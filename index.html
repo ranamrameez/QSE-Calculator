@@ -198,7 +198,12 @@
     padding:40px 20px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:var(--radius);
   }
   .toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
-  .toolbar .right{display:flex; gap:8px;}
+  .toolbar .right{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  th.sortable{cursor:pointer; user-select:none; white-space:nowrap;}
+  th.sortable:hover{color:var(--text);}
+  th.sortable .arrow{color:var(--gold); font-size:10px; margin-left:3px;}
+  tr.group-row td{background:var(--panel-2); font-size:12px; padding:8px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  tr.group-row .g-stats{color:var(--muted); font-weight:400; margin-left:8px;}
 
   .chip-tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
   .chip{
@@ -293,6 +298,11 @@
       </div>
       <div class="grid grid-4" id="dashCards"></div>
       <div class="rule-note">A share is only <b>sold in profit</b> when: <b>net sell proceeds</b> (sell price × shares − sell commission) exceed <b>total buy cost</b> (buy price × shares + buy commission). Per-share, that means sell price must clear the break‑even price shown below.</div>
+
+      <div class="section-title">Cash &amp; net worth <span class="tag">all-in, incl. transfers</span></div>
+      <div class="grid grid-3" id="cashCards" style="margin-bottom:8px;"></div>
+      <div class="grid grid-3" id="cashCards2" style="margin-bottom:16px;"></div>
+
       <div class="charts-row">
         <div class="card">
           <div class="section-title">Investment by ticker</div>
@@ -347,6 +357,17 @@
       <div class="toolbar">
         <div style="color:var(--muted); font-size:12.5px;" id="txCount"></div>
         <div class="right">
+          <label style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;">Ticker
+            <select id="txFilterSel" onchange="setTxFilter(this.value)" style="width:auto; padding:6px 8px;"><option value="">All</option></select>
+          </label>
+          <label style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;">Group by
+            <select id="txGroupSel" onchange="setTxGroupBy(this.value)" style="width:auto; padding:6px 8px;">
+              <option value="none">None</option>
+              <option value="ticker">Ticker</option>
+              <option value="action">Buy/Sell</option>
+              <option value="month">Month</option>
+            </select>
+          </label>
           <button class="btn ghost small" onclick="exportJSON()">Export JSON</button>
           <button class="btn danger small" onclick="clearAll()">Clear all data</button>
         </div>
@@ -356,6 +377,7 @@
       <div class="section-title" style="margin-top:32px;">Cash transfers <span class="tag">deposits / withdrawals</span></div>
       <p class="pagesub" style="margin-top:-6px;">Wire fees on deposits are real money lost too — they're kept separate from trading fees but counted in your totals.</p>
       <div class="card" style="margin-bottom:20px;">
+        <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;" id="trFormTitle">Add transfer</div>
         <div class="row">
           <div class="field"><label>Date</label><input type="date" id="trDate"></div>
           <div class="field"><label>Type</label>
@@ -363,10 +385,17 @@
           </div>
           <div class="field"><label>Gross amount</label><input type="number" id="trGross" placeholder="0"></div>
           <div class="field"><label>Transfer fee</label><input type="number" id="trFee" placeholder="10"></div>
-          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="btn" onclick="addTransfer()">Add</button></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end; display:flex; gap:8px;">
+            <button class="btn" id="trSubmitBtn" onclick="addTransfer()">Add</button>
+            <button class="btn ghost" id="trCancelBtn" style="display:none;" onclick="cancelEditTransfer()">Cancel</button>
+          </div>
         </div>
       </div>
       <div id="trTableWrap"></div>
+
+      <div class="section-title" style="margin-top:32px;">Cash ledger <span class="tag">running balance</span></div>
+      <p class="pagesub" style="margin-top:-6px;">Every deposit, withdrawal, buy, and sell in one chronological line, each with the cash balance right after it — the same shape as your broker statement's "Balance" column.</p>
+      <div id="cashLedgerWrap"></div>
     </div>
 
     <!-- CALCULATORS -->
@@ -1012,6 +1041,62 @@ function computePositions(){
   return Object.values(byTicker).filter(p=>true);
 }
 
+/* ============================= CASH LEDGER / NET WORTH ============================= */
+// Merges every buy, sell, deposit, and withdrawal into one chronological cash
+// ledger with a running balance — same shape as a broker statement's
+// "Balance" column. Order ties (same date) go transfers-then-trades, since
+// that's how money usually has to arrive before you can spend it.
+function buildCashLedger(){
+  const events = [];
+  DB.transactions.forEach(tx=>{
+    const amount = tx.shares*tx.price;
+    const fee = calcFee(amount, tx.action==='BUY');
+    const cashDelta = tx.action==='BUY' ? -(amount+fee) : (amount-fee);
+    events.push({
+      date: tx.date, kind:'trade', action: tx.action,
+      label: `${tx.action} ${fmt(tx.shares,0)} ${tx.ticker} @ ${fmt(tx.price,3)}`,
+      amount: cashDelta, fee,
+    });
+  });
+  DB.transfers.forEach(t=>{
+    const cashDelta = t.type==='DEPOSIT' ? (t.gross - t.fee) : -(t.gross + t.fee);
+    events.push({
+      date: t.date, kind:'transfer', action: t.type,
+      label: t.type==='DEPOSIT' ? 'Deposit' : 'Withdrawal',
+      amount: cashDelta, fee: t.fee,
+    });
+  });
+  events.sort((a,b)=> a.date===b.date ? (a.kind==='transfer'?-1:1) - (b.kind==='transfer'?-1:1) : a.date.localeCompare(b.date));
+  let balance = 0;
+  events.forEach(e=>{ balance += e.amount; e.balance = balance; });
+  return events;
+}
+// The single all-in summary: what actually happened to your money, trading
+// gains/losses and every fee included.
+function cashSummary(){
+  const totalInward = DB.transfers.filter(t=>t.type==='DEPOSIT').reduce((s,t)=>s+t.gross,0);
+  const totalOutward = DB.transfers.filter(t=>t.type==='WITHDRAWAL').reduce((s,t)=>s+t.gross,0);
+  const transferFees = totalTransferFees();
+  const positions = computePositions(); // includes closed tickers, needed for lifetime realized P/L
+  const tradingFees = positions.reduce((s,p)=>s+p.buyFees+p.sellFees,0);
+  const realizedPL = positions.reduce((s,p)=>s+p.realized,0);
+  let unrealizedPL = 0, portfolioValue = 0;
+  positions.filter(p=>p.shares>0).forEach(p=>{
+    const mp = getMarketPrice(p.ticker);
+    const grossValue = p.shares*mp;
+    const estSellFee = mp>0 ? calcFee(grossValue, false) : 0;
+    const netValue = grossValue - estSellFee;
+    unrealizedPL += netValue - p.invested;
+    portfolioValue += netValue;
+  });
+  const ledger = buildCashLedger();
+  const cashBalance = ledger.length ? ledger[ledger.length-1].balance : 0;
+  const netWorth = cashBalance + portfolioValue;
+  const totalCharges = transferFees + tradingFees;
+  const netPL = realizedPL + unrealizedPL - transferFees; // buy/sell commissions are already inside realized/unrealized; transfer fees aren't, so subtract them here
+  return { totalInward, totalOutward, transferFees, tradingFees, totalCharges, realizedPL, unrealizedPL, netPL, cashBalance, portfolioValue, netWorth, ledger };
+}
+
 function getMarketPrice(ticker){
   return DB.marketPrices[ticker] !== undefined ? DB.marketPrices[ticker] : 0;
 }
@@ -1099,6 +1184,30 @@ function renderDashboard(){
     {label:'Total Fees Paid', value: fmtMoney(allFees), sub:`${fmtMoney(totalFees)} trading + ${fmtMoney(transferFees)} transfers`},
   ];
   document.getElementById('dashCards').innerHTML = cards.map(c=>`
+    <div class="card stat-card">
+      <div class="label">${c.label}</div>
+      <div class="value ${c.cls||''}">${c.value}</div>
+      <div class="sub">${c.sub}</div>
+    </div>`).join('');
+
+  const cs = cashSummary();
+  const cashCards1 = [
+    {label:'Cash balance', value: fmtMoney(cs.cashBalance), sub:'deposits − withdrawals − net buys + net sells'},
+    {label:'Net worth', value: fmtMoney(cs.netWorth), sub:'cash balance + current portfolio value'},
+    {label:'Net profit / loss', value: fmtMoney(cs.netPL), sub:'realized + unrealized, all fees included', cls: cs.netPL>=0?'pos':'neg'},
+  ];
+  const cashCards2 = [
+    {label:'Total inward', value: fmtMoney(cs.totalInward), sub:'gross deposits'},
+    {label:'Total outward', value: fmtMoney(cs.totalOutward), sub:'gross withdrawals'},
+    {label:'Total charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`},
+  ];
+  document.getElementById('cashCards').innerHTML = cashCards1.map(c=>`
+    <div class="card stat-card">
+      <div class="label">${c.label}</div>
+      <div class="value ${c.cls||''}">${c.value}</div>
+      <div class="sub">${c.sub}</div>
+    </div>`).join('');
+  document.getElementById('cashCards2').innerHTML = cashCards2.map(c=>`
     <div class="card stat-card">
       <div class="label">${c.label}</div>
       <div class="value ${c.cls||''}">${c.value}</div>
@@ -1205,6 +1314,7 @@ function openPositionModal(ticker){
     ${resultLine('Profit / loss', fmtMoney(profit)+' ('+pct.toFixed(2)+'%)', profit>=0?'pos':'neg')}
     ${resultLine('Break-even sell price', fmt(be,3))}
     ${resultLine('Sell price for +2% / +5%', fmt(sell2,3)+' / '+fmt(sell5,3))}
+    <button class="btn secondary" style="width:100%; margin-top:14px;" onclick="viewTickerHistory('${p.ticker}')">View transaction history</button>
   `;
   openModal(`${p.ticker} position`, body);
 }
@@ -1275,38 +1385,149 @@ function renderPortfolio(){
 }
 
 /* ============================= RENDER: TRANSACTIONS ============================= */
+let txSort = {col:'date', dir:'desc'};
+let txGroupBy = 'none';
+let txFilterTicker = '';
+
+function txSortValue(tx, col){
+  switch(col){
+    case 'ticker': return tx.ticker;
+    case 'action': return tx.action;
+    case 'shares': return tx.shares;
+    case 'price': return tx.price;
+    case 'amount': return tx.shares*tx.price;
+    case 'fee': return calcFee(tx.shares*tx.price, tx.action==='BUY');
+    default: return tx.date;
+  }
+}
+function sortTx(col){
+  if(txSort.col===col){ txSort.dir = txSort.dir==='asc'?'desc':'asc'; }
+  else { txSort = {col, dir: (col==='ticker'||col==='action')?'asc':'desc'}; }
+  renderTransactions();
+}
+function sortArrow(col){
+  if(txSort.col!==col) return '';
+  return `<span class="arrow">${txSort.dir==='asc'?'▲':'▼'}</span>`;
+}
+function setTxGroupBy(val){ txGroupBy = val; renderTransactions(); }
+function setTxFilter(val){ txFilterTicker = val; renderTransactions(); }
+function txGroupKey(tx){
+  if(txGroupBy==='ticker') return tx.ticker;
+  if(txGroupBy==='action') return tx.action;
+  if(txGroupBy==='month') return tx.date.slice(0,7);
+  return null;
+}
+function refreshTxFilterSelect(){
+  const sel = document.getElementById('txFilterSel');
+  if(!sel) return;
+  const prev = txFilterTicker;
+  const tickers = [...new Set(DB.transactions.map(t=>t.ticker))].sort();
+  sel.innerHTML = '<option value="">All</option>' + tickers.map(t=>`<option value="${t}">${tickerLabel(t)}</option>`).join('');
+  sel.value = tickers.includes(prev) ? prev : '';
+  txFilterTicker = sel.value;
+}
+function renderTxRow(tx){
+  const amount = tx.shares*tx.price;
+  const fee = calcFee(amount, tx.action==='BUY');
+  return `<tr>
+    <td>${tx.date}</td>
+    <td><b>${tx.ticker}</b>${tickerName(tx.ticker)?` <span style="color:var(--muted); font-size:10.5px;">${tickerName(tx.ticker)}</span>`:''}</td>
+    <td><span class="pill ${tx.action==='BUY'?'pill-buy':'pill-sell'}">${tx.action}</span></td>
+    <td class="num-cell">${fmt(tx.shares,0)}</td>
+    <td class="num-cell">${fmt(tx.price,3)}</td>
+    <td class="num-cell">${fmt(amount,2)}</td>
+    <td class="num-cell">${fmt(fee,2)}</td>
+    <td class="num-cell" style="white-space:nowrap;">
+      <button class="btn ghost small" onclick="startEditTx(${tx._i})">Edit</button>
+      <button class="btn ghost small" onclick="deleteTx(${tx._i})">Delete</button>
+    </td>
+  </tr>`;
+}
 function renderTransactions(){
+  refreshTxFilterSelect();
   document.getElementById('txCount').textContent = DB.transactions.length + ' transaction(s)';
   if(!DB.transactions.length){
     document.getElementById('txTableWrap').innerHTML = `<div class="empty">No transactions yet. Add your first buy above.</div>`;
+    renderCashLedger();
     return;
   }
-  const sorted = [...DB.transactions].map((t,i)=>({...t, _i:i})).sort((a,b)=> b.date.localeCompare(a.date));
-  const rowsHtml = sorted.map(tx=>{
-    const amount = tx.shares*tx.price;
-    const fee = calcFee(amount, tx.action==='BUY');
-    return `<tr>
-      <td>${tx.date}</td>
-      <td><b>${tx.ticker}</b>${tickerName(tx.ticker)?` <span style="color:var(--muted); font-size:10.5px;">${tickerName(tx.ticker)}</span>`:''}</td>
-      <td><span class="pill ${tx.action==='BUY'?'pill-buy':'pill-sell'}">${tx.action}</span></td>
-      <td class="num-cell">${fmt(tx.shares,0)}</td>
-      <td class="num-cell">${fmt(tx.price,3)}</td>
-      <td class="num-cell">${fmt(amount,2)}</td>
-      <td class="num-cell">${fmt(fee,2)}</td>
-      <td class="num-cell" style="white-space:nowrap;">
-        <button class="btn ghost small" onclick="startEditTx(${tx._i})">Edit</button>
-        <button class="btn ghost small" onclick="deleteTx(${tx._i})">Delete</button>
-      </td>
-    </tr>`;
-  }).join('');
+  let list = [...DB.transactions].map((t,i)=>({...t, _i:i}));
+  if(txFilterTicker) list = list.filter(t=>t.ticker===txFilterTicker);
+  list.sort((a,b)=>{
+    const va=txSortValue(a,txSort.col), vb=txSortValue(b,txSort.col);
+    const cmp = typeof va==='string' ? va.localeCompare(vb) : (va-vb);
+    return txSort.dir==='asc' ? cmp : -cmp;
+  });
+
+  let bodyHtml;
+  if(txGroupBy==='none'){
+    bodyHtml = list.length ? list.map(renderTxRow).join('') : `<tr><td colspan="8" style="color:var(--muted); text-align:center; padding:20px;">No transactions match this filter.</td></tr>`;
+  } else {
+    const groups = {};
+    list.forEach(tx=>{ const k=txGroupKey(tx); (groups[k] = groups[k]||[]).push(tx); });
+    bodyHtml = Object.keys(groups).sort().map(key=>{
+      const items = groups[key];
+      const buyShares = items.filter(t=>t.action==='BUY').reduce((s,t)=>s+t.shares,0);
+      const sellShares = items.filter(t=>t.action==='SELL').reduce((s,t)=>s+t.shares,0);
+      const totalAmount = items.reduce((s,t)=>s+t.shares*t.price,0);
+      const totalFee = items.reduce((s,t)=>s+calcFee(t.shares*t.price, t.action==='BUY'),0);
+      const label = txGroupBy==='ticker' ? key+(tickerName(key)?` — ${tickerName(key)}`:'') : key;
+      return `<tr class="group-row"><td colspan="8"><b>${label}</b><span class="g-stats">${items.length} txn(s) · ${fmt(buyShares,0)} bought / ${fmt(sellShares,0)} sold · ${fmtMoney(totalAmount)} volume · ${fmtMoney(totalFee)} fees</span></td></tr>`
+        + items.map(renderTxRow).join('');
+    }).join('');
+  }
   document.getElementById('txTableWrap').innerHTML = `
     <div class="card" style="overflow-x:auto;">
     <table>
-      <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th class="num-cell">Shares</th><th class="num-cell">Price</th><th class="num-cell">Amount</th><th class="num-cell">Fee</th><th></th></tr></thead>
+      <thead><tr>
+        <th class="sortable" onclick="sortTx('date')">Date${sortArrow('date')}</th>
+        <th class="sortable" onclick="sortTx('ticker')">Ticker${sortArrow('ticker')}</th>
+        <th class="sortable" onclick="sortTx('action')">Action${sortArrow('action')}</th>
+        <th class="num-cell sortable" onclick="sortTx('shares')">Shares${sortArrow('shares')}</th>
+        <th class="num-cell sortable" onclick="sortTx('price')">Price${sortArrow('price')}</th>
+        <th class="num-cell sortable" onclick="sortTx('amount')">Amount${sortArrow('amount')}</th>
+        <th class="num-cell sortable" onclick="sortTx('fee')">Fee${sortArrow('fee')}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${bodyHtml}</tbody>
+    </table>
+    </div>`;
+  renderCashLedger();
+}
+function viewTickerHistory(ticker){
+  closeModal();
+  document.querySelector('[data-page="transactions"]').click();
+  txFilterTicker = ticker;
+  renderTransactions();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============================= RENDER: CASH LEDGER ============================= */
+function renderCashLedger(){
+  const wrap = document.getElementById('cashLedgerWrap');
+  if(!wrap) return;
+  const ledger = buildCashLedger();
+  if(!ledger.length){
+    wrap.innerHTML = `<div class="empty">No cash movements yet — add a transfer or a transaction above.</div>`;
+    return;
+  }
+  const rowsHtml = ledger.map(e=>`<tr>
+    <td>${e.date}</td>
+    <td>${e.kind==='transfer' ? (e.action==='DEPOSIT'?'Deposit':'Withdrawal') : `<span class="pill ${e.action==='BUY'?'pill-buy':'pill-sell'}">${e.action}</span>`}</td>
+    <td>${e.label}</td>
+    <td class="num-cell">${fmtMoney(e.fee)}</td>
+    <td class="num-cell ${e.amount>=0?'pos':'neg'}">${e.amount>=0?'+':''}${fmtMoney(e.amount)}</td>
+    <td class="num-cell" style="font-weight:700;">${fmtMoney(e.balance)}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `
+    <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Detail</th><th class="num-cell">Fee</th><th class="num-cell">Cash change</th><th class="num-cell">Balance</th></tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
     </div>`;
 }
+
 let editingTxIndex = null;
 function addTransaction(){
   const date = document.getElementById('txDate').value || new Date().toISOString().slice(0,10);
@@ -1381,7 +1602,10 @@ function renderTransfers(){
       <td class="num-cell">${fmtMoney(t.gross)}</td>
       <td class="num-cell neg">${fmtMoney(t.fee)}</td>
       <td class="num-cell">${fmtMoney(net)}</td>
-      <td class="num-cell"><button class="btn ghost small" onclick="deleteTransfer(${t._i})">Delete</button></td>
+      <td class="num-cell" style="white-space:nowrap;">
+        <button class="btn ghost small" onclick="startEditTransfer(${t._i})">Edit</button>
+        <button class="btn ghost small" onclick="deleteTransfer(${t._i})">Delete</button>
+      </td>
     </tr>`;
   }).join('');
   const total = totalTransferFees();
@@ -1394,19 +1618,52 @@ function renderTransfers(){
     </div>
     <div style="margin-top:10px; color:var(--muted); font-size:12.5px;">Total transfer fees paid: <span style="color:var(--loss); font-family:var(--mono); font-weight:700;">${fmtMoney(total)}</span></div>`;
 }
+let editingTransferIndex = null;
 function addTransfer(){
   const date = document.getElementById('trDate').value || new Date().toISOString().slice(0,10);
   const type = document.getElementById('trType').value;
   const gross = parseFloat(document.getElementById('trGross').value)||0;
   const fee = parseFloat(document.getElementById('trFee').value)||0;
   if(!gross){ toast('Enter the gross amount.'); return; }
-  DB.transfers.push({date, type, gross, fee});
+  if(editingTransferIndex !== null){
+    DB.transfers[editingTransferIndex] = {date, type, gross, fee};
+    editingTransferIndex = null;
+    document.getElementById('trFormTitle').textContent = 'Add transfer';
+    document.getElementById('trSubmitBtn').textContent = 'Add';
+    document.getElementById('trCancelBtn').style.display = 'none';
+    toast('Transfer updated.');
+  } else {
+    DB.transfers.push({date, type, gross, fee});
+    toast('Transfer added.');
+  }
   saveDB();
   document.getElementById('trGross').value=''; document.getElementById('trFee').value='';
   renderAll();
-  toast('Transfer added.');
 }
-function deleteTransfer(i){ DB.transfers.splice(i,1); saveDB(); renderAll(); }
+function startEditTransfer(i){
+  const t = DB.transfers[i];
+  editingTransferIndex = i;
+  document.getElementById('trDate').value = t.date;
+  document.getElementById('trType').value = t.type;
+  document.getElementById('trGross').value = t.gross;
+  document.getElementById('trFee').value = t.fee;
+  document.getElementById('trFormTitle').textContent = 'Editing transfer — change the fields below and save';
+  document.getElementById('trSubmitBtn').textContent = 'Save changes';
+  document.getElementById('trCancelBtn').style.display = 'inline-block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function cancelEditTransfer(){
+  editingTransferIndex = null;
+  document.getElementById('trFormTitle').textContent = 'Add transfer';
+  document.getElementById('trSubmitBtn').textContent = 'Add';
+  document.getElementById('trCancelBtn').style.display = 'none';
+  document.getElementById('trGross').value=''; document.getElementById('trFee').value='';
+}
+function deleteTransfer(i){
+  DB.transfers.splice(i,1);
+  if(editingTransferIndex === i) cancelEditTransfer();
+  saveDB(); renderAll();
+}
 
 /* ============================= RENDER: WATCHLIST ============================= */
 function renderWatchlist(){
