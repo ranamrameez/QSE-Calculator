@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QSE Trading Workbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0e11;
+    --panel:#12161b;
+    --panel-2:#171c22;
+    --border:#232b33;
+    --text:#e8ecef;
+    --muted:#8a97a3;
+    --accent:#9a1b3e;
+    --accent-soft:#3a1520;
+    --gold:#c9a227;
+    --profit:#34c77b;
+    --loss:#e5484d;
+    --warn:#e5a93f;
+    --radius:10px;
+    --mono:'JetBrains Mono',monospace;
+    --disp:'Space Grotesk',sans-serif;
+    --body:'Inter',sans-serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0f3;
+    --panel:#ffffff;
+    --panel-2:#f4f5f7;
+    --border:#dde1e6;
+    --text:#1b2027;
+    --muted:#667085;
+    --accent:#9a1b3e;
+    --accent-soft:#f7e3e9;
+    --gold:#a9790a;
+    --profit:#18874a;
+    --loss:#c8302f;
+    --warn:#a9790a;
+  }
+  :root[data-theme="light"] .card{ box-shadow:0 1px 3px rgba(20,20,30,.06); }
+  :root[data-theme="light"] input[type=text],
+  :root[data-theme="light"] input[type=number],
+  :root[data-theme="light"] input[type=date],
+  :root[data-theme="light"] select{ background:#f7f8fa; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  a{color:inherit;}
+  button, input, select{font-family:var(--body);}
+  input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--gold); outline-offset:1px;}
+
+  /* ---------- Ticker Tape ---------- */
+  .tape-wrap{
+    background:linear-gradient(180deg, #14060b, #0b0e11);
+    border-bottom:1px solid var(--border);
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+    height:38px;
+    display:flex;
+    align-items:center;
+  }
+  .tape-wrap::before{
+    content:"QSE •";
+    position:absolute;left:0;top:0;bottom:0;
+    display:flex;align-items:center;
+    padding:0 14px;
+    background:var(--accent);
+    color:#fff;
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:.06em;
+    z-index:2;
+  }
+  .tape-track{
+    display:inline-flex;
+    padding-left:100%;
+    animation:tape-scroll 30s linear infinite;
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+  .tape-wrap:hover .tape-track{animation-play-state:paused;}
+  @media (prefers-reduced-motion: reduce){
+    .tape-track{animation:none; padding-left:90px;}
+  }
+  .tape-item{padding:0 22px;color:var(--muted);border-right:1px solid var(--border);}
+  .tape-item b{color:var(--text);font-weight:600;margin-right:6px;}
+  .tape-up{color:var(--profit);}
+  .tape-down{color:var(--loss);}
+  @keyframes tape-scroll{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-100%);}
+  }
+
+  /* ---------- Shell ---------- */
+  .shell{display:flex; min-height:calc(100vh - 38px);}
+  .sidebar{
+    width:220px; flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:18px 10px;
+  }
+  .brand{
+    font-family:var(--disp); font-weight:700; font-size:15px;
+    letter-spacing:.02em; padding:4px 10px 18px 10px;
+    color:var(--text); display:flex; flex-direction:column; gap:2px;
+  }
+  .brand span{color:var(--gold); font-family:var(--mono); font-size:11px; font-weight:500;}
+  nav.navlist{display:flex; flex-direction:column; gap:2px;}
+  .navbtn{
+    display:flex; align-items:center; gap:10px;
+    background:transparent; border:none; color:var(--muted);
+    text-align:left; padding:10px 12px; border-radius:8px;
+    font-size:13.5px; font-weight:500; cursor:pointer; width:100%;
+    transition:background .12s, color .12s;
+  }
+  .navbtn:hover{background:var(--panel-2); color:var(--text);}
+  .navbtn.active{background:var(--accent-soft); color:#fff; box-shadow:inset 3px 0 0 var(--accent);}
+  .navbtn .num{font-family:var(--mono); color:var(--gold); font-size:11px; width:16px; flex-shrink:0;}
+
+  .main{flex:1; padding:26px 30px 60px 30px; max-width:1180px;}
+  .page{display:none;}
+  .page.active{display:block; animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h1.pagetitle{
+    font-family:var(--disp); font-size:22px; font-weight:600; margin:0 0 4px 0;
+  }
+  .pagesub{color:var(--muted); font-size:13px; margin:0 0 22px 0;}
+
+  .grid{display:grid; gap:16px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:1000px){.grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);}}
+
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px;
+  }
+  .stat-card .label{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;}
+  .stat-card .value{font-family:var(--mono); font-size:22px; font-weight:700;}
+  .stat-card .sub{font-size:11.5px; margin-top:6px; color:var(--muted);}
+
+  .section-title{font-family:var(--disp); font-size:15px; font-weight:600; margin:28px 0 12px 0; display:flex; align-items:center; gap:8px;}
+  .section-title .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:20px; padding:1px 8px;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.8px;}
+  thead th{
+    text-align:left; color:var(--muted); font-weight:500; text-transform:uppercase;
+    font-size:10.5px; letter-spacing:.05em; padding:8px 10px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:var(--panel);
+  }
+  tbody td{padding:9px 10px; border-bottom:1px solid var(--border); font-family:var(--mono); white-space:nowrap;}
+  tbody tr:hover{background:var(--panel-2);}
+  .num-cell{text-align:right;}
+  .pos{color:var(--profit);}
+  .neg{color:var(--loss);}
+  .neutral{color:var(--warn);}
+
+  .pill{display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-family:var(--mono); font-weight:700;}
+  .pill-buy{background:#123024; color:var(--profit);}
+  .pill-sell{background:#3a1520; color:var(--loss);}
+
+  label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;}
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%; background:#0d1115; border:1px solid var(--border); color:var(--text);
+    padding:9px 10px; border-radius:7px; font-family:var(--mono); font-size:13px;
+  }
+  .field{margin-bottom:14px;}
+  .row{display:flex; gap:12px;}
+  .row > *{flex:1;}
+  .btn{
+    background:var(--accent); color:#fff; border:none; padding:10px 16px; border-radius:7px;
+    font-weight:600; font-size:13px; cursor:pointer; font-family:var(--body);
+  }
+  .btn:hover{filter:brightness(1.1);}
+  .btn.secondary{background:var(--panel-2); border:1px solid var(--border); color:var(--text);}
+  .btn.ghost{background:transparent; border:1px solid var(--border); color:var(--muted);}
+  .btn.small{padding:5px 10px; font-size:11.5px;}
+  .btn.danger{background:#3a1520; color:var(--loss); border:1px solid #5a1f2b;}
+
+  .calc-panel{display:grid; grid-template-columns:280px 1fr; gap:24px;}
+  @media(max-width:900px){.calc-panel{grid-template-columns:1fr;}}
+  .result-line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--border); font-family:var(--mono); font-size:13px;}
+  .result-line:last-child{border-bottom:none;}
+  .result-line .k{color:var(--muted);}
+  .result-line .v{font-weight:700;}
+
+  .settings-list .result-line{cursor:default;}
+  .badge-dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
+
+  .empty{
+    padding:40px 20px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:var(--radius);
+  }
+  .toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .toolbar .right{display:flex; gap:8px;}
+
+  .chip-tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .chip{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
+    padding:7px 13px; border-radius:20px; font-size:12.5px; cursor:pointer; font-weight:500;
+  }
+  .chip.active{background:var(--accent-soft); color:#fff; border-color:var(--accent);}
+
+  .subpage{display:none;}
+  .subpage.active{display:block;}
+
+  .footer-note{color:var(--muted); font-size:11.5px; margin-top:30px; border-top:1px solid var(--border); padding-top:14px;}
+  canvas{max-width:100%;}
+  .charts-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;}
+  @media(max-width:900px){.charts-row{grid-template-columns:1fr;}}
+  .toast{
+    position:fixed; bottom:20px; right:20px; background:var(--panel); border:1px solid var(--accent);
+    padding:12px 18px; border-radius:8px; font-size:13px; box-shadow:0 6px 24px rgba(0,0,0,.4);
+    opacity:0; transform:translateY(10px); transition:.2s; z-index:50; pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:none;}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:flex-start; justify-content:center; padding:8vh 16px 40px 16px; z-index:100;
+    overflow-y:auto;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:22px; width:100%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,.5);
+    animation:fadein .16s ease;
+  }
+  .modal-box .modal-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+  .modal-box .modal-title{font-family:var(--disp); font-size:17px; font-weight:700;}
+  .modal-box .modal-close{background:transparent; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:2px 6px;}
+  .modal-box .modal-close:hover{color:var(--text);}
+
+  /* ---------- Portfolio summary (dashboard) ---------- */
+  .psum-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 4px; border-bottom:1px solid var(--border); cursor:pointer;
+    background:transparent; border-left:none; border-right:none; border-top:none; width:100%; text-align:left;
+    font-family:var(--body); transition:background .12s;
+  }
+  .psum-row:last-child{border-bottom:none;}
+  .psum-row:hover{background:var(--panel-2);}
+  .psum-row .psum-name{display:flex; flex-direction:column; gap:2px;}
+  .psum-row .psum-ticker{font-family:var(--mono); font-weight:700; font-size:13.5px;}
+  .psum-row .psum-company{font-size:11px; color:var(--muted);}
+  .psum-row .psum-nums{text-align:right; display:flex; flex-direction:column; gap:2px;}
+  .psum-row .psum-invested{font-family:var(--mono); font-size:13px;}
+  .psum-row .psum-be{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .rule-note{
+    font-size:12px; color:var(--muted); background:var(--panel-2); border:1px solid var(--border);
+    border-radius:8px; padding:10px 12px; margin-bottom:16px; line-height:1.5;
+  }
+  .rule-note b{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="tape-wrap"><div class="tape-track" id="tapeTrack">&nbsp;</div></div>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="brand">QSE WORKBOOK<span>trading assistant</span></div>
+    <button class="btn secondary small" id="themeToggle" style="width:100%; margin-bottom:14px;" onclick="toggleTheme()">☀ Light mode</button>
+    <nav class="navlist">
+      <button class="navbtn active" data-page="dashboard"><span class="num">01</span>Dashboard</button>
+      <button class="navbtn" data-page="portfolio"><span class="num">02</span>Portfolio</button>
+      <button class="navbtn" data-page="transactions"><span class="num">03</span>Transactions</button>
+      <button class="navbtn" data-page="calculators"><span class="num">04</span>Calculators</button>
+      <button class="navbtn" data-page="watchlist"><span class="num">05</span>Watchlist</button>
+      <button class="navbtn" data-page="settings"><span class="num">06</span>Settings</button>
+    </nav>
+    <div class="footer-note" style="margin-top:24px; padding-top:12px;">
+      Data lives in this browser (localStorage). Use Export/Import in Settings to move it between devices.
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <h1 class="pagetitle">Dashboard</h1>
+      <p class="pagesub">Portfolio overview, computed live from your transaction log.</p>
+      <div class="card" id="priceSyncCard" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div id="priceSyncStatus" style="color:var(--muted); font-size:12.5px;">Checking for a prices.json…</div>
+        <button class="btn secondary small" onclick="refreshMarketPricesFromFile(true)">Refresh prices</button>
+      </div>
+      <div class="grid grid-4" id="dashCards"></div>
+      <div class="rule-note">A share is only <b>sold in profit</b> when: <b>net sell proceeds</b> (sell price × shares − sell commission) exceed <b>total buy cost</b> (buy price × shares + buy commission). Per-share, that means sell price must clear the break‑even price shown below.</div>
+      <div class="charts-row">
+        <div class="card">
+          <div class="section-title">Investment by ticker</div>
+          <div id="chartInvestEmpty" class="empty" style="display:none;">No open positions yet.</div>
+          <canvas id="chartInvest" height="180"></canvas>
+        </div>
+        <div class="card">
+          <div class="section-title">Profit / loss by ticker</div>
+          <div id="chartProfitEmpty" class="empty" style="display:none;">No open positions yet.</div>
+          <canvas id="chartProfit" height="180"></canvas>
+        </div>
+      </div>
+      <div class="section-title">Portfolio <span class="tag">tap a row for full detail</span></div>
+      <div class="card" id="dashPortfolioBox" style="padding:6px 14px;"></div>
+      <div class="section-title">Alerts</div>
+      <div id="alertsBox" class="card"></div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div class="page" id="page-portfolio">
+      <h1 class="pagetitle">Portfolio</h1>
+      <p class="pagesub">One row per open position, derived automatically from your transaction log. <strong>Set today's price in the "Market" column below</strong> — it feeds the Dashboard, alerts, and every calculator automatically.</p>
+      <div class="card" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div id="priceSyncStatus2" style="color:var(--muted); font-size:12.5px;">Checking for a prices.json…</div>
+        <button class="btn secondary small" onclick="refreshMarketPricesFromFile(true)">Refresh prices</button>
+      </div>
+      <div id="portfolioTableWrap"></div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="page" id="page-transactions">
+      <h1 class="pagetitle">Transaction Log</h1>
+      <p class="pagesub">Record every buy and sell. Shares, weighted average cost, fees, and break-even all roll up automatically.</p>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-title" id="txFormTitle">Add transaction</div>
+        <div class="row">
+          <div class="field"><label>Date</label><input type="date" id="txDate"></div>
+          <div class="field"><label>Ticker</label><input type="text" id="txTicker" placeholder="e.g. MARK" list="tickerList" style="text-transform:uppercase;"></div>
+          <div class="field"><label>Action</label>
+            <select id="txAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+          </div>
+          <div class="field"><label>Shares</label><input type="number" id="txShares" placeholder="0"></div>
+          <div class="field"><label>Price</label><input type="number" step="0.001" id="txPrice" placeholder="0.000"></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end; display:flex; gap:8px;">
+            <button class="btn" id="txSubmitBtn" onclick="addTransaction()">Add</button>
+            <button class="btn ghost" id="txCancelBtn" style="display:none;" onclick="cancelEditTx()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div style="color:var(--muted); font-size:12.5px;" id="txCount"></div>
+        <div class="right">
+          <button class="btn ghost small" onclick="exportJSON()">Export JSON</button>
+          <button class="btn danger small" onclick="clearAll()">Clear all data</button>
+        </div>
+      </div>
+      <div id="txTableWrap"></div>
+
+      <div class="section-title" style="margin-top:32px;">Cash transfers <span class="tag">deposits / withdrawals</span></div>
+      <p class="pagesub" style="margin-top:-6px;">Wire fees on deposits are real money lost too — they're kept separate from trading fees but counted in your totals.</p>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="row">
+          <div class="field"><label>Date</label><input type="date" id="trDate"></div>
+          <div class="field"><label>Type</label>
+            <select id="trType"><option value="DEPOSIT">Deposit</option><option value="WITHDRAWAL">Withdrawal</option></select>
+          </div>
+          <div class="field"><label>Gross amount</label><input type="number" id="trGross" placeholder="0"></div>
+          <div class="field"><label>Transfer fee</label><input type="number" id="trFee" placeholder="10"></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="btn" onclick="addTransfer()">Add</button></div>
+        </div>
+      </div>
+      <div id="trTableWrap"></div>
+    </div>
+
+    <!-- CALCULATORS -->
+    <div class="page" id="page-calculators">
+      <h1 class="pagetitle">Calculators</h1>
+      <p class="pagesub">Every question you'd ask before placing an order.</p>
+
+      <div class="chip-tabs" id="calcTabs">
+        <button class="chip active" data-calc="buy">Buy calculator</button>
+        <button class="chip" data-calc="reverse">Reverse averaging</button>
+        <button class="chip" data-calc="budget">Budget calculator</button>
+        <button class="chip" data-calc="profit">Profit planner</button>
+        <button class="chip" data-calc="sell">Sell planner</button>
+        <button class="chip" data-calc="recovery">Recovery planner</button>
+        <button class="chip" data-calc="scenario">Scenario simulator</button>
+      </div>
+
+      <!-- BUY -->
+      <div class="subpage active" id="calc-buy">
+        <div class="grid grid-4" id="bcHighlights" style="margin-bottom:16px;"></div>
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="bcTickerSel" onchange="applyCalcTicker('bc')"></select></div>
+            <div class="field"><label>Current shares</label><input type="number" id="bcCurShares" value="0" oninput="calcBuy()"></div>
+            <div class="field"><label>Current average cost</label><input type="number" step="0.001" id="bcCurAvg" value="0" oninput="calcBuy()"></div>
+            <div class="field"><label>New shares to buy</label><input type="number" id="bcNewShares" value="0" oninput="calcBuy()"></div>
+            <div class="field"><label>Buy price</label><input type="number" step="0.001" id="bcNewPrice" value="0" oninput="calcBuy()"></div>
+            <div class="field">
+              <label>Current / market price</label>
+              <div style="display:flex; gap:8px;">
+                <input type="number" step="0.001" id="bcMarket" value="0" oninput="calcBuy()" style="flex:1;">
+                <button class="btn secondary" style="flex:0 0 auto;" onclick="saveBcMarketPrice()">Set as current price</button>
+              </div>
+              <div style="font-size:11px; color:var(--muted); margin-top:4px;">Saves to the selected ticker's portfolio price — updates the Dashboard and every other calculator too.</div>
+            </div>
+          </div>
+          <div class="card"><div id="bcResults"></div></div>
+        </div>
+      </div>
+
+      <!-- REVERSE -->
+      <div class="subpage" id="calc-reverse">
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="rcTickerSel" onchange="applyCalcTicker('rc')"></select></div>
+            <div class="field"><label>Current shares</label><input type="number" id="rcCurShares" value="0"></div>
+            <div class="field"><label>Current average cost</label><input type="number" step="0.001" id="rcCurAvg" value="0"></div>
+            <div class="field"><label>New buy price</label><input type="number" step="0.001" id="rcNewPrice" value="0"></div>
+            <div class="field"><label>Target average cost</label><input type="number" step="0.001" id="rcTargetAvg" value="0"></div>
+            <button class="btn" onclick="calcReverse()">Calculate shares needed</button>
+          </div>
+          <div class="card"><div id="rcResults"></div></div>
+        </div>
+      </div>
+
+      <!-- BUDGET -->
+      <div class="subpage" id="calc-budget">
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="bgTickerSel" onchange="applyCalcTicker('bg')"></select></div>
+            <div class="field"><label>Available cash</label><input type="number" id="bgCash" value="0"></div>
+            <div class="field"><label>Buy price</label><input type="number" step="0.001" id="bgPrice" value="0"></div>
+            <div class="field"><label>Current shares (optional)</label><input type="number" id="bgCurShares" value="0"></div>
+            <div class="field"><label>Current average (optional)</label><input type="number" step="0.001" id="bgCurAvg" value="0"></div>
+            <button class="btn" onclick="calcBudget()">Calculate max shares</button>
+          </div>
+          <div class="card"><div id="bgResults"></div></div>
+        </div>
+      </div>
+
+      <!-- PROFIT PLANNER -->
+      <div class="subpage" id="calc-profit">
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="ppTickerSel" onchange="applyCalcTicker('pp')"></select></div>
+            <div class="field"><label>Shares held</label><input type="number" id="ppShares" value="0"></div>
+            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="ppAvg" value="0"></div>
+            <div class="field"><label>Target mode</label>
+              <select id="ppMode"><option value="amount">Desired profit (amount)</option><option value="roi">Desired ROI %</option></select>
+            </div>
+            <div class="field"><label id="ppTargetLabel">Desired profit (QAR)</label><input type="number" id="ppTarget" value="0"></div>
+            <button class="btn" onclick="calcProfitPlanner()">Calculate required sell price</button>
+          </div>
+          <div class="card"><div id="ppResults"></div></div>
+        </div>
+      </div>
+
+      <!-- SELL PLANNER -->
+      <div class="subpage" id="calc-sell">
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="spTickerSel" onchange="applyCalcTicker('sp')"></select></div>
+            <div class="field"><label>Shares held</label><input type="number" id="spShares" value="0"></div>
+            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="spAvg" value="0"></div>
+            <div class="field"><label>Sell price</label><input type="number" step="0.001" id="spPrice" value="0"></div>
+            <div class="field"><label>Percent to sell</label>
+              <select id="spPct"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option></select>
+            </div>
+            <button class="btn" onclick="calcSellPlanner()">Calculate</button>
+          </div>
+          <div class="card"><div id="spResults"></div></div>
+        </div>
+      </div>
+
+      <!-- RECOVERY -->
+      <div class="subpage" id="calc-recovery">
+        <div class="calc-panel">
+          <div class="card">
+            <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="rpTickerSel" onchange="applyCalcTicker('rp')"></select></div>
+            <div class="field"><label>Shares held</label><input type="number" id="rpShares" value="0"></div>
+            <div class="field"><label>Average cost (bought at)</label><input type="number" step="0.001" id="rpAvg" value="0"></div>
+            <div class="field"><label>Current market price</label><input type="number" step="0.001" id="rpMarket" value="0"></div>
+            <button class="btn" onclick="calcRecovery()">Build recovery table</button>
+          </div>
+          <div class="card"><div id="rpResults"></div></div>
+        </div>
+      </div>
+
+      <!-- SCENARIO -->
+      <div class="subpage" id="calc-scenario">
+        <div class="grid grid-4" id="scHighlights" style="margin-bottom:16px;"></div>
+        <div class="card">
+          <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="scTickerSel" onchange="applyCalcTicker('sc')"></select></div>
+          <div class="row">
+            <div class="field"><label>Shares held</label><input type="number" id="scShares" value="1000"></div>
+            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="scAvg" value="2.500"></div>
+          </div>
+          <div class="field">
+            <label>Market price</label>
+            <div class="row" style="align-items:center; gap:12px;">
+              <input type="range" id="scSlider" min="0" max="10" step="0.001" value="2.5" style="width:100%; flex:3;" oninput="syncScenarioPrice('slider')">
+              <input type="number" id="scPriceInput" step="0.001" value="2.500" style="flex:1; min-width:110px;" oninput="syncScenarioPrice('input')">
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">Drag the slider or type an exact price — both stay in sync.</div>
+          </div>
+          <div id="scResults" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="page" id="page-watchlist">
+      <h1 class="pagetitle">Watchlist</h1>
+      <p class="pagesub">Track tickers you don't own yet. Green means your target has been hit.</p>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="row">
+          <div class="field"><label>Ticker</label><input type="text" id="wlTicker" list="tickerList" style="text-transform:uppercase;"></div>
+          <div class="field"><label>Target buy price</label><input type="number" step="0.001" id="wlTarget"></div>
+          <div class="field"><label>Current price</label><input type="number" step="0.001" id="wlCurrent"></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="btn" onclick="addWatch()">Add</button></div>
+        </div>
+      </div>
+      <div id="watchTableWrap"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <h1 class="pagetitle">Settings</h1>
+      <p class="pagesub">Edit once — every calculation across the workbook references these values.</p>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="section-title">Cloud sync <span class="tag">Firestore</span></div>
+          <p style="color:var(--muted); font-size:13px;">Sign in once and your workbook follows you to any device. Without signing in, everything still saves locally on this browser only — nothing is lost, it just won't sync elsewhere.</p>
+          <div id="cloudStatus" style="color:var(--muted); font-size:12.5px; margin:12px 0;">Connecting…</div>
+          <div id="cloudSignedOutBox">
+            <div class="field"><label>Email</label><input type="email" id="cloudEmail" placeholder="you@example.com"></div>
+            <div class="field"><label>Password <span style="text-transform:none; color:var(--muted);">(leave blank to use the emailed link instead)</span></label><input type="password" id="cloudPassword" placeholder="min 6 characters"></div>
+            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+              <button class="btn" onclick="cloudSignIn()">Sign in</button>
+              <button class="btn secondary" onclick="cloudSignUp()">Create account</button>
+              <button class="btn secondary" onclick="cloudSendEmailLink()">Email me a sign-in link</button>
+            </div>
+
+            <div style="margin:16px 0; padding-top:16px; border-top:1px solid var(--border);">
+              <button class="btn secondary" style="width:100%;" onclick="cloudSignInGoogle()">Continue with Google</button>
+            </div>
+
+            <div style="padding-top:2px;">
+              <div class="field"><label>Phone <span style="text-transform:none; color:var(--muted);">(with country code, e.g. +974...)</span></label><input type="tel" id="cloudPhone" placeholder="+974XXXXXXXX"></div>
+              <button class="btn secondary" onclick="cloudSendPhoneCode()">Send SMS code</button>
+              <div id="cloudPhoneCodeBox" style="display:none; margin-top:10px;">
+                <div class="field"><label>Verification code</label><input type="text" id="cloudPhoneCode" placeholder="123456"></div>
+                <button class="btn" onclick="cloudVerifyPhoneCode()">Verify &amp; sign in</button>
+              </div>
+              <div id="recaptcha-container"></div>
+            </div>
+          </div>
+          <div id="cloudSignedInBox" style="display:none;">
+            <div style="margin-bottom:10px; font-size:13px;">Signed in as <b id="cloudUserEmail"></b></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn secondary" onclick="pushToCloud(true)">Sync now</button>
+              <button class="btn ghost" onclick="cloudSignOut()">Sign out</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="rule-note">Found a mismatch: for 200 shares, The Group's calculator showed a total of 581 at 2.899 and 582 at 2.900 — that only matches rounding the total to the <b>nearest</b> unit. Ceiling (round up) gives 582 in both cases. The old "always ceiling" behavior was verified against past trades, so both modes are offered below — switch to "Round to nearest unit" if that's what you're actually being charged.</div>
+          <div class="field"><label>Broker fee %</label><input type="number" step="0.001" id="setFeePct"></div>
+          <div class="field"><label>Minimum fee (QAR)</label><input type="number" step="0.01" id="setMinFee"></div>
+          <div class="field"><label>Rounding unit</label>
+            <select id="setRoundingUnit">
+              <option value="0.01">Nearest 0.01 (cent/dirham)</option>
+              <option value="0.05">Nearest 0.05</option>
+              <option value="1">Nearest whole 1 QAR</option>
+            </select>
+          </div>
+          <div class="field" style="display:flex; align-items:center; gap:8px; flex-direction:row;">
+            <input type="checkbox" id="setRoundTotal" style="width:auto;">
+            <label style="margin:0; text-transform:none; font-size:13px; color:var(--text);">Round the final cash total up (buys) / down (sells) — not just the fee</label>
+          </div>
+          <div class="field"><label>Buy total rounding</label>
+            <select id="setBuyRoundMode">
+              <option value="ceil">Always round up (ceiling)</option>
+              <option value="nearest">Round to nearest unit</option>
+            </select>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px; text-transform:none;">Our two calculators disagreed here — see the note in Settings help below. Pick whichever matches your broker's actual charge.</div>
+          </div>
+          <div class="field"><label>Tick size</label><input type="number" step="0.001" id="setTick"></div>
+          <div class="field"><label>Currency label</label><input type="text" id="setCurrency"></div>
+          <button class="btn" onclick="saveSettings()">Save settings</button>
+        </div>
+        <div class="card">
+          <div class="section-title">Data management</div>
+          <p style="color:var(--muted); font-size:13px;">Everything is stored as JSON in this browser's localStorage (and in Firestore if you're signed in above) — export a backup any time, or to move the workbook manually.</p>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button class="btn secondary" onclick="exportJSON()">Export JSON</button>
+            <label class="btn secondary" style="cursor:pointer;">Import JSON<input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importJSON(event)"></label>
+            <button class="btn danger" onclick="clearAll()">Clear all data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+<datalist id="tickerList"></datalist>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<!-- Firebase (compat build — plain globals, no ES module wiring needed to talk to the rest of this file) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase API keys are meant to be public in client code — they identify
+  // the project, not a secret. Actual access control lives in Firestore
+  // Security Rules (see PRICE_SYNC_SETUP / chat instructions), which is what
+  // actually keeps your data private.
+  const firebaseConfig = {
+    apiKey: "AIzaSyCzg_KmLGNUXlIzqEAUJctG29kyJQruM8I",
+    authDomain: "qse-app.firebaseapp.com",
+    projectId: "qse-app",
+    storageBucket: "qse-app.firebasestorage.app",
+    messagingSenderId: "766310206577",
+    appId: "1:766310206577:web:271c3974a45503e5999fd0"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const fbAuth = firebase.auth();
+  const fbDb = firebase.firestore();
+</script>
+
+<script>
+/* ============================= STATE ============================= */
+const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, roundingUnit: 1, roundTotal: true, buyRoundMode: 'ceil', tick: 0.001, currency: 'QAR' };
+const STORAGE_KEY = 'qse_workbook_db_v1';
+// Real trade log reconstructed from account-statement-cash-2026-05-02_2026-08-03.xlsx.
+// Only used the first time the workbook loads (i.e. before anything is saved to
+// localStorage) — edit or clear freely from the Transactions/Settings pages after that.
+const SEED_TRANSACTIONS = [
+  {date:'2026-06-22', ticker:'VFQS', action:'BUY',  shares:100, price:2.744},
+  {date:'2026-06-22', ticker:'QFLS', action:'BUY',  shares:14,  price:14.11},
+  {date:'2026-06-22', ticker:'MPHC', action:'BUY',  shares:9,   price:1.214},
+  {date:'2026-06-23', ticker:'MPHC', action:'SELL', shares:9,   price:1.215},
+  {date:'2026-06-23', ticker:'TQES', action:'BUY',  shares:5,   price:2.19},
+  {date:'2026-06-23', ticker:'QFLS', action:'SELL', shares:14,  price:14.16},
+  {date:'2026-06-23', ticker:'TQES', action:'BUY',  shares:91,  price:2.164},
+  {date:'2026-06-23', ticker:'TQES', action:'SELL', shares:96,  price:2.183},
+  {date:'2026-06-24', ticker:'MARK', action:'BUY',  shares:36,  price:2.075},
+  {date:'2026-06-24', ticker:'QIBK', action:'BUY',  shares:6,   price:21.53},
+  {date:'2026-06-24', ticker:'VFQS', action:'BUY',  shares:2,   price:2.683},
+  {date:'2026-06-24', ticker:'QIBK', action:'SELL', shares:6,   price:21.54},
+  {date:'2026-06-24', ticker:'MARK', action:'BUY',  shares:62,  price:2.07},
+  {date:'2026-06-25', ticker:'MARK', action:'SELL', shares:98,  price:2.074},
+  {date:'2026-06-25', ticker:'VFQS', action:'BUY',  shares:76,  price:2.658},
+  {date:'2026-06-28', ticker:'MARK', action:'BUY',  shares:110, price:2.068},
+  {date:'2026-06-28', ticker:'MARK', action:'BUY',  shares:128, price:2.066},
+  {date:'2026-06-28', ticker:'MARK', action:'BUY',  shares:54,  price:2.064},
+  {date:'2026-06-29', ticker:'MARK', action:'BUY',  shares:100, price:2.061},
+  {date:'2026-06-29', ticker:'MARK', action:'BUY',  shares:91,  price:2.059},
+  {date:'2026-06-29', ticker:'MARK', action:'BUY',  shares:300, price:2.056},
+  {date:'2026-06-30', ticker:'VFQS', action:'BUY',  shares:200, price:2.655},
+  {date:'2026-06-30', ticker:'VFQS', action:'BUY',  shares:311, price:2.652},
+  {date:'2026-06-30', ticker:'VFQS', action:'SELL', shares:689, price:2.669},
+];
+// SWIFT deposits from the same statement, each carrying a flat 10 QAR wire fee
+// that the trading log above doesn't see — but it's real money lost every time
+// you fund the account, so it's tracked separately and rolled into the totals.
+const SEED_TRANSFERS = [
+  {date:'2026-06-22', type:'DEPOSIT', gross:495,  fee:10},
+  {date:'2026-06-26', type:'DEPOSIT', gross:1010, fee:10},
+  {date:'2026-06-29', type:'DEPOSIT', gross:2000, fee:10},
+];
+// QSE ticker -> company name, for display and for the calculator/transaction
+// autocomplete. Not exhaustive — add more as you trade new names.
+const TICKER_NAMES = {
+  VFQS:'Vodafone Qatar', QFLS:'Qatar Fuel (WOQOD)', MPHC:'Mesaieed Petrochemical Holding',
+  TQES:'Qatar Electronic Systems (Techno Q)', MARK:'AlRayan Bank', QIBK:'Qatar Islamic Bank',
+  QNBK:'Qatar National Bank', IQCD:'Industries Qatar', ORDS:'Ooredoo', QGTS:'Nakilat',
+  ERES:'Ezdan Holding Group', IGRD:'Estithmar Holding', DUBK:'Dukhan Bank', QIIK:'Qatar Intl Islamic Bank',
+  CBQK:'The Commercial Bank', QEWS:'Nebras Energy', QNNS:'Qatar Navigation', ABQK:'Ahli Bank',
+  QAMC:'Qatar Aluminium Manufacturing', BRES:'Barwa Real Estate', DHBK:'Doha Bank', QATI:'Qatar Insurance',
+  AHCS:'Aamal Company', ZHCD:'Zad Holding', GISS:'Gulf International Services', UDCD:'United Development',
+  BLDN:'Baladna', MERS:'Al Meera Consumer Goods', MCCS:'Mannai Corporation', QFBQ:'Lesha Bank',
+  MEZA:'MEEZA', QNCD:'Qatar National Cement', QIGD:'Qatari Investors Group', MCGS:'Medicare Group',
+  DOHI:'Doha Insurance Group', GWCS:'Gulf Warehousing', QIMD:'Qatar Industrial Manufacturing',
+};
+function tickerName(sym){ return TICKER_NAMES[sym] || ''; }
+function tickerLabel(sym){ const n = tickerName(sym); return n ? `${sym} — ${n}` : sym; }
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return { settings: {...DEFAULT_SETTINGS}, transactions: [...SEED_TRANSACTIONS], transfers: [...SEED_TRANSFERS], marketPrices: {}, watchlist: [] };
+    const db = JSON.parse(raw);
+    db.settings = { ...DEFAULT_SETTINGS, ...(db.settings||{}) };
+    db.transactions = db.transactions || [];
+    db.transfers = db.transfers || [];
+    db.marketPrices = db.marketPrices || {};
+    db.watchlist = db.watchlist || [];
+    return db;
+  }catch(e){
+    return { settings: {...DEFAULT_SETTINGS}, transactions: [], transfers: [], marketPrices: {}, watchlist: [] };
+  }
+}
+function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); queueCloudSync(); }
+
+/* ============================= CLOUD SYNC (Firestore) ============================= */
+// Whole-workbook doc at users/{uid}/workbook/data. Local writes go to
+// localStorage immediately (so the app always works offline) and are mirrored
+// to Firestore on a short debounce; on sign-in the cloud copy is treated as
+// the source of truth and overwrites whatever's local.
+let cloudUser = null;
+let cloudSyncTimer = null;
+let cloudApplyingRemote = false; // guards against re-uploading data we just downloaded
+
+function cloudDocRef(){ return fbDb.collection('users').doc(cloudUser.uid).collection('workbook').doc('data'); }
+
+function setCloudStatus(msg, cls){
+  const el = document.getElementById('cloudStatus');
+  const colorVar = cls==='pos' ? '--profit' : cls==='neg' ? '--loss' : '--muted';
+  if(el) el.innerHTML = `<span style="color:var(${colorVar})">●</span> ${msg}`;
+}
+function updateCloudUI(){
+  const signedIn = !!cloudUser;
+  const outBox = document.getElementById('cloudSignedOutBox'), inBox = document.getElementById('cloudSignedInBox');
+  if(outBox) outBox.style.display = signedIn ? 'none' : '';
+  if(inBox) inBox.style.display = signedIn ? '' : 'none';
+  if(signedIn) document.getElementById('cloudUserEmail').textContent = cloudUser.email;
+}
+
+fbAuth.onAuthStateChanged(async (user)=>{
+  cloudUser = user;
+  updateCloudUI();
+  if(!user){ setCloudStatus('Not signed in — saving locally only on this device.'); return; }
+  setCloudStatus('Signed in as '+user.email+' — loading cloud data…');
+  try{
+    const snap = await cloudDocRef().get();
+    if(snap.exists){
+      const cloud = snap.data();
+      cloudApplyingRemote = true;
+      DB = {
+        settings: {...DEFAULT_SETTINGS, ...(cloud.settings||{})},
+        transactions: cloud.transactions || [],
+        transfers: cloud.transfers || [],
+        marketPrices: cloud.marketPrices || {},
+        watchlist: cloud.watchlist || [],
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+      cloudApplyingRemote = false;
+      const when = cloud._updated ? new Date(cloud._updated).toLocaleString() : 'unknown time';
+      setCloudStatus('Synced — cloud data loaded (last saved '+when+')', 'pos');
+    } else {
+      await pushToCloud(false); // first time this account has signed in: seed the cloud with what's local
+      setCloudStatus("No cloud data yet — uploaded this device's workbook.", "pos");
+    }
+    renderAll();
+  }catch(e){
+    setCloudStatus('Cloud load failed: '+e.message+' (check Firestore rules)', 'neg');
+  }
+});
+
+function queueCloudSync(){
+  if(!cloudUser || cloudApplyingRemote) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(()=>pushToCloud(false), 900);
+}
+async function pushToCloud(manual){
+  if(!cloudUser) { if(manual) toast('Sign in first to sync to the cloud.'); return; }
+  try{
+    await cloudDocRef().set({ ...DB, _updated: new Date().toISOString() });
+    setCloudStatus('Synced to cloud — '+new Date().toLocaleTimeString(), 'pos');
+    if(manual) toast('Synced to cloud.');
+  }catch(e){
+    setCloudStatus('Cloud save failed: '+e.message, 'neg');
+    if(manual) toast('Cloud sync failed: '+e.message);
+  }
+}
+async function cloudSignUp(){
+  const email = document.getElementById('cloudEmail').value.trim();
+  const pass = document.getElementById('cloudPassword').value;
+  if(!email || !pass){ toast('Enter email and password.'); return; }
+  try{ await fbAuth.createUserWithEmailAndPassword(email, pass); toast('Account created — signed in.'); }
+  catch(e){ toast('Sign up failed: '+e.message); }
+}
+async function cloudSignIn(){
+  const email = document.getElementById('cloudEmail').value.trim();
+  const pass = document.getElementById('cloudPassword').value;
+  if(!email || !pass){ toast('Enter email and password.'); return; }
+  try{ await fbAuth.signInWithEmailAndPassword(email, pass); toast('Signed in.'); }
+  catch(e){ toast('Sign in failed: '+e.message); }
+}
+async function cloudSignOut(){
+  await fbAuth.signOut();
+  toast('Signed out — now saving locally only.');
+}
+
+async function cloudSignInGoogle(){
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+    toast('Signed in with Google.');
+  }catch(e){
+    toast('Google sign-in failed: '+e.message);
+  }
+}
+
+// Passwordless email link: send the link, then on whatever page load
+// receives it back (checked once at startup, below), complete the sign-in.
+const EMAIL_LINK_STORAGE_KEY = 'qse_email_for_signin';
+async function cloudSendEmailLink(){
+  const email = document.getElementById('cloudEmail').value.trim();
+  if(!email){ toast('Enter your email first.'); return; }
+  const actionCodeSettings = { url: window.location.href.split('#')[0].split('?')[0], handleCodeInApp: true };
+  try{
+    await fbAuth.sendSignInLinkToEmail(email, actionCodeSettings);
+    localStorage.setItem(EMAIL_LINK_STORAGE_KEY, email);
+    toast('Sign-in link sent — check your email on this device (or paste the email again if you open the link elsewhere).');
+  }catch(e){
+    toast('Could not send link: '+e.message);
+  }
+}
+function completeEmailLinkSignInIfPresent(){
+  if(!fbAuth.isSignInWithEmailLink(window.location.href)) return;
+  let email = localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
+  if(!email) email = window.prompt('Confirm the email you used to request this sign-in link:');
+  if(!email) return;
+  fbAuth.signInWithEmailLink(email, window.location.href)
+    .then(()=>{
+      localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
+      window.history.replaceState({}, document.title, window.location.pathname); // strip the sign-in token from the URL
+      toast('Signed in via email link.');
+    })
+    .catch(e=> toast('Email link sign-in failed: '+e.message));
+}
+
+// Phone/SMS sign-in — invisible reCAPTCHA, then a 6-digit code.
+let phoneConfirmationResult = null;
+function ensureRecaptcha(){
+  if(window.recaptchaVerifier) return window.recaptchaVerifier;
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size:'invisible' }, fbAuth);
+  return window.recaptchaVerifier;
+}
+async function cloudSendPhoneCode(){
+  const phone = document.getElementById('cloudPhone').value.trim();
+  if(!phone.startsWith('+')){ toast('Use international format, e.g. +974XXXXXXXX.'); return; }
+  try{
+    const verifier = ensureRecaptcha();
+    phoneConfirmationResult = await fbAuth.signInWithPhoneNumber(phone, verifier);
+    document.getElementById('cloudPhoneCodeBox').style.display = '';
+    toast('Code sent by SMS.');
+  }catch(e){
+    toast('Could not send code: '+e.message);
+  }
+}
+async function cloudVerifyPhoneCode(){
+  const code = document.getElementById('cloudPhoneCode').value.trim();
+  if(!phoneConfirmationResult || !code){ toast('Request a code first, then enter it here.'); return; }
+  try{
+    await phoneConfirmationResult.confirm(code);
+    toast('Signed in via phone.');
+  }catch(e){
+    toast('Invalid code: '+e.message);
+  }
+}
+completeEmailLinkSignInIfPresent();
+let DB = loadDB();
+
+/* ============================= THEME ============================= */
+const THEME_KEY = 'qse_theme';
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = theme==='light' ? '● Dark mode' : '☀ Light mode';
+  localStorage.setItem(THEME_KEY, theme);
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current==='light' ? 'dark' : 'light';
+  applyTheme(next);
+  renderDashboard(); // charts need fresh colors from the new theme
+}
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ============================= MODAL ============================= */
+function openModal(title, bodyHtml){
+  document.getElementById('modalBox').innerHTML = `
+    <div class="modal-head">
+      <div class="modal-title">${title}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    ${bodyHtml}`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+
+/* ============================= FEE / MATH CORE ============================= */
+// calcFee(amount, isBuy): returns the commission charged.
+// minFee is folded in BEFORE rounding, so the round-total step below always
+// sees the real fee that will be charged (applying it after rounding, as an
+// earlier version of this function did, could silently push the settled
+// total off the broker's actual rounded total).
+// If settings.roundTotal is on, the FINAL cash figure is rounded to
+// settings.roundingUnit and the fee is back-derived from that:
+//   - BUY: total = amount + fee, rounded per settings.buyRoundMode.
+//     Originally hardcoded to CEILING, verified against 24 real "The Group"
+//     trades. But two later data points from The Group's own calculator
+//     (200 sh @ 2.899 -> total 581; 200 sh @ 2.900 -> total 582) only match
+//     rounding the total to the NEAREST unit, not the ceiling (ceiling would
+//     give 582 in both cases). The two behaviors agree whenever the raw total
+//     lands in the top half of a unit and disagree otherwise, so old trades
+//     may not have exercised the disagreement. buyRoundMode lets you pick
+//     whichever matches what you actually get charged — see Settings.
+//   - SELL: total = amount - fee, rounded to the NEAREST unit — verified
+//     the same way; sells are NOT floored/rounded against the trader,
+//     they round normally (which can occasionally land in the trader's favor).
+function calcFee(amount, isBuy=true){
+  const s = DB.settings;
+  if(amount <= 0) return 0;
+  const unit = s.roundingUnit || 0.01;
+  const rawFee = Math.max(amount * (s.feePct/100), s.minFee);
+  let fee;
+  if(s.roundTotal){
+    if(isBuy){
+      const totalRaw = amount + rawFee;
+      const totalRounded = (s.buyRoundMode === 'nearest')
+        ? Math.round(totalRaw/unit) * unit
+        : Math.ceil(totalRaw/unit - 1e-9) * unit;
+      fee = totalRounded - amount;
+    } else {
+      const netRaw = amount - rawFee;
+      const netRounded = Math.round(netRaw/unit) * unit;
+      fee = amount - netRounded;
+    }
+  } else {
+    fee = Math.ceil(rawFee/unit - 1e-9) * unit;
+  }
+  fee = Math.max(fee, 0); // fee can't go negative even if minFee is 0 and rounding favors the trader
+  return Math.round(fee*10000)/10000;
+}
+function roundTick(price){
+  const t = DB.settings.tick || 0.001;
+  return Math.round(price/t)*t;
+}
+function fmt(n, dec=3){
+  if(n===undefined||n===null||isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US',{minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+function fmtMoney(n){ return fmt(n,2) + ' ' + DB.settings.currency; }
+
+// Solve break-even SELL price P such that (P*shares - fee(P*shares, sell)) == costBasis
+function breakEvenPrice(costBasis, shares){
+  if(shares<=0) return 0;
+  const feeRate = DB.settings.feePct/100;
+  let P = costBasis / (shares*(1-feeRate));
+  for(let i=0;i<40;i++){
+    const amount = P*shares;
+    const fee = calcFee(amount, false);
+    const net = amount - fee;
+    const diff = net - costBasis;
+    if(Math.abs(diff) < 0.0005) break;
+    P = P - diff/shares;
+    if(P<0) P=0;
+  }
+  return roundTick(P);
+}
+// Solve sell price P such that net proceeds - costBasis == targetProfit
+function requiredSellPrice(costBasis, shares, targetProfit){
+  return breakEvenPrice(costBasis + targetProfit, shares);
+}
+
+/* ============================= TRANSACTIONS -> POSITIONS ============================= */
+function computePositions(){
+  const byTicker = {};
+  const sorted = [...DB.transactions].sort((a,b)=> a.date.localeCompare(b.date));
+  for(const tx of sorted){
+    const t = tx.ticker;
+    if(!byTicker[t]) byTicker[t] = { ticker:t, shares:0, invested:0, buyFees:0, sellFees:0, realized:0 };
+    const p = byTicker[t];
+    const amount = tx.shares * tx.price;
+    const isBuy = tx.action === 'BUY';
+    const fee = calcFee(amount, isBuy);
+    if(isBuy){
+      p.invested += amount + fee;
+      p.shares += tx.shares;
+      p.buyFees += fee;
+    } else { // SELL
+      const avg = p.shares>0 ? p.invested/p.shares : 0;
+      const costRemoved = avg * Math.min(tx.shares, p.shares);
+      const proceeds = amount - fee;
+      p.realized += proceeds - costRemoved;
+      p.invested -= costRemoved;
+      p.shares -= tx.shares;
+      p.sellFees += fee;
+      if(p.shares < 0.0000001) p.shares = 0;
+      if(p.shares === 0) p.invested = 0;
+    }
+  }
+  return Object.values(byTicker).filter(p=>true);
+}
+
+function getMarketPrice(ticker){
+  return DB.marketPrices[ticker] !== undefined ? DB.marketPrices[ticker] : 0;
+}
+function setMarketPrice(ticker, val){
+  DB.marketPrices[ticker] = val; saveDB(); renderAll();
+}
+
+/* ============================= PRICE SYNC (prices.json) ============================= */
+// Reads a same-origin prices.json (written by the GitHub Action in the repo —
+// see .github/workflows/update-prices.yml). Same-origin means no CORS problem
+// and no API key ever touches the browser. Called on load and whenever you
+// navigate to Dashboard/Portfolio — not on a timer, matching "just on navigation."
+let lastPriceSync = null;
+async function refreshMarketPricesFromFile(manual){
+  const statusEls = [document.getElementById('priceSyncStatus'), document.getElementById('priceSyncStatus2')].filter(Boolean);
+  try{
+    const res = await fetch('prices.json?_=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('missing');
+    const data = await res.json();
+    let count = 0;
+    Object.keys(data).forEach(sym=>{
+      if(sym === '_updated') return;
+      if(typeof data[sym] === 'number'){ DB.marketPrices[sym] = data[sym]; count++; }
+    });
+    saveDB();
+    lastPriceSync = data._updated || null;
+    const when = lastPriceSync ? new Date(lastPriceSync).toLocaleString() : 'unknown time';
+    statusEls.forEach(el=> el.innerHTML = `<span class="pos">●</span> Synced ${count} price(s) from prices.json — last updated ${when}`);
+    renderAll();
+    if(manual) toast('Prices refreshed.');
+  }catch(e){
+    statusEls.forEach(el=> el.innerHTML = `<span class="neutral">●</span> No prices.json found yet — set up the GitHub Action (see repo README), or enter prices manually below.`);
+    if(manual) toast('No prices.json found — see setup instructions.');
+  }
+}
+
+/* ============================= NAV ============================= */
+document.querySelectorAll('.navbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    if(btn.dataset.page === 'dashboard' || btn.dataset.page === 'portfolio'){
+      refreshMarketPricesFromFile(false);
+    }
+  });
+});
+document.querySelectorAll('#calcTabs .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('#calcTabs .chip').forEach(c=>c.classList.remove('active'));
+    document.querySelectorAll('.subpage').forEach(p=>p.classList.remove('active'));
+    chip.classList.add('active');
+    document.getElementById('calc-'+chip.dataset.calc).classList.add('active');
+  });
+});
+document.getElementById('ppMode').addEventListener('change', (e)=>{
+  document.getElementById('ppTargetLabel').textContent = e.target.value==='roi' ? 'Desired ROI (%)' : 'Desired profit ('+DB.settings.currency+')';
+});
+
+/* ============================= RENDER: DASHBOARD ============================= */
+let chartInvest, chartProfit;
+function renderDashboard(){
+  const positions = computePositions().filter(p=>p.shares>0);
+  let totalInvestment=0, totalValue=0, totalFees=0, largestWinner=null, largestLoser=null;
+  const rows = positions.map(p=>{
+    const mp = getMarketPrice(p.ticker);
+    const value = p.shares*mp;
+    const profit = value - p.invested;
+    totalInvestment += p.invested;
+    totalValue += value;
+    totalFees += p.buyFees + p.sellFees;
+    if(!largestWinner || profit>largestWinner.profit) largestWinner = {ticker:p.ticker, profit};
+    if(!largestLoser || profit<largestLoser.profit) largestLoser = {ticker:p.ticker, profit};
+    return {ticker:p.ticker, invested:p.invested, value, profit};
+  });
+  const roi = totalInvestment>0 ? (totalValue-totalInvestment)/totalInvestment*100 : 0;
+
+  const transferFees = totalTransferFees();
+  const allFees = totalFees + transferFees;
+  const cards = [
+    {label:'Total Investment', value: fmtMoney(totalInvestment), sub:'cost basis of open positions'},
+    {label:'Current Value', value: fmtMoney(totalValue), sub:'at last entered market price'},
+    {label:'Unrealized P/L', value: fmtMoney(totalValue-totalInvestment), sub: roi.toFixed(2)+'% ROI', cls: (totalValue-totalInvestment)>=0?'pos':'neg'},
+    {label:'Total Fees Paid', value: fmtMoney(allFees), sub:`${fmtMoney(totalFees)} trading + ${fmtMoney(transferFees)} transfers`},
+  ];
+  document.getElementById('dashCards').innerHTML = cards.map(c=>`
+    <div class="card stat-card">
+      <div class="label">${c.label}</div>
+      <div class="value ${c.cls||''}">${c.value}</div>
+      <div class="sub">${c.sub}</div>
+    </div>`).join('');
+
+  // charts — canvases always stay in the DOM; only the empty-state hint toggles
+  const labels = rows.map(r=>r.ticker);
+  const investCanvas = document.getElementById('chartInvest');
+  const profitCanvas = document.getElementById('chartProfit');
+  const investEmpty = document.getElementById('chartInvestEmpty');
+  const profitEmpty = document.getElementById('chartProfitEmpty');
+  if(labels.length && window.Chart){
+    investEmpty.style.display='none'; profitEmpty.style.display='none';
+    investCanvas.style.display='block'; profitCanvas.style.display='block';
+    if(chartInvest) chartInvest.destroy();
+    if(chartProfit) chartProfit.destroy();
+    const textColor = cssVar('--muted') || '#8a97a3';
+    const gridColor = cssVar('--border') || '#232b33';
+    const profitColor = cssVar('--profit') || '#34c77b';
+    const lossColor = cssVar('--loss') || '#e5484d';
+    const ctx1 = investCanvas.getContext('2d');
+    chartInvest = new Chart(ctx1, {
+      type:'doughnut',
+      data:{ labels, datasets:[{data: rows.map(r=>r.invested), backgroundColor:['#9a1b3e','#c9a227','#34c77b','#3b6bd6','#8a97a3','#e5484d','#7b5cd6','#2ea3a3']}]},
+      options:{plugins:{legend:{labels:{color:textColor}}}}
+    });
+    const ctx2 = profitCanvas.getContext('2d');
+    chartProfit = new Chart(ctx2, {
+      type:'bar',
+      data:{ labels, datasets:[{ data: rows.map(r=>r.profit), backgroundColor: rows.map(r=> r.profit>=0 ? profitColor : lossColor)}]},
+      options:{ plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:textColor}, grid:{color:gridColor}}, y:{ticks:{color:textColor}, grid:{color:gridColor}} } }
+    });
+  } else {
+    if(chartInvest){ chartInvest.destroy(); chartInvest=null; }
+    if(chartProfit){ chartProfit.destroy(); chartProfit=null; }
+    investCanvas.style.display='none'; profitCanvas.style.display='none';
+    investEmpty.style.display = window.Chart ? 'block' : 'block';
+    profitEmpty.style.display = 'block';
+  }
+
+  // alerts
+  const alerts = [];
+  rows.forEach(r=>{
+    const pct = r.invested>0 ? r.profit/r.invested*100 : 0;
+    if(pct>=10) alerts.push({t:r.ticker, msg:`Profit above 10% (+${pct.toFixed(1)}%)`, cls:'pos'});
+    else if(pct>=5) alerts.push({t:r.ticker, msg:`Profit above 5% (+${pct.toFixed(1)}%)`, cls:'pos'});
+    if(pct<=-10) alerts.push({t:r.ticker, msg:`Loss beyond 10% (${pct.toFixed(1)}%)`, cls:'neg'});
+    else if(pct<=-5) alerts.push({t:r.ticker, msg:`Loss beyond 5% (${pct.toFixed(1)}%)`, cls:'neg'});
+  });
+  DB.watchlist.forEach(w=>{
+    if(w.current >= w.target) alerts.push({t:w.ticker, msg:`Watchlist target reached (${fmt(w.current,3)} ≥ ${fmt(w.target,3)})`, cls:'pos'});
+  });
+  document.getElementById('alertsBox').innerHTML = alerts.length ? alerts.map(a=>`
+    <div class="result-line"><span class="k">${a.t}</span><span class="v ${a.cls}">${a.msg}</span></div>`).join('') :
+    `<div style="color:var(--muted); font-size:13px;">No alerts right now — nothing above ±5% or at a watchlist target.</div>`;
+
+  // portfolio summary strip
+  const psumBox = document.getElementById('dashPortfolioBox');
+  if(!positions.length){
+    psumBox.innerHTML = `<div class="empty" style="border:none; padding:24px 0;">No open positions. Add a BUY transaction to get started.</div>`;
+  } else {
+    psumBox.innerHTML = positions.map(p=>{
+      const be = breakEvenPrice(p.invested, p.shares);
+      return `<button class="psum-row" onclick="openPositionModal('${p.ticker}')">
+        <span class="psum-name">
+          <span class="psum-ticker">${p.ticker}</span>
+          <span class="psum-company">${tickerName(p.ticker) || fmt(p.shares,0)+' shares'}</span>
+        </span>
+        <span class="psum-nums">
+          <span class="psum-invested">${fmtMoney(p.invested)}</span>
+          <span class="psum-be">break-even ${fmt(be,3)}</span>
+        </span>
+      </button>`;
+    }).join('');
+  }
+
+  renderTape(rows);
+}
+
+// Full detail popup for one position — pulled fresh at click time so it always
+// reflects the latest transactions / market price, not a stale snapshot.
+function openPositionModal(ticker){
+  const p = computePositions().find(x=>x.ticker===ticker && x.shares>0);
+  if(!p){ toast('Position not found — it may have been closed.'); return; }
+  const avg = p.invested/p.shares;
+  const mp = getMarketPrice(p.ticker);
+  const value = p.shares*mp;
+  const profit = value - p.invested;
+  const pct = p.invested>0 ? profit/p.invested*100 : 0;
+  const be = breakEvenPrice(p.invested, p.shares);
+  const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
+  const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
+  const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
+  const body = `
+    <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">${tickerName(p.ticker) || 'No company name on file'}</div>
+    ${resultLine('Shares held', fmt(p.shares,0))}
+    ${resultLine('Avg. buy price', fmt(avg,3))}
+    ${resultLine('Current / market price', mp>0?fmt(mp,3):'—')}
+    ${resultLine('Total buy commission', fmtMoney(p.buyFees))}
+    ${resultLine('Est. sell commission (at market)', mp>0?fmtMoney(sellFeeAtMarket):'—')}
+    ${resultLine('Total buy price', fmtMoney(p.invested))}
+    ${resultLine('Current value', fmtMoney(value))}
+    ${resultLine('Profit / loss', fmtMoney(profit)+' ('+pct.toFixed(2)+'%)', profit>=0?'pos':'neg')}
+    ${resultLine('Break-even sell price', fmt(be,3))}
+    ${resultLine('Sell price for +2% / +5%', fmt(sell2,3)+' / '+fmt(sell5,3))}
+  `;
+  openModal(`${p.ticker} position`, body);
+}
+
+function renderTape(rows){
+  const track = document.getElementById('tapeTrack');
+  if(!rows || !rows.length){
+    track.innerHTML = `<span class="tape-item">Add a transaction to see live positions here.</span>`;
+    return;
+  }
+  const items = rows.map(r=>{
+    const pct = r.invested>0 ? (r.profit/r.invested*100) : 0;
+    const cls = pct>=0 ? 'tape-up' : 'tape-down';
+    const arrow = pct>=0 ? '▲' : '▼';
+    return `<span class="tape-item"><b>${r.ticker}</b>${fmt(getMarketPrice(r.ticker),3)} <span class="${cls}">${arrow} ${pct.toFixed(2)}%</span></span>`;
+  });
+  track.innerHTML = items.join('') + items.join(''); // duplicate for seamless loop feel
+}
+
+/* ============================= RENDER: PORTFOLIO ============================= */
+function renderPortfolio(){
+  const positions = computePositions().filter(p=>p.shares>0);
+  if(!positions.length){
+    document.getElementById('portfolioTableWrap').innerHTML = `<div class="empty">No open positions. Add a BUY transaction to get started.</div>`;
+    return;
+  }
+  const rowsHtml = positions.map(p=>{
+    const avg = p.invested/p.shares;
+    const mp = getMarketPrice(p.ticker);
+    const value = p.shares*mp;
+    const profit = value - p.invested;
+    const pct = p.invested>0 ? profit/p.invested*100 : 0;
+    const be = breakEvenPrice(p.invested, p.shares);
+    const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
+    const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
+    const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
+    let statusColor = 'var(--warn)';
+    if(pct>1) statusColor='var(--profit)'; else if(pct<-1) statusColor='var(--loss)';
+    return `<tr style="cursor:pointer;" onclick="openPositionModal('${p.ticker}')">
+      <td><span class="badge-dot" style="background:${statusColor}"></span><b>${p.ticker}</b>${tickerName(p.ticker)?` <span style="color:var(--muted); font-size:11px;">${tickerName(p.ticker)}</span>`:''}</td>
+      <td class="num-cell">${fmt(p.shares,0)}</td>
+      <td class="num-cell">${fmt(avg,3)}</td>
+      <td class="num-cell">${fmtMoney(p.buyFees)}</td>
+      <td class="num-cell">${fmtMoney(p.invested)}</td>
+      <td class="num-cell" onclick="event.stopPropagation()"><input type="number" step="0.001" value="${mp||''}" style="width:90px; text-align:right;" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)"></td>
+      <td class="num-cell">${mp>0?fmtMoney(sellFeeAtMarket):'—'}</td>
+      <td class="num-cell">${fmtMoney(value)}</td>
+      <td class="num-cell ${profit>=0?'pos':'neg'}">${fmtMoney(profit)}</td>
+      <td class="num-cell ${pct>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
+      <td class="num-cell">${fmt(be,3)}</td>
+      <td class="num-cell">${fmt(sell2,3)} / ${fmt(sell5,3)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('portfolioTableWrap').innerHTML = `
+    <div class="rule-note">A share is only <b>sold in profit</b> when: <b>net sell proceeds</b> (sell price × shares − sell commission) exceed <b>total buy price</b> (buy price × shares + buy commission) — i.e. the sell price clears the Break-even column below. Click any row for the full breakdown.</div>
+    <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>Ticker</th><th class="num-cell">Shares</th><th class="num-cell">Buy price</th>
+        <th class="num-cell">Buy commission</th><th class="num-cell">Total buy price</th>
+        <th class="num-cell">Market</th><th class="num-cell">Sell commission (est.)</th>
+        <th class="num-cell">Value</th><th class="num-cell">P/L</th>
+        <th class="num-cell">P/L %</th><th class="num-cell">Break-even</th><th class="num-cell">Sell +2% / +5%</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    </div>`;
+}
+
+/* ============================= RENDER: TRANSACTIONS ============================= */
+function renderTransactions(){
+  document.getElementById('txCount').textContent = DB.transactions.length + ' transaction(s)';
+  if(!DB.transactions.length){
+    document.getElementById('txTableWrap').innerHTML = `<div class="empty">No transactions yet. Add your first buy above.</div>`;
+    return;
+  }
+  const sorted = [...DB.transactions].map((t,i)=>({...t, _i:i})).sort((a,b)=> b.date.localeCompare(a.date));
+  const rowsHtml = sorted.map(tx=>{
+    const amount = tx.shares*tx.price;
+    const fee = calcFee(amount, tx.action==='BUY');
+    return `<tr>
+      <td>${tx.date}</td>
+      <td><b>${tx.ticker}</b>${tickerName(tx.ticker)?` <span style="color:var(--muted); font-size:10.5px;">${tickerName(tx.ticker)}</span>`:''}</td>
+      <td><span class="pill ${tx.action==='BUY'?'pill-buy':'pill-sell'}">${tx.action}</span></td>
+      <td class="num-cell">${fmt(tx.shares,0)}</td>
+      <td class="num-cell">${fmt(tx.price,3)}</td>
+      <td class="num-cell">${fmt(amount,2)}</td>
+      <td class="num-cell">${fmt(fee,2)}</td>
+      <td class="num-cell" style="white-space:nowrap;">
+        <button class="btn ghost small" onclick="startEditTx(${tx._i})">Edit</button>
+        <button class="btn ghost small" onclick="deleteTx(${tx._i})">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('txTableWrap').innerHTML = `
+    <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th class="num-cell">Shares</th><th class="num-cell">Price</th><th class="num-cell">Amount</th><th class="num-cell">Fee</th><th></th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    </div>`;
+}
+let editingTxIndex = null;
+function addTransaction(){
+  const date = document.getElementById('txDate').value || new Date().toISOString().slice(0,10);
+  const ticker = document.getElementById('txTicker').value.trim().toUpperCase();
+  const action = document.getElementById('txAction').value;
+  const shares = parseFloat(document.getElementById('txShares').value);
+  const price = parseFloat(document.getElementById('txPrice').value);
+  if(!ticker || !shares || !price){ toast('Enter ticker, shares and price.'); return; }
+  if(editingTxIndex !== null){
+    DB.transactions[editingTxIndex] = {date, ticker, action, shares, price};
+    editingTxIndex = null;
+    document.getElementById('txFormTitle').textContent = 'Add transaction';
+    document.getElementById('txSubmitBtn').textContent = 'Add';
+    document.getElementById('txCancelBtn').style.display = 'none';
+    toast('Transaction updated.');
+  } else {
+    DB.transactions.push({date, ticker, action, shares, price});
+    toast('Transaction added.');
+  }
+  saveDB();
+  document.getElementById('txTicker').value='';
+  document.getElementById('txShares').value='';
+  document.getElementById('txPrice').value='';
+  document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('txAction').value = 'BUY';
+  renderAll();
+}
+function startEditTx(i){
+  const tx = DB.transactions[i];
+  editingTxIndex = i;
+  document.getElementById('txDate').value = tx.date;
+  document.getElementById('txTicker').value = tx.ticker;
+  document.getElementById('txAction').value = tx.action;
+  document.getElementById('txShares').value = tx.shares;
+  document.getElementById('txPrice').value = tx.price;
+  document.getElementById('txFormTitle').textContent = 'Edit transaction';
+  document.getElementById('txSubmitBtn').textContent = 'Save changes';
+  document.getElementById('txCancelBtn').style.display = 'inline-block';
+  document.querySelector('[data-page="transactions"]').click();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function cancelEditTx(){
+  editingTxIndex = null;
+  document.getElementById('txFormTitle').textContent = 'Add transaction';
+  document.getElementById('txSubmitBtn').textContent = 'Add';
+  document.getElementById('txCancelBtn').style.display = 'none';
+  document.getElementById('txTicker').value='';
+  document.getElementById('txShares').value='';
+  document.getElementById('txPrice').value='';
+}
+function deleteTx(i){
+  DB.transactions.splice(i,1);
+  if(editingTxIndex === i) cancelEditTx();
+  saveDB(); renderAll();
+}
+
+/* ============================= RENDER: TRANSFERS ============================= */
+function totalTransferFees(){
+  return DB.transfers.reduce((sum,t)=>sum+(t.fee||0), 0);
+}
+function renderTransfers(){
+  if(!DB.transfers.length){
+    document.getElementById('trTableWrap').innerHTML = `<div class="empty">No deposits or withdrawals logged yet.</div>`;
+    return;
+  }
+  const sorted = [...DB.transfers].map((t,i)=>({...t,_i:i})).sort((a,b)=> a.date.localeCompare(b.date));
+  const rowsHtml = sorted.map(t=>{
+    const net = t.type==='DEPOSIT' ? t.gross - t.fee : t.gross + t.fee;
+    return `<tr>
+      <td>${t.date}</td>
+      <td>${t.type==='DEPOSIT'?'Deposit':'Withdrawal'}</td>
+      <td class="num-cell">${fmtMoney(t.gross)}</td>
+      <td class="num-cell neg">${fmtMoney(t.fee)}</td>
+      <td class="num-cell">${fmtMoney(net)}</td>
+      <td class="num-cell"><button class="btn ghost small" onclick="deleteTransfer(${t._i})">Delete</button></td>
+    </tr>`;
+  }).join('');
+  const total = totalTransferFees();
+  document.getElementById('trTableWrap').innerHTML = `
+    <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th class="num-cell">Gross</th><th class="num-cell">Fee</th><th class="num-cell">Net</th><th></th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    </div>
+    <div style="margin-top:10px; color:var(--muted); font-size:12.5px;">Total transfer fees paid: <span style="color:var(--loss); font-family:var(--mono); font-weight:700;">${fmtMoney(total)}</span></div>`;
+}
+function addTransfer(){
+  const date = document.getElementById('trDate').value || new Date().toISOString().slice(0,10);
+  const type = document.getElementById('trType').value;
+  const gross = parseFloat(document.getElementById('trGross').value)||0;
+  const fee = parseFloat(document.getElementById('trFee').value)||0;
+  if(!gross){ toast('Enter the gross amount.'); return; }
+  DB.transfers.push({date, type, gross, fee});
+  saveDB();
+  document.getElementById('trGross').value=''; document.getElementById('trFee').value='';
+  renderAll();
+  toast('Transfer added.');
+}
+function deleteTransfer(i){ DB.transfers.splice(i,1); saveDB(); renderAll(); }
+
+/* ============================= RENDER: WATCHLIST ============================= */
+function renderWatchlist(){
+  if(!DB.watchlist.length){
+    document.getElementById('watchTableWrap').innerHTML = `<div class="empty">No tickers on your watchlist yet.</div>`;
+    return;
+  }
+  const rowsHtml = DB.watchlist.map((w,i)=>{
+    const diff = w.current - w.target;
+    const hit = w.current >= w.target;
+    return `<tr>
+      <td><span class="badge-dot" style="background:${hit?'var(--profit)':'var(--loss)'}"></span>${w.ticker}</td>
+      <td class="num-cell">${fmt(w.target,3)}</td>
+      <td class="num-cell">${fmt(w.current,3)}</td>
+      <td class="num-cell ${diff>=0?'pos':'neg'}">${fmt(diff,3)}</td>
+      <td class="num-cell">${hit?'Time to buy':'Wait'}</td>
+      <td class="num-cell"><button class="btn ghost small" onclick="deleteWatch(${i})">Delete</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('watchTableWrap').innerHTML = `
+    <div class="card" style="overflow-x:auto;">
+    <table><thead><tr><th>Ticker</th><th class="num-cell">Target buy</th><th class="num-cell">Current</th><th class="num-cell">Difference</th><th>Status</th><th></th></tr></thead>
+    <tbody>${rowsHtml}</tbody></table>
+    </div>`;
+}
+function addWatch(){
+  const ticker = document.getElementById('wlTicker').value.trim().toUpperCase();
+  const target = parseFloat(document.getElementById('wlTarget').value);
+  const current = parseFloat(document.getElementById('wlCurrent').value)||0;
+  if(!ticker || !target){ toast('Enter ticker and target price.'); return; }
+  DB.watchlist.push({ticker, target, current});
+  saveDB();
+  document.getElementById('wlTicker').value=''; document.getElementById('wlTarget').value=''; document.getElementById('wlCurrent').value='';
+  renderAll();
+}
+function deleteWatch(i){ DB.watchlist.splice(i,1); saveDB(); renderAll(); }
+
+/* ============================= SETTINGS ============================= */
+function renderSettings(){
+  document.getElementById('setFeePct').value = DB.settings.feePct;
+  document.getElementById('setMinFee').value = DB.settings.minFee;
+  document.getElementById('setRoundingUnit').value = DB.settings.roundingUnit;
+  document.getElementById('setRoundTotal').checked = !!DB.settings.roundTotal;
+  document.getElementById('setBuyRoundMode').value = DB.settings.buyRoundMode || 'ceil';
+  document.getElementById('setTick').value = DB.settings.tick;
+  document.getElementById('setCurrency').value = DB.settings.currency;
+}
+function saveSettings(){
+  DB.settings = {
+    feePct: parseFloat(document.getElementById('setFeePct').value)||0,
+    minFee: parseFloat(document.getElementById('setMinFee').value)||0,
+    roundingUnit: parseFloat(document.getElementById('setRoundingUnit').value)||0.01,
+    roundTotal: document.getElementById('setRoundTotal').checked,
+    buyRoundMode: document.getElementById('setBuyRoundMode').value || 'ceil',
+    tick: parseFloat(document.getElementById('setTick').value)||0.001,
+    currency: document.getElementById('setCurrency').value || 'QAR',
+  };
+  saveDB(); renderAll(); toast('Settings saved.');
+}
+
+/* ============================= EXPORT / IMPORT ============================= */
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'qse-workbook-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+function importJSON(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      DB = { settings:{...DEFAULT_SETTINGS, ...(parsed.settings||{})}, transactions:parsed.transactions||[], transfers:parsed.transfers||[], marketPrices:parsed.marketPrices||{}, watchlist:parsed.watchlist||[] };
+      saveDB(); renderAll(); toast('Data imported.');
+    }catch(e){ toast('Could not read that file.'); }
+  };
+  reader.readAsText(file);
+}
+function clearAll(){
+  if(!confirm('This clears all transactions, prices and watchlist entries in this browser. Continue?')) return;
+  DB = { settings: DB.settings, transactions: [], transfers: [], marketPrices:{}, watchlist:[] };
+  saveDB(); renderAll(); toast('All data cleared.');
+}
+
+/* ============================= CALCULATORS ============================= */
+function resultLine(k,v,cls=''){ return `<div class="result-line"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`; }
+
+// Lets each calculator tab pull "current shares / average cost" straight from
+// an existing open position instead of typing them in by hand.
+const CALC_TICKER_IDS = ['bcTickerSel','rcTickerSel','bgTickerSel','ppTickerSel','spTickerSel','rpTickerSel','scTickerSel'];
+const CALC_FIELD_MAP = {
+  bc: {shares:'bcCurShares', avg:'bcCurAvg', market:'bcMarket'},
+  rc: {shares:'rcCurShares', avg:'rcCurAvg'},
+  bg: {shares:'bgCurShares', avg:'bgCurAvg'},
+  pp: {shares:'ppShares',    avg:'ppAvg'},
+  sp: {shares:'spShares',    avg:'spAvg',    market:'spPrice'},
+  rp: {shares:'rpShares',    avg:'rpAvg',    market:'rpMarket'},
+  sc: {shares:'scShares',    avg:'scAvg',    slider:'scSlider'},
+};
+const CALC_FN = { bc:()=>calcBuy(), rc:()=>calcReverse(), bg:()=>calcBudget(), pp:()=>calcProfitPlanner(), sp:()=>calcSellPlanner(), rp:()=>calcRecovery(), sc:()=>calcScenario() };
+function refreshCalcTickerSelects(){
+  const positions = computePositions().filter(p=>p.shares>0).sort((a,b)=>a.ticker.localeCompare(b.ticker));
+  const optionsHtml = '<option value="">— New / manual entry —</option>' +
+    positions.map(p=>`<option value="${p.ticker}">${tickerLabel(p.ticker)} · ${fmt(p.shares,0)} sh @ ${fmt(p.invested/p.shares,3)}</option>`).join('');
+  CALC_TICKER_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const prev = el.value;
+    el.innerHTML = optionsHtml;
+    if([...el.options].some(o=>o.value===prev)) el.value = prev;
+  });
+}
+function applyCalcTicker(prefix){
+  const sel = document.getElementById(prefix+'TickerSel');
+  const map = CALC_FIELD_MAP[prefix];
+  if(!sel || !map) return;
+  const sym = sel.value;
+  if(!sym) return; // "New / manual entry" — leave whatever the user already typed
+  const p = computePositions().find(x=>x.ticker===sym && x.shares>0);
+  if(!p) return;
+  const avg = p.invested/p.shares;
+  document.getElementById(map.shares).value = fmt(p.shares,0).replace(/,/g,'');
+  document.getElementById(map.avg).value = avg.toFixed(3);
+  const mp = getMarketPrice(sym);
+  if(map.market && mp) document.getElementById(map.market).value = mp;
+  if(map.slider){
+    const startPrice = mp || avg;
+    document.getElementById(map.slider).value = startPrice;
+    document.getElementById('scPriceInput').value = startPrice;
+  }
+  CALC_FN[prefix]();
+}
+
+function calcBuy(){
+  const s1=parseFloat(document.getElementById('bcCurShares').value)||0;
+  const a1=parseFloat(document.getElementById('bcCurAvg').value)||0;
+  const s2=parseFloat(document.getElementById('bcNewShares').value)||0;
+  const p2=parseFloat(document.getElementById('bcNewPrice').value)||0;
+  const mp=parseFloat(document.getElementById('bcMarket').value)||0;
+  const oldInvested = s1*a1;
+  const buyAmount = s2*p2;
+  const buyFee = calcFee(buyAmount, true);
+  const thisLotCost = buyAmount + buyFee; // what actually leaves your cash account for THIS buy
+  const totalShares = s1+s2;
+  const totalInvested = oldInvested + thisLotCost;
+  const newAvg = totalShares>0 ? totalInvested/totalShares : 0;
+  const be = breakEvenPrice(totalInvested, totalShares);
+  const value = totalShares*mp;
+  const profit = value - totalInvested;
+  const profitPct = totalInvested>0 ? (profit/totalInvested*100) : 0;
+
+  // The 4 numbers you want at a glance, up top, live as you type.
+  const highlights = [
+    {label:'Buy price + commission', value: fmt(p2,3)+' + '+fmtMoney(buyFee), sub: fmt(s2,0)+' shares @ '+fmt(p2,3)},
+    {label:'Total buy cost', value: fmtMoney(thisLotCost), sub: 'this purchase only, fee included'},
+    {label:'Break-even (blended)', value: fmt(be,3), sub: totalShares>0 ? fmt(newAvg,3)+' new avg cost' : '—'},
+    {label:'Current price', value: mp>0?fmt(mp,3):'—', sub: mp>0 ? fmtMoney(profit)+' ('+profitPct.toFixed(2)+'%)' : 'enter to see live P/L', cls: mp>0 ? (profit>=0?'pos':'neg') : ''},
+  ];
+  document.getElementById('bcHighlights').innerHTML = highlights.map(h=>`
+    <div class="card stat-card">
+      <div class="label">${h.label}</div>
+      <div class="value ${h.cls||''}">${h.value}</div>
+      <div class="sub">${h.sub}</div>
+    </div>`).join('');
+
+  document.getElementById('bcResults').innerHTML =
+    resultLine('Buy amount (before fee)', fmtMoney(buyAmount)) +
+    resultLine('Buy commission', fmtMoney(buyFee)) +
+    resultLine('Total cost, this buy', fmtMoney(thisLotCost)) +
+    resultLine('Total shares after', fmt(totalShares,0)) +
+    resultLine('Total cash invested', fmtMoney(totalInvested)) +
+    resultLine('New average cost', fmt(newAvg,3)) +
+    resultLine('New break-even', fmt(be,3)) +
+    resultLine('Portfolio value @ current price', fmtMoney(value)) +
+    resultLine('Profit/loss @ current price', fmtMoney(profit)+' ('+profitPct.toFixed(2)+'%)', profit>=0?'pos':'neg');
+}
+function saveBcMarketPrice(){
+  const sel = document.getElementById('bcTickerSel');
+  const mp = parseFloat(document.getElementById('bcMarket').value)||0;
+  if(!sel.value){ toast('Pick a ticker from the dropdown above first — new/manual entries have nowhere to save a price to.'); return; }
+  if(!mp){ toast('Enter a price first.'); return; }
+  setMarketPrice(sel.value, mp);
+  toast(`Saved ${fmt(mp,3)} as ${sel.value}'s current price.`);
+}
+
+function calcReverse(){
+  const s1=parseFloat(document.getElementById('rcCurShares').value)||0;
+  const a1=parseFloat(document.getElementById('rcCurAvg').value)||0;
+  const p2=parseFloat(document.getElementById('rcNewPrice').value)||0;
+  const target=parseFloat(document.getElementById('rcTargetAvg').value)||0;
+  const oldInvested = s1*a1;
+  // binary search for N shares at price p2 so that new average == target
+  let lo=0, hi=10000000, N=0;
+  function newAvgFor(n){
+    const amount = n*p2;
+    const fee = calcFee(amount, true);
+    return (oldInvested + amount + fee)/(s1+n);
+  }
+  if(p2>0 && target>p2 && target<a1){
+    for(let i=0;i<60;i++){
+      N=(lo+hi)/2;
+      const av = newAvgFor(N);
+      if(av>target) lo=N; else hi=N;
+    }
+  } else {
+    N = NaN;
+  }
+  if(isNaN(N) || target<=p2 || target>=a1){
+    document.getElementById('rcResults').innerHTML = `<div class="empty">Target average must be between the new buy price and your current average.</div>`;
+    return;
+  }
+  N = Math.ceil(N);
+  const amount = N*p2;
+  const fee = calcFee(amount, true);
+  const totalShares = s1+N;
+  const totalInvested = oldInvested + amount + fee;
+  const finalAvg = totalInvested/totalShares;
+  document.getElementById('rcResults').innerHTML =
+    resultLine('Shares to buy', fmt(N,0)) +
+    resultLine('Buy amount', fmtMoney(amount)) +
+    resultLine('Buy commission', fmtMoney(fee)) +
+    resultLine('Total shares after', fmt(totalShares,0)) +
+    resultLine('Total investment after', fmtMoney(totalInvested)) +
+    resultLine('Resulting average cost', fmt(finalAvg,3)) +
+    resultLine('New break-even', fmt(breakEvenPrice(totalInvested,totalShares),3));
+}
+
+function calcBudget(){
+  const cash=parseFloat(document.getElementById('bgCash').value)||0;
+  const price=parseFloat(document.getElementById('bgPrice').value)||0;
+  const s1=parseFloat(document.getElementById('bgCurShares').value)||0;
+  const a1=parseFloat(document.getElementById('bgCurAvg').value)||0;
+  if(price<=0){ document.getElementById('bgResults').innerHTML=`<div class="empty">Enter a buy price.</div>`; return; }
+  let N = Math.floor(cash/price);
+  while(N>0){
+    const amount = N*price;
+    const fee = calcFee(amount, true);
+    if(amount+fee<=cash) break;
+    N--;
+  }
+  const amount = N*price;
+  const fee = calcFee(amount, true);
+  const oldInvested = s1*a1;
+  const totalShares = s1+N;
+  const totalInvested = oldInvested+amount+fee;
+  const newAvg = totalShares>0 ? totalInvested/totalShares : 0;
+  const be = breakEvenPrice(totalInvested,totalShares);
+  const rows = [2.20,2.30,2.40,2.50].map(pr=>{
+    const val = totalShares*pr;
+    const pl = val-totalInvested;
+    return resultLine(`Profit @ ${fmt(pr,2)}`, fmtMoney(pl), pl>=0?'pos':'neg');
+  }).join('');
+  document.getElementById('bgResults').innerHTML =
+    resultLine('Maximum shares purchasable', fmt(N,0)) +
+    resultLine('Cost incl. commission', fmtMoney(amount+fee)) +
+    resultLine('Cash remaining', fmtMoney(cash-amount-fee)) +
+    resultLine('New average cost', fmt(newAvg,3)) +
+    resultLine('New break-even', fmt(be,3)) + rows;
+}
+
+function calcProfitPlanner(){
+  const shares=parseFloat(document.getElementById('ppShares').value)||0;
+  const avg=parseFloat(document.getElementById('ppAvg').value)||0;
+  const mode=document.getElementById('ppMode').value;
+  const target=parseFloat(document.getElementById('ppTarget').value)||0;
+  const costBasis = shares*avg;
+  const targetProfit = mode==='roi' ? costBasis*(target/100) : target;
+  const price = requiredSellPrice(costBasis, shares, targetProfit);
+  const amount = shares*price;
+  const fee = calcFee(amount, false);
+  document.getElementById('ppResults').innerHTML =
+    resultLine('Cost basis', fmtMoney(costBasis)) +
+    resultLine('Target profit', fmtMoney(targetProfit)) +
+    resultLine('Required sell price', fmt(price,3)) +
+    resultLine('Gross sale amount', fmtMoney(amount)) +
+    resultLine('Sell commission', fmtMoney(fee)) +
+    resultLine('Net proceeds', fmtMoney(amount-fee));
+}
+
+function calcSellPlanner(){
+  const shares=parseFloat(document.getElementById('spShares').value)||0;
+  const avg=parseFloat(document.getElementById('spAvg').value)||0;
+  const price=parseFloat(document.getElementById('spPrice').value)||0;
+  const pct=parseFloat(document.getElementById('spPct').value)||0;
+  const sellShares = Math.round(shares*(pct/100));
+  const amount = sellShares*price;
+  const fee = calcFee(amount, false);
+  const cashReceived = amount-fee;
+  const remainingShares = shares-sellShares;
+  const remainingAvg = avg; // avg cost of remaining shares unchanged
+  const remainingValue = remainingShares*price;
+  const costRemoved = avg*sellShares;
+  const realized = cashReceived-costRemoved;
+  document.getElementById('spResults').innerHTML =
+    resultLine('Shares to sell', fmt(sellShares,0)) +
+    resultLine('Sell commission', fmtMoney(fee)) +
+    resultLine('Cash received', fmtMoney(cashReceived)) +
+    resultLine('Realized profit/loss', fmtMoney(realized), realized>=0?'pos':'neg') +
+    resultLine('Remaining shares', fmt(remainingShares,0)) +
+    resultLine('Remaining average cost', fmt(remainingAvg,3)) +
+    resultLine('Remaining portfolio value', fmtMoney(remainingValue));
+}
+
+function calcRecovery(){
+  const shares=parseFloat(document.getElementById('rpShares').value)||0;
+  const avg=parseFloat(document.getElementById('rpAvg').value)||0;
+  const market=parseFloat(document.getElementById('rpMarket').value)||0;
+  const costBasis = shares*avg;
+  const currentValue = shares*market;
+  const currentPL = currentValue-costBasis;
+  const prices = [];
+  const step = Math.max(0.01, +(Math.abs(avg-market)/6).toFixed(3) || 0.1);
+  let p = Math.min(avg, market);
+  const maxP = Math.max(avg, market);
+  for(let x=p; x<=maxP+step*0.5; x+=step){ prices.push(+x.toFixed(3)); }
+  if(!prices.includes(+avg.toFixed(3))) prices.push(+avg.toFixed(3));
+  prices.sort((a,b)=>a-b);
+  const rows = prices.map(pr=>{
+    const val = shares*pr;
+    const pl = val-costBasis;
+    return resultLine(`@ ${fmt(pr,3)}`, fmtMoney(pl), pl>=0?'pos':'neg');
+  }).join('');
+  document.getElementById('rpResults').innerHTML =
+    resultLine('Current value', fmtMoney(currentValue)) +
+    resultLine('Current profit/loss', fmtMoney(currentPL), currentPL>=0?'pos':'neg') +
+    '<div style="margin-top:10px; font-size:11px; color:var(--muted); text-transform:uppercase;">Profit/loss at various prices</div>' + rows;
+}
+
+// Keeps the slider and the exact-price number input mirrored, then recalculates.
+// source tells us which control just changed so we don't fight the user's typing.
+function syncScenarioPrice(source){
+  const slider = document.getElementById('scSlider');
+  const numInput = document.getElementById('scPriceInput');
+  if(source==='input'){
+    let v = parseFloat(numInput.value)||0;
+    const max = parseFloat(slider.max)||10;
+    if(v > max){ slider.max = Math.ceil(v*1.2*1000)/1000; } // stretch slider range for high prices typed by hand
+    slider.value = v;
+  } else {
+    numInput.value = slider.value;
+  }
+  calcScenario();
+}
+function calcScenario(){
+  const shares=parseFloat(document.getElementById('scShares').value)||0;
+  const avg=parseFloat(document.getElementById('scAvg').value)||0;
+  const price=parseFloat(document.getElementById('scPriceInput').value)||0;
+  const costBasis = shares*avg;
+  const value = shares*price;
+  const sellFee = price>0 ? calcFee(value, false) : 0;
+  const pl = value-sellFee-costBasis;
+  const roi = costBasis>0 ? pl/costBasis*100 : 0;
+  const be = breakEvenPrice(costBasis, shares);
+
+  const highlights = [
+    {label:'Buy price (avg. cost)', value: fmt(avg,3), sub: fmt(shares,0)+' shares held'},
+    {label:'Current / simulated price', value: price>0?fmt(price,3):'—', sub: 'move the slider or type a value'},
+    {label:'Sell commission @ this price', value: price>0?fmtMoney(sellFee):'—', sub:'deducted from proceeds'},
+    {label:'Total buy price', value: fmtMoney(costBasis), sub: 'shares × avg. cost'},
+  ];
+  document.getElementById('scHighlights').innerHTML = highlights.map(h=>`
+    <div class="card stat-card">
+      <div class="label">${h.label}</div>
+      <div class="value ${h.cls||''}">${h.value}</div>
+      <div class="sub">${h.sub}</div>
+    </div>`).join('');
+
+  document.getElementById('scResults').innerHTML =
+    resultLine('Cash value at this price', fmtMoney(value)) +
+    resultLine('Sell commission', fmtMoney(sellFee)) +
+    resultLine('Net proceeds if sold', fmtMoney(value-sellFee)) +
+    resultLine('Profit/loss (net of sell commission)', fmtMoney(pl), pl>=0?'pos':'neg') +
+    resultLine('ROI', roi.toFixed(2)+'%', roi>=0?'pos':'neg') +
+    resultLine('Break-even sell price', fmt(be,3));
+}
+['scShares','scAvg'].forEach(id=>document.getElementById(id).addEventListener('input', calcScenario));
+
+/* ============================= INIT ============================= */
+function renderAll(){
+  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderWatchlist, renderSettings, refreshCalcTickerSelects];
+  for(const fn of sections){
+    try{ fn(); }catch(e){ console.error(fn.name, e); }
+  }
+}
+function populateTickerDatalist(){
+  const dl = document.getElementById('tickerList');
+  dl.innerHTML = Object.entries(TICKER_NAMES).map(([sym,name])=>`<option value="${sym}">${sym} — ${name}</option>`).join('');
+}
+populateTickerDatalist();
+document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
+document.getElementById('trDate').value = new Date().toISOString().slice(0,10);
+renderAll();
+refreshMarketPricesFromFile(false);
+calcBuy(); calcReverse(); calcBudget(); calcProfitPlanner(); calcSellPlanner(); calcRecovery(); calcScenario();
+</script>
+</body>
+</html>

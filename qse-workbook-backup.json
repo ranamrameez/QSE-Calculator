@@ -1,0 +1,236 @@
+{
+  "settings": {
+    "feePct": 0.275,
+    "minFee": 0,
+    "roundingUnit": 0.05,
+    "roundTotal": true,
+    "buyRoundMode": "ceil",
+    "tick": 0.001,
+    "currency": "QAR"
+  },
+  "transactions": [
+    {
+      "date": "2026-06-22",
+      "ticker": "VODAFONE",
+      "action": "BUY",
+      "shares": 100,
+      "price": 2.744
+    },
+    {
+      "date": "2026-06-22",
+      "ticker": "QATAR FUEL",
+      "action": "BUY",
+      "shares": 14,
+      "price": 14.11
+    },
+    {
+      "date": "2026-06-22",
+      "ticker": "MESAIED",
+      "action": "BUY",
+      "shares": 9,
+      "price": 1.214
+    },
+    {
+      "date": "2026-06-23",
+      "ticker": "MESAIED",
+      "action": "SELL",
+      "shares": 9,
+      "price": 1.215
+    },
+    {
+      "date": "2026-06-23",
+      "ticker": "TECHNO Q",
+      "action": "BUY",
+      "shares": 5,
+      "price": 2.19
+    },
+    {
+      "date": "2026-06-23",
+      "ticker": "QATAR FUEL",
+      "action": "SELL",
+      "shares": 14,
+      "price": 14.16
+    },
+    {
+      "date": "2026-06-23",
+      "ticker": "TECHNO Q",
+      "action": "BUY",
+      "shares": 91,
+      "price": 2.164
+    },
+    {
+      "date": "2026-06-23",
+      "ticker": "TECHNO Q",
+      "action": "SELL",
+      "shares": 96,
+      "price": 2.183
+    },
+    {
+      "date": "2026-06-24",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 36,
+      "price": 2.075
+    },
+    {
+      "date": "2026-06-24",
+      "ticker": "QIB",
+      "action": "BUY",
+      "shares": 6,
+      "price": 21.53
+    },
+    {
+      "date": "2026-06-24",
+      "ticker": "VODAFONE",
+      "action": "BUY",
+      "shares": 2,
+      "price": 2.683
+    },
+    {
+      "date": "2026-06-24",
+      "ticker": "QIB",
+      "action": "SELL",
+      "shares": 6,
+      "price": 21.54
+    },
+    {
+      "date": "2026-06-24",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 62,
+      "price": 2.07
+    },
+    {
+      "date": "2026-06-25",
+      "ticker": "RAYYAN B",
+      "action": "SELL",
+      "shares": 98,
+      "price": 2.074
+    },
+    {
+      "date": "2026-06-25",
+      "ticker": "VODAFONE",
+      "action": "BUY",
+      "shares": 76,
+      "price": 2.658
+    },
+    {
+      "date": "2026-06-28",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 110,
+      "price": 2.068
+    },
+    {
+      "date": "2026-06-28",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 128,
+      "price": 2.066
+    },
+    {
+      "date": "2026-06-28",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 54,
+      "price": 2.064
+    },
+    {
+      "date": "2026-06-29",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 100,
+      "price": 2.061
+    },
+    {
+      "date": "2026-06-29",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 91,
+      "price": 2.059
+    },
+    {
+      "date": "2026-06-29",
+      "ticker": "RAYYAN B",
+      "action": "BUY",
+      "shares": 300,
+      "price": 2.056
+    },
+    {
+      "date": "2026-06-30",
+      "ticker": "VODAFONE",
+      "action": "BUY",
+      "shares": 200,
+      "price": 2.655
+    },
+    {
+      "date": "2026-06-30",
+      "ticker": "VODAFONE",
+      "action": "BUY",
+      "shares": 311,
+      "price": 2.652
+    },
+    {
+      "date": "2026-06-30",
+      "ticker": "VODAFONE",
+      "action": "SELL",
+      "shares": 689,
+      "price": 2.669
+    },
+    {
+      "date": "2026-08-06",
+      "ticker": "MPHC",
+      "action": "BUY",
+      "shares": 60,
+      "price": 1.125
+    },
+    {
+      "date": "2026-08-06",
+      "ticker": "QFLS",
+      "action": "BUY",
+      "shares": 50,
+      "price": 13.8
+    },
+    {
+      "date": "2026-08-06",
+      "ticker": "QFBQ",
+      "action": "BUY",
+      "shares": 200,
+      "price": 2.899
+    },
+    {
+      "date": "2026-08-06",
+      "ticker": "QFLS",
+      "action": "BUY",
+      "shares": 25,
+      "price": 13.66
+    }
+  ],
+  "transfers": [
+    {
+      "date": "2026-06-01",
+      "type": "DEPOSIT",
+      "gross": 495,
+      "fee": 10
+    },
+    {
+      "date": "2026-06-03",
+      "type": "DEPOSIT",
+      "gross": 1010,
+      "fee": 10
+    },
+    {
+      "date": "2026-06-07",
+      "type": "DEPOSIT",
+      "gross": 2000,
+      "fee": 10
+    }
+  ],
+  "marketPrices": {
+    "RAYYAN B": 2,
+    "MPHC": 1.14,
+    "QFLS": 13.7,
+    "QFBQ": 2.905
+  },
+  "watchlist": []
+}
