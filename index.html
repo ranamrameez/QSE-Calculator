@@ -642,23 +642,37 @@
 <!-- Firebase (compat build — plain globals, no ES module wiring needed to talk to the rest of this file) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
   // Firebase API keys are meant to be public in client code — they identify
-  // the project, not a secret. Actual access control lives in Firestore
-  // Security Rules (see PRICE_SYNC_SETUP / chat instructions), which is what
-  // actually keeps your data private.
+  // the project, not a secret. Actual access control lives in the Realtime
+  // Database Rules (see the rules block in chat), which is what actually
+  // keeps your data private.
   const firebaseConfig = {
     apiKey: "AIzaSyCzg_KmLGNUXlIzqEAUJctG29kyJQruM8I",
     authDomain: "qse-app.firebaseapp.com",
+    databaseURL: "https://qse-app-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "qse-app",
     storageBucket: "qse-app.firebasestorage.app",
     messagingSenderId: "766310206577",
     appId: "1:766310206577:web:271c3974a45503e5999fd0"
   };
-  firebase.initializeApp(firebaseConfig);
-  const fbAuth = firebase.auth();
-  const fbDb = firebase.firestore();
+  // If the SDK scripts above failed to load (offline, an ad-blocker, opening
+  // the file directly as file:// instead of through http/https, etc.) don't
+  // let the whole app crash — fall back to local-only mode and say why.
+  let fbAuth = null, fbDb = null, firebaseReady = false;
+  if(typeof firebase === 'undefined'){
+    console.warn('Firebase SDK did not load — cloud sync disabled, saving locally only. This usually means the page was opened as a local file:// (Firebase requires http/https) or the gstatic.com scripts were blocked.');
+  } else {
+    try{
+      firebase.initializeApp(firebaseConfig);
+      fbAuth = firebase.auth();
+      fbDb = firebase.database();
+      firebaseReady = true;
+    }catch(e){
+      console.warn('Firebase failed to initialize — cloud sync disabled, saving locally only.', e);
+    }
+  }
 </script>
 
 <script>
@@ -736,16 +750,16 @@ function loadDB(){
 }
 function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); queueCloudSync(); }
 
-/* ============================= CLOUD SYNC (Firestore) ============================= */
-// Whole-workbook doc at users/{uid}/workbook/data. Local writes go to
+/* ============================= CLOUD SYNC (Realtime Database) ============================= */
+// Whole-workbook JSON at users/{uid}/workbook. Local writes go to
 // localStorage immediately (so the app always works offline) and are mirrored
-// to Firestore on a short debounce; on sign-in the cloud copy is treated as
-// the source of truth and overwrites whatever's local.
+// to Realtime Database on a short debounce; on sign-in the cloud copy is
+// treated as the source of truth and overwrites whatever's local.
 let cloudUser = null;
 let cloudSyncTimer = null;
 let cloudApplyingRemote = false; // guards against re-uploading data we just downloaded
 
-function cloudDocRef(){ return fbDb.collection('users').doc(cloudUser.uid).collection('workbook').doc('data'); }
+function cloudRef(){ return fbDb.ref('users/' + cloudUser.uid + '/workbook'); }
 
 function setCloudStatus(msg, cls){
   const el = document.getElementById('cloudStatus');
@@ -760,46 +774,51 @@ function updateCloudUI(){
   if(signedIn) document.getElementById('cloudUserEmail').textContent = cloudUser.email;
 }
 
-fbAuth.onAuthStateChanged(async (user)=>{
-  cloudUser = user;
-  updateCloudUI();
-  if(!user){ setCloudStatus('Not signed in — saving locally only on this device.'); return; }
-  setCloudStatus('Signed in as '+user.email+' — loading cloud data…');
-  try{
-    const snap = await cloudDocRef().get();
-    if(snap.exists){
-      const cloud = snap.data();
-      cloudApplyingRemote = true;
-      DB = {
-        settings: {...DEFAULT_SETTINGS, ...(cloud.settings||{})},
-        transactions: cloud.transactions || [],
-        transfers: cloud.transfers || [],
-        marketPrices: cloud.marketPrices || {},
-        watchlist: cloud.watchlist || [],
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
-      cloudApplyingRemote = false;
-      const when = cloud._updated ? new Date(cloud._updated).toLocaleString() : 'unknown time';
-      setCloudStatus('Synced — cloud data loaded (last saved '+when+')', 'pos');
-    } else {
-      await pushToCloud(false); // first time this account has signed in: seed the cloud with what's local
-      setCloudStatus("No cloud data yet — uploaded this device's workbook.", "pos");
+if(!firebaseReady){
+  setCloudStatus('Cloud sync unavailable in this browser — saving locally only. (Firebase script failed to load — check the console, or open this over http/https rather than as a local file.)', 'neg');
+} else {
+  fbAuth.onAuthStateChanged(async (user)=>{
+    cloudUser = user;
+    updateCloudUI();
+    if(!user){ setCloudStatus('Not signed in — saving locally only on this device.'); return; }
+    setCloudStatus('Signed in as '+user.email+' — loading cloud data…');
+    try{
+      const snap = await cloudRef().once('value');
+      if(snap.exists()){
+        const cloud = snap.val();
+        cloudApplyingRemote = true;
+        DB = {
+          settings: {...DEFAULT_SETTINGS, ...(cloud.settings||{})},
+          transactions: cloud.transactions || [],
+          transfers: cloud.transfers || [],
+          marketPrices: cloud.marketPrices || {},
+          watchlist: cloud.watchlist || [],
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+        cloudApplyingRemote = false;
+        const when = cloud._updated ? new Date(cloud._updated).toLocaleString() : 'unknown time';
+        setCloudStatus('Synced — cloud data loaded (last saved '+when+')', 'pos');
+      } else {
+        await pushToCloud(false); // first time this account has signed in: seed the cloud with what's local
+        setCloudStatus("No cloud data yet — uploaded this device's workbook.", "pos");
+      }
+      renderAll();
+    }catch(e){
+      setCloudStatus('Cloud load failed: '+e.message+' (check Realtime Database rules)', 'neg');
     }
-    renderAll();
-  }catch(e){
-    setCloudStatus('Cloud load failed: '+e.message+' (check Firestore rules)', 'neg');
-  }
-});
+  });
+}
 
 function queueCloudSync(){
-  if(!cloudUser || cloudApplyingRemote) return;
+  if(!firebaseReady || !cloudUser || cloudApplyingRemote) return;
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(()=>pushToCloud(false), 900);
 }
 async function pushToCloud(manual){
+  if(!firebaseReady){ if(manual) toast('Cloud sync is unavailable in this browser right now.'); return; }
   if(!cloudUser) { if(manual) toast('Sign in first to sync to the cloud.'); return; }
   try{
-    await cloudDocRef().set({ ...DB, _updated: new Date().toISOString() });
+    await cloudRef().set({ ...DB, _updated: new Date().toISOString() });
     setCloudStatus('Synced to cloud — '+new Date().toLocaleTimeString(), 'pos');
     if(manual) toast('Synced to cloud.');
   }catch(e){
@@ -807,7 +826,12 @@ async function pushToCloud(manual){
     if(manual) toast('Cloud sync failed: '+e.message);
   }
 }
+function requireFirebase(){
+  if(!firebaseReady){ toast('Cloud sync is unavailable — Firebase failed to load in this browser (check the console).'); return false; }
+  return true;
+}
 async function cloudSignUp(){
+  if(!requireFirebase()) return;
   const email = document.getElementById('cloudEmail').value.trim();
   const pass = document.getElementById('cloudPassword').value;
   if(!email || !pass){ toast('Enter email and password.'); return; }
@@ -815,6 +839,7 @@ async function cloudSignUp(){
   catch(e){ toast('Sign up failed: '+e.message); }
 }
 async function cloudSignIn(){
+  if(!requireFirebase()) return;
   const email = document.getElementById('cloudEmail').value.trim();
   const pass = document.getElementById('cloudPassword').value;
   if(!email || !pass){ toast('Enter email and password.'); return; }
@@ -822,11 +847,13 @@ async function cloudSignIn(){
   catch(e){ toast('Sign in failed: '+e.message); }
 }
 async function cloudSignOut(){
+  if(!requireFirebase()) return;
   await fbAuth.signOut();
   toast('Signed out — now saving locally only.');
 }
 
 async function cloudSignInGoogle(){
+  if(!requireFirebase()) return;
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     await fbAuth.signInWithPopup(provider);
@@ -840,6 +867,7 @@ async function cloudSignInGoogle(){
 // receives it back (checked once at startup, below), complete the sign-in.
 const EMAIL_LINK_STORAGE_KEY = 'qse_email_for_signin';
 async function cloudSendEmailLink(){
+  if(!requireFirebase()) return;
   const email = document.getElementById('cloudEmail').value.trim();
   if(!email){ toast('Enter your email first.'); return; }
   const actionCodeSettings = { url: window.location.href.split('#')[0].split('?')[0], handleCodeInApp: true };
@@ -852,7 +880,7 @@ async function cloudSendEmailLink(){
   }
 }
 function completeEmailLinkSignInIfPresent(){
-  if(!fbAuth.isSignInWithEmailLink(window.location.href)) return;
+  if(!firebaseReady || !fbAuth.isSignInWithEmailLink(window.location.href)) return;
   let email = localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
   if(!email) email = window.prompt('Confirm the email you used to request this sign-in link:');
   if(!email) return;
@@ -873,6 +901,7 @@ function ensureRecaptcha(){
   return window.recaptchaVerifier;
 }
 async function cloudSendPhoneCode(){
+  if(!requireFirebase()) return;
   const phone = document.getElementById('cloudPhone').value.trim();
   if(!phone.startsWith('+')){ toast('Use international format, e.g. +974XXXXXXXX.'); return; }
   try{
