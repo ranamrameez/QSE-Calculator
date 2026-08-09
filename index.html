@@ -330,6 +330,8 @@
         <button class="btn secondary small" onclick="refreshMarketPricesFromFile(true)">Refresh prices</button>
       </div>
       <div id="portfolioTableWrap"></div>
+      <div class="section-title" style="margin-top:28px;">Closed positions <span class="tag">lifetime stats</span></div>
+      <div id="closedPositionsWrap"></div>
     </div>
 
     <!-- TRANSACTIONS -->
@@ -592,27 +594,9 @@
           </div>
         </div>
         <div class="card">
-          <div class="rule-note">Found a mismatch: for 200 shares, The Group's calculator showed a total of 581 at 2.899 and 582 at 2.900 — that only matches rounding the total to the <b>nearest</b> unit. Ceiling (round up) gives 582 in both cases. The old "always ceiling" behavior was verified against past trades, so both modes are offered below — switch to "Round to nearest unit" if that's what you're actually being charged.</div>
+          <div class="rule-note">Verified against the real account statement (33 trades, 03/05/2026–09/08/2026): commission is simply <b>amount × fee % rounded to the nearest cent</b> — no minimum floor was ever applied, and the trade's cash impact is never separately rounded to a whole Riyal (the statement's own "Balance" column keeps full cents). Example: 200 sh @ 2.899, amount 579.80, fee 579.80×0.275% = 1.59445 → 1.59, net −581.39 — matches the statement exactly. The old "ceiling" / "round to nearest whole unit" modes have been removed since they didn't match real charges.</div>
           <div class="field"><label>Broker fee %</label><input type="number" step="0.001" id="setFeePct"></div>
           <div class="field"><label>Minimum fee (QAR)</label><input type="number" step="0.01" id="setMinFee"></div>
-          <div class="field"><label>Rounding unit</label>
-            <select id="setRoundingUnit">
-              <option value="0.01">Nearest 0.01 (cent/dirham)</option>
-              <option value="0.05">Nearest 0.05</option>
-              <option value="1">Nearest whole 1 QAR</option>
-            </select>
-          </div>
-          <div class="field" style="display:flex; align-items:center; gap:8px; flex-direction:row;">
-            <input type="checkbox" id="setRoundTotal" style="width:auto;">
-            <label style="margin:0; text-transform:none; font-size:13px; color:var(--text);">Round the final cash total up (buys) / down (sells) — not just the fee</label>
-          </div>
-          <div class="field"><label>Buy total rounding</label>
-            <select id="setBuyRoundMode">
-              <option value="ceil">Always round up (ceiling)</option>
-              <option value="nearest">Round to nearest unit</option>
-            </select>
-            <div style="font-size:11px; color:var(--muted); margin-top:4px; text-transform:none;">Our two calculators disagreed here — see the note in Settings help below. Pick whichever matches your broker's actual charge.</div>
-          </div>
           <div class="field"><label>Tick size</label><input type="number" step="0.001" id="setTick"></div>
           <div class="field"><label>Currency label</label><input type="text" id="setCurrency"></div>
           <button class="btn" onclick="saveSettings()">Save settings</button>
@@ -677,7 +661,7 @@
 
 <script>
 /* ============================= STATE ============================= */
-const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, roundingUnit: 1, roundTotal: true, buyRoundMode: 'ceil', tick: 0.001, currency: 'QAR' };
+const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, tick: 0.001, currency: 'QAR' };
 const STORAGE_KEY = 'qse_workbook_db_v1';
 // Real trade log reconstructed from account-statement-cash-2026-05-02_2026-08-03.xlsx.
 // Only used the first time the workbook loads (i.e. before anything is saved to
@@ -971,43 +955,24 @@ document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); }
 // sees the real fee that will be charged (applying it after rounding, as an
 // earlier version of this function did, could silently push the settled
 // total off the broker's actual rounded total).
-// If settings.roundTotal is on, the FINAL cash figure is rounded to
-// settings.roundingUnit and the fee is back-derived from that:
-//   - BUY: total = amount + fee, rounded per settings.buyRoundMode.
-//     Originally hardcoded to CEILING, verified against 24 real "The Group"
-//     trades. But two later data points from The Group's own calculator
-//     (200 sh @ 2.899 -> total 581; 200 sh @ 2.900 -> total 582) only match
-//     rounding the total to the NEAREST unit, not the ceiling (ceiling would
-//     give 582 in both cases). The two behaviors agree whenever the raw total
-//     lands in the top half of a unit and disagree otherwise, so old trades
-//     may not have exercised the disagreement. buyRoundMode lets you pick
-//     whichever matches what you actually get charged — see Settings.
-//   - SELL: total = amount - fee, rounded to the NEAREST unit — verified
-//     the same way; sells are NOT floored/rounded against the trader,
-//     they round normally (which can occasionally land in the trader's favor).
+// Verified line-by-line against the account statement covering 03/05/2026–09/08/2026
+// (33 buys/sells across 7 tickers). Every single commission in that statement equals
+// amount * feePct%, rounded to the nearest cent with ordinary (not ceiling, not
+// "nearest-unit-of-the-total") rounding — e.g. 200 sh Lesha Bank @ 2.899: amount
+// 579.80, fee 579.80*0.275% = 1.59445 -> 1.59 (matches statement exactly); @ 2.940
+// sell: amount 588.00, fee 588*0.275% = 1.617 -> 1.62 (matches). No minimum fee was
+// ever charged, even on a 5.37 QAR trade (fee 0.01). The trade's cash impact
+// (amount ± fee) is NOT separately rounded to a whole Riyal anywhere in the
+// statement — every "Balance" entry carries full cents (e.g. 209.85, 12.31, 0.84).
+// The earlier "always ceiling" / "round total to nearest unit" logic was based on
+// a different, informal "Group calculator" preview (581/582-style whole numbers)
+// that does not match this broker-issued statement, so it has been removed.
 function calcFee(amount, isBuy=true){
   const s = DB.settings;
   if(amount <= 0) return 0;
-  const unit = s.roundingUnit || 0.01;
-  const rawFee = Math.max(amount * (s.feePct/100), s.minFee);
-  let fee;
-  if(s.roundTotal){
-    if(isBuy){
-      const totalRaw = amount + rawFee;
-      const totalRounded = (s.buyRoundMode === 'nearest')
-        ? Math.round(totalRaw/unit) * unit
-        : Math.ceil(totalRaw/unit - 1e-9) * unit;
-      fee = totalRounded - amount;
-    } else {
-      const netRaw = amount - rawFee;
-      const netRounded = Math.round(netRaw/unit) * unit;
-      fee = amount - netRounded;
-    }
-  } else {
-    fee = Math.ceil(rawFee/unit - 1e-9) * unit;
-  }
-  fee = Math.max(fee, 0); // fee can't go negative even if minFee is 0 and rounding favors the trader
-  return Math.round(fee*10000)/10000;
+  const rawFee = amount * (s.feePct/100);
+  const fee = Math.max(Math.round(rawFee * 100) / 100, s.minFee || 0);
+  return fee;
 }
 function roundTick(price){
   const t = DB.settings.tick || 0.001;
@@ -1046,15 +1011,20 @@ function computePositions(){
   const sorted = [...DB.transactions].sort((a,b)=> a.date.localeCompare(b.date));
   for(const tx of sorted){
     const t = tx.ticker;
-    if(!byTicker[t]) byTicker[t] = { ticker:t, shares:0, invested:0, buyFees:0, sellFees:0, realized:0 };
+    if(!byTicker[t]) byTicker[t] = { ticker:t, shares:0, invested:0, buyFees:0, sellFees:0, realized:0,
+      totalBoughtShares:0, totalSoldShares:0, buyCount:0, sellCount:0, firstDate:tx.date, lastDate:tx.date };
     const p = byTicker[t];
     const amount = tx.shares * tx.price;
     const isBuy = tx.action === 'BUY';
     const fee = calcFee(amount, isBuy);
+    if(tx.date < p.firstDate) p.firstDate = tx.date;
+    if(tx.date > p.lastDate) p.lastDate = tx.date;
     if(isBuy){
       p.invested += amount + fee;
       p.shares += tx.shares;
       p.buyFees += fee;
+      p.totalBoughtShares += tx.shares;
+      p.buyCount += 1;
     } else { // SELL
       const avg = p.shares>0 ? p.invested/p.shares : 0;
       const costRemoved = avg * Math.min(tx.shares, p.shares);
@@ -1063,6 +1033,8 @@ function computePositions(){
       p.invested -= costRemoved;
       p.shares -= tx.shares;
       p.sellFees += fee;
+      p.totalSoldShares += tx.shares;
+      p.sellCount += 1;
       if(p.shares < 0.0000001) p.shares = 0;
       if(p.shares === 0) p.invested = 0;
     }
@@ -1317,32 +1289,56 @@ function renderDashboard(){
   renderTape(rows);
 }
 
-// Full detail popup for one position — pulled fresh at click time so it always
+// Full detail popup for one symbol — pulled fresh at click time so it always
 // reflects the latest transactions / market price, not a stale snapshot.
+// Works for open positions (shares>0) and fully-closed tickers alike: the
+// "Current holding" section only shows when shares are actually held; the
+// "All-time stats" section always shows, since realized P/L and lifetime
+// fees matter even after a position is fully closed.
 function openPositionModal(ticker){
-  const p = computePositions().find(x=>x.ticker===ticker && x.shares>0);
-  if(!p){ toast('Position not found — it may have been closed.'); return; }
-  const avg = p.invested/p.shares;
-  const mp = getMarketPrice(p.ticker);
-  const value = p.shares*mp;
-  const profit = value - p.invested;
-  const pct = p.invested>0 ? profit/p.invested*100 : 0;
-  const be = breakEvenPrice(p.invested, p.shares);
-  const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
-  const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
-  const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
+  const p = computePositions().find(x=>x.ticker===ticker);
+  if(!p){ toast('No transactions found for that symbol.'); return; }
+  let currentHtml = '';
+  if(p.shares > 0){
+    const avg = p.invested/p.shares;
+    const mp = getMarketPrice(p.ticker);
+    const value = p.shares*mp;
+    const profit = value - p.invested;
+    const pct = p.invested>0 ? profit/p.invested*100 : 0;
+    const be = breakEvenPrice(p.invested, p.shares);
+    const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
+    const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
+    const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
+    currentHtml = `
+      <div class="section-title" style="margin:14px 0 4px 0; font-size:12px;">Current holding</div>
+      ${resultLine('Shares held', fmt(p.shares,0))}
+      ${resultLine('Avg. buy price', fmt(avg,3))}
+      ${resultLine('Current / market price', mp>0?fmt(mp,3):'—')}
+      ${resultLine('Buy commission (this lot)', fmtMoney(p.buyFees))}
+      ${resultLine('Est. sell commission (at market)', mp>0?fmtMoney(sellFeeAtMarket):'—')}
+      ${resultLine('Total buy price', fmtMoney(p.invested))}
+      ${resultLine('Current value', fmtMoney(value))}
+      ${resultLine('Unrealized profit / loss', fmtMoney(profit)+' ('+pct.toFixed(2)+'%)', profit>=0?'pos':'neg')}
+      ${resultLine('Break-even sell price', fmt(be,3))}
+      ${resultLine('Sell price for +2% / +5%', fmt(sell2,3)+' / '+fmt(sell5,3))}`;
+  } else {
+    currentHtml = `<div class="rule-note" style="margin:14px 0 0 0;">No open shares right now — this position has been fully closed. Stats below cover its entire history.</div>`;
+  }
+  const allFees = p.buyFees + p.sellFees;
+  const statusHtml = `
+    <div class="section-title" style="margin:16px 0 4px 0; font-size:12px;">All-time stats for ${p.ticker}</div>
+    ${resultLine('Status', p.shares>0 ? 'Open position' : 'Closed')}
+    ${resultLine('First / last trade', p.firstDate+' → '+p.lastDate)}
+    ${resultLine('Total shares bought', fmt(p.totalBoughtShares,0)+' across '+p.buyCount+' buy(s)')}
+    ${resultLine('Total shares sold', fmt(p.totalSoldShares,0)+' across '+p.sellCount+' sell(s)')}
+    ${resultLine('Total buy commission', fmtMoney(p.buyFees))}
+    ${resultLine('Total sell commission', fmtMoney(p.sellFees))}
+    ${resultLine('Total commission (lifetime)', fmtMoney(allFees))}
+    ${resultLine('Realized profit / loss', fmtMoney(p.realized), p.realized>=0?'pos':'neg')}`;
   const body = `
     <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">${tickerName(p.ticker) || 'No company name on file'}</div>
-    ${resultLine('Shares held', fmt(p.shares,0))}
-    ${resultLine('Avg. buy price', fmt(avg,3))}
-    ${resultLine('Current / market price', mp>0?fmt(mp,3):'—')}
-    ${resultLine('Total buy commission', fmtMoney(p.buyFees))}
-    ${resultLine('Est. sell commission (at market)', mp>0?fmtMoney(sellFeeAtMarket):'—')}
-    ${resultLine('Total buy price', fmtMoney(p.invested))}
-    ${resultLine('Current value', fmtMoney(value))}
-    ${resultLine('Profit / loss', fmtMoney(profit)+' ('+pct.toFixed(2)+'%)', profit>=0?'pos':'neg')}
-    ${resultLine('Break-even sell price', fmt(be,3))}
-    ${resultLine('Sell price for +2% / +5%', fmt(sell2,3)+' / '+fmt(sell5,3))}
+    ${currentHtml}
+    ${statusHtml}
     <button class="btn secondary" style="width:100%; margin-top:14px;" onclick="viewTickerHistory('${p.ticker}')">View transaction history</button>
   `;
   openModal(`${p.ticker} position`, body);
@@ -1365,11 +1361,11 @@ function renderTape(rows){
 
 /* ============================= RENDER: PORTFOLIO ============================= */
 function renderPortfolio(){
-  const positions = computePositions().filter(p=>p.shares>0);
+  const allPositions = computePositions();
+  const positions = allPositions.filter(p=>p.shares>0);
   if(!positions.length){
     document.getElementById('portfolioTableWrap').innerHTML = `<div class="empty">No open positions. Add a BUY transaction to get started.</div>`;
-    return;
-  }
+  } else {
   const rowsHtml = positions.map(p=>{
     const avg = p.invested/p.shares;
     const mp = getMarketPrice(p.ticker);
@@ -1411,6 +1407,35 @@ function renderPortfolio(){
       <tbody>${rowsHtml}</tbody>
     </table>
     </div>`;
+  }
+
+  // Fully-closed tickers: shares back to zero, but their lifetime stats
+  // (realized P/L, fees, buy/sell counts) still matter.
+  const closed = allPositions.filter(p=>p.shares===0 && (p.buyCount>0 || p.sellCount>0))
+    .sort((a,b)=> b.lastDate.localeCompare(a.lastDate));
+  const closedWrap = document.getElementById('closedPositionsWrap');
+  if(!closed.length){
+    closedWrap.innerHTML = `<div class="empty">No fully closed positions yet.</div>`;
+  } else {
+    const closedRows = closed.map(p=>`<tr style="cursor:pointer;" onclick="openPositionModal('${p.ticker}')">
+      <td><b>${p.ticker}</b>${tickerName(p.ticker)?` <span style="color:var(--muted); font-size:11px;">${tickerName(p.ticker)}</span>`:''}</td>
+      <td class="num-cell">${fmt(p.totalBoughtShares,0)} / ${fmt(p.totalSoldShares,0)}</td>
+      <td class="num-cell">${p.buyCount} / ${p.sellCount}</td>
+      <td class="num-cell">${fmtMoney(p.buyFees+p.sellFees)}</td>
+      <td class="num-cell ${p.realized>=0?'pos':'neg'}">${fmtMoney(p.realized)}</td>
+      <td class="num-cell">${p.lastDate}</td>
+    </tr>`).join('');
+    closedWrap.innerHTML = `
+      <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th class="num-cell">Bought / Sold (sh)</th><th class="num-cell">Buy / Sell trades</th>
+          <th class="num-cell">Total commission</th><th class="num-cell">Realized P/L</th><th class="num-cell">Last trade</th>
+        </tr></thead>
+        <tbody>${closedRows}</tbody>
+      </table>
+      </div>`;
+  }
 }
 
 /* ============================= RENDER: TRANSACTIONS ============================= */
@@ -1532,15 +1557,43 @@ function viewTickerHistory(ticker){
 }
 
 /* ============================= RENDER: CASH LEDGER ============================= */
+let clSort = {col:'date', dir:'desc'};
+function clSortValue(e, col){
+  switch(col){
+    case 'type': return e.kind==='transfer' ? e.action : e.action;
+    case 'detail': return e.label;
+    case 'fee': return e.fee;
+    case 'amount': return e.amount;
+    case 'balance': return e.balance;
+    default: return e.date;
+  }
+}
+function sortCl(col){
+  if(clSort.col===col){ clSort.dir = clSort.dir==='asc'?'desc':'asc'; }
+  else { clSort = {col, dir:'desc'}; }
+  renderCashLedger();
+}
+function clSortArrow(col){
+  if(clSort.col!==col) return '';
+  return `<span class="arrow">${clSort.dir==='asc'?'▲':'▼'}</span>`;
+}
 function renderCashLedger(){
   const wrap = document.getElementById('cashLedgerWrap');
   if(!wrap) return;
+  // Balances are always computed in true chronological order first (a running
+  // total only means something in date sequence) — sorting for display happens
+  // afterward and just reorders which rows you're looking at.
   const ledger = buildCashLedger();
   if(!ledger.length){
     wrap.innerHTML = `<div class="empty">No cash movements yet — add a transfer or a transaction above.</div>`;
     return;
   }
-  const rowsHtml = ledger.map(e=>`<tr>
+  const sorted = [...ledger].sort((a,b)=>{
+    const va=clSortValue(a,clSort.col), vb=clSortValue(b,clSort.col);
+    const cmp = typeof va==='string' ? va.localeCompare(vb) : (va-vb);
+    return clSort.dir==='asc' ? cmp : -cmp;
+  });
+  const rowsHtml = sorted.map(e=>`<tr>
     <td>${e.date}</td>
     <td>${e.kind==='transfer' ? (e.action==='DEPOSIT'?'Deposit':'Withdrawal') : `<span class="pill ${e.action==='BUY'?'pill-buy':'pill-sell'}">${e.action}</span>`}</td>
     <td>${e.label}</td>
@@ -1551,7 +1604,14 @@ function renderCashLedger(){
   wrap.innerHTML = `
     <div class="card" style="overflow-x:auto;">
     <table>
-      <thead><tr><th>Date</th><th>Type</th><th>Detail</th><th class="num-cell">Fee</th><th class="num-cell">Cash change</th><th class="num-cell">Balance</th></tr></thead>
+      <thead><tr>
+        <th class="sortable" onclick="sortCl('date')">Date${clSortArrow('date')}</th>
+        <th class="sortable" onclick="sortCl('type')">Type${clSortArrow('type')}</th>
+        <th class="sortable" onclick="sortCl('detail')">Detail${clSortArrow('detail')}</th>
+        <th class="num-cell sortable" onclick="sortCl('fee')">Fee${clSortArrow('fee')}</th>
+        <th class="num-cell sortable" onclick="sortCl('amount')">Cash change${clSortArrow('amount')}</th>
+        <th class="num-cell sortable" onclick="sortCl('balance')">Balance${clSortArrow('balance')}</th>
+      </tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
     </div>`;
@@ -1734,9 +1794,6 @@ function deleteWatch(i){ DB.watchlist.splice(i,1); saveDB(); renderAll(); }
 function renderSettings(){
   document.getElementById('setFeePct').value = DB.settings.feePct;
   document.getElementById('setMinFee').value = DB.settings.minFee;
-  document.getElementById('setRoundingUnit').value = DB.settings.roundingUnit;
-  document.getElementById('setRoundTotal').checked = !!DB.settings.roundTotal;
-  document.getElementById('setBuyRoundMode').value = DB.settings.buyRoundMode || 'ceil';
   document.getElementById('setTick').value = DB.settings.tick;
   document.getElementById('setCurrency').value = DB.settings.currency;
 }
@@ -1744,9 +1801,6 @@ function saveSettings(){
   DB.settings = {
     feePct: parseFloat(document.getElementById('setFeePct').value)||0,
     minFee: parseFloat(document.getElementById('setMinFee').value)||0,
-    roundingUnit: parseFloat(document.getElementById('setRoundingUnit').value)||0.01,
-    roundTotal: document.getElementById('setRoundTotal').checked,
-    buyRoundMode: document.getElementById('setBuyRoundMode').value || 'ceil',
     tick: parseFloat(document.getElementById('setTick').value)||0.001,
     currency: document.getElementById('setCurrency').value || 'QAR',
   };
