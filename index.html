@@ -45,7 +45,7 @@
   :root[data-theme="light"] input[type=date],
   :root[data-theme="light"] select{ background:#f7f8fa; }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
   a{color:inherit;}
@@ -130,7 +130,7 @@
   h1.pagetitle{
     font-family:var(--disp); font-size:22px; font-weight:600; margin:0 0 4px 0;
   }
-  .pagesub{color:var(--muted); font-size:13px; margin:0 0 22px 0;}
+  .pagesub{color:var(--muted); font-size:14.5px; margin:0 0 22px 0; line-height:1.5;}
 
   .grid{display:grid; gap:16px;}
   .grid-4{grid-template-columns:repeat(4,1fr);}
@@ -142,51 +142,51 @@
     background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
     padding:18px;
   }
-  .stat-card .label{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;}
+  .stat-card .label{color:var(--muted); font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
   .stat-card .value{font-family:var(--mono); font-size:22px; font-weight:700;}
-  .stat-card .sub{font-size:11.5px; margin-top:6px; color:var(--muted);}
+  .stat-card .sub{font-size:12.5px; margin-top:6px; color:var(--muted); line-height:1.4;}
 
   .section-title{font-family:var(--disp); font-size:15px; font-weight:600; margin:28px 0 12px 0; display:flex; align-items:center; gap:8px;}
   .section-title .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:20px; padding:1px 8px;}
 
-  table{width:100%; border-collapse:collapse; font-size:12.8px;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
   thead th{
-    text-align:left; color:var(--muted); font-weight:500; text-transform:uppercase;
-    font-size:10.5px; letter-spacing:.05em; padding:8px 10px; border-bottom:1px solid var(--border);
+    text-align:left; color:var(--muted); font-weight:600; text-transform:uppercase;
+    font-size:11.5px; letter-spacing:.04em; padding:10px 10px; border-bottom:1px solid var(--border);
     position:sticky; top:0; background:var(--panel);
   }
-  tbody td{padding:9px 10px; border-bottom:1px solid var(--border); font-family:var(--mono); white-space:nowrap;}
+  tbody td{padding:11px 10px; border-bottom:1px solid var(--border); font-family:var(--mono); white-space:nowrap; font-size:14px;}
   tbody tr:hover{background:var(--panel-2);}
   .num-cell{text-align:right;}
   .pos{color:var(--profit);}
   .neg{color:var(--loss);}
   .neutral{color:var(--warn);}
 
-  .pill{display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-family:var(--mono); font-weight:700;}
+  .pill{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11.5px; font-family:var(--mono); font-weight:700;}
   .pill-buy{background:#123024; color:var(--profit);}
   .pill-sell{background:#3a1520; color:var(--loss);}
 
-  label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;}
+  label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
   input[type=text], input[type=number], input[type=date], select{
     width:100%; background:#0d1115; border:1px solid var(--border); color:var(--text);
-    padding:9px 10px; border-radius:7px; font-family:var(--mono); font-size:13px;
+    padding:10px 11px; border-radius:7px; font-family:var(--mono); font-size:14.5px;
   }
   .field{margin-bottom:14px;}
   .row{display:flex; gap:12px;}
   .row > *{flex:1;}
   .btn{
-    background:var(--accent); color:#fff; border:none; padding:10px 16px; border-radius:7px;
-    font-weight:600; font-size:13px; cursor:pointer; font-family:var(--body);
+    background:var(--accent); color:#fff; border:none; padding:11px 17px; border-radius:7px;
+    font-weight:600; font-size:14px; cursor:pointer; font-family:var(--body);
   }
   .btn:hover{filter:brightness(1.1);}
   .btn.secondary{background:var(--panel-2); border:1px solid var(--border); color:var(--text);}
   .btn.ghost{background:transparent; border:1px solid var(--border); color:var(--muted);}
-  .btn.small{padding:5px 10px; font-size:11.5px;}
+  .btn.small{padding:6px 11px; font-size:12.5px;}
   .btn.danger{background:#3a1520; color:var(--loss); border:1px solid #5a1f2b;}
 
   .calc-panel{display:grid; grid-template-columns:280px 1fr; gap:24px;}
   @media(max-width:900px){.calc-panel{grid-template-columns:1fr;}}
-  .result-line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--border); font-family:var(--mono); font-size:13px;}
+  .result-line{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed var(--border); font-family:var(--mono); font-size:14.5px; line-height:1.4;}
   .result-line:last-child{border-bottom:none;}
   .result-line .k{color:var(--muted);}
   .result-line .v{font-weight:700;}
@@ -263,6 +263,24 @@
     border-radius:8px; padding:10px 12px; margin-bottom:16px; line-height:1.5;
   }
   .rule-note b{color:var(--text);}
+
+  /* ---------- Modal info cards (grouped, compact) ---------- */
+  .mgroup-title{
+    font-family:var(--disp); font-size:12.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.04em; color:var(--gold); margin:16px 0 8px 0;
+  }
+  .mgroup-title:first-child{margin-top:2px;}
+  .mgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .mcard{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    padding:9px 11px;
+  }
+  .mcard.wide{grid-column:1 / -1;}
+  .mcard .mlabel{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px;}
+  .mcard .mvalue{font-family:var(--mono); font-size:14.5px; font-weight:700; line-height:1.3;}
+  .mcard .mvalue.pos{color:var(--profit);}
+  .mcard .mvalue.neg{color:var(--loss);}
+  .mcard .msub{font-size:11px; color:var(--muted); margin-top:2px;}
 </style>
 </head>
 <body>
@@ -296,7 +314,7 @@
         <div id="priceSyncStatus" style="color:var(--muted); font-size:12.5px;">Checking for a prices.json…</div>
         <button class="btn secondary small" onclick="refreshMarketPricesFromFile(true)">Refresh prices</button>
       </div>
-      <div class="grid grid-4" id="dashCards"></div>
+      <div class="grid grid-3" id="dashCards"></div>
       <div class="rule-note">A share is only <b>sold in profit</b> when: <b>net sell proceeds</b> (sell price × shares − sell commission) exceed <b>total buy cost</b> (buy price × shares + buy commission). Per-share, that means sell price must clear the break‑even price shown below.</div>
 
       <div class="section-title">Cash &amp; net worth <span class="tag">all-in, incl. transfers</span></div>
@@ -395,8 +413,20 @@
       </div>
       <div id="trTableWrap"></div>
 
+      <div class="section-title" style="margin-top:32px;">Rewards &amp; adjustments <span class="tag">cashback, corrections</span></div>
+      <p class="pagesub" style="margin-top:-6px;">Broker trading rewards and other one-off cash corrections that aren't a buy/sell or a transfer — they still move your cash balance and count toward net profit/loss.</p>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="row">
+          <div class="field"><label>Date</label><input type="date" id="adjDate"></div>
+          <div class="field"><label>Amount (negative for a deduction)</label><input type="number" step="0.01" id="adjAmount" placeholder="0.34"></div>
+          <div class="field"><label>Note</label><input type="text" id="adjNote" placeholder="Trading reward"></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="btn" onclick="addAdjustment()">Add</button></div>
+        </div>
+      </div>
+      <div id="adjTableWrap"></div>
+
       <div class="section-title" style="margin-top:32px;">Cash ledger <span class="tag">running balance</span></div>
-      <p class="pagesub" style="margin-top:-6px;">Every deposit, withdrawal, buy, and sell in one chronological line, each with the cash balance right after it — the same shape as your broker statement's "Balance" column.</p>
+      <p class="pagesub" style="margin-top:-6px;">Every deposit, withdrawal, buy, sell, and reward in one chronological line, each with the cash balance right after it — the same shape as your broker statement's "Balance" column.</p>
       <div id="cashLedgerWrap"></div>
     </div>
 
@@ -691,6 +721,13 @@ const SEED_TRANSACTIONS = [
   {date:'2026-06-30', ticker:'VFQS', action:'BUY',  shares:200, price:2.655},
   {date:'2026-06-30', ticker:'VFQS', action:'BUY',  shares:311, price:2.652},
   {date:'2026-06-30', ticker:'VFQS', action:'SELL', shares:689, price:2.669},
+  {date:'2026-08-06', ticker:'QFLS', action:'BUY',  shares:50,  price:13.80},
+  {date:'2026-08-06', ticker:'MPHC', action:'BUY',  shares:60,  price:1.125},
+  {date:'2026-08-06', ticker:'QFBQ', action:'BUY',  shares:200, price:2.899},
+  {date:'2026-08-06', ticker:'QFLS', action:'BUY',  shares:25,  price:13.66},
+  {date:'2026-08-09', ticker:'MPHC', action:'BUY',  shares:74,  price:1.116},
+  {date:'2026-08-09', ticker:'QFBQ', action:'SELL', shares:200, price:2.94},
+  {date:'2026-08-09', ticker:'QFLS', action:'BUY',  shares:49,  price:13.52},
 ];
 // SWIFT deposits from the same statement, each carrying a flat 10 QAR wire fee
 // that the trading log above doesn't see — but it's real money lost every time
@@ -699,6 +736,15 @@ const SEED_TRANSFERS = [
   {date:'2026-06-22', type:'DEPOSIT', gross:495,  fee:10},
   {date:'2026-06-26', type:'DEPOSIT', gross:1010, fee:10},
   {date:'2026-06-29', type:'DEPOSIT', gross:2000, fee:10},
+];
+// "Trading Reward" cashback lines from the statement — small broker credits
+// that aren't tied to any specific buy/sell, but are real cash that hit the
+// account. Tracked separately from trading/transfer fees.
+const SEED_ADJUSTMENTS = [
+  {date:'2026-06-23', amount:0.34, note:'Trading reward'},
+  {date:'2026-06-24', amount:0.21, note:'Trading reward'},
+  {date:'2026-06-25', amount:0.34, note:'Trading reward'},
+  {date:'2026-06-30', amount:2.54, note:'Trading reward'},
 ];
 // QSE ticker -> company name, for display and for the calculator/transaction
 // autocomplete. Not exhaustive — add more as you trade new names.
@@ -720,16 +766,17 @@ function tickerLabel(sym){ const n = tickerName(sym); return n ? `${sym} — ${n
 function loadDB(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return { settings: {...DEFAULT_SETTINGS}, transactions: [...SEED_TRANSACTIONS], transfers: [...SEED_TRANSFERS], marketPrices: {}, watchlist: [] };
+    if(!raw) return { settings: {...DEFAULT_SETTINGS}, transactions: [...SEED_TRANSACTIONS], transfers: [...SEED_TRANSFERS], adjustments: [...SEED_ADJUSTMENTS], marketPrices: {}, watchlist: [] };
     const db = JSON.parse(raw);
     db.settings = { ...DEFAULT_SETTINGS, ...(db.settings||{}) };
     db.transactions = db.transactions || [];
     db.transfers = db.transfers || [];
+    db.adjustments = db.adjustments || [];
     db.marketPrices = db.marketPrices || {};
     db.watchlist = db.watchlist || [];
     return db;
   }catch(e){
-    return { settings: {...DEFAULT_SETTINGS}, transactions: [], transfers: [], marketPrices: {}, watchlist: [] };
+    return { settings: {...DEFAULT_SETTINGS}, transactions: [], transfers: [], adjustments: [], marketPrices: {}, watchlist: [] };
   }
 }
 function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); queueCloudSync(); }
@@ -775,6 +822,7 @@ if(!firebaseReady){
           settings: {...DEFAULT_SETTINGS, ...(cloud.settings||{})},
           transactions: cloud.transactions || [],
           transfers: cloud.transfers || [],
+          adjustments: cloud.adjustments || [],
           marketPrices: cloud.marketPrices || {},
           watchlist: cloud.watchlist || [],
         };
@@ -1067,6 +1115,13 @@ function buildCashLedger(){
       amount: cashDelta, fee: t.fee,
     });
   });
+  (DB.adjustments||[]).forEach(a=>{
+    events.push({
+      date: a.date, kind:'adjustment', action: a.amount>=0?'REWARD':'CORRECTION',
+      label: a.note || (a.amount>=0 ? 'Trading reward' : 'Adjustment'),
+      amount: a.amount, fee: 0,
+    });
+  });
   events.sort((a,b)=> a.date===b.date ? (a.kind==='transfer'?-1:1) - (b.kind==='transfer'?-1:1) : a.date.localeCompare(b.date));
   let balance = 0;
   events.forEach(e=>{ balance += e.amount; e.balance = balance; });
@@ -1078,6 +1133,7 @@ function cashSummary(){
   const totalInward = DB.transfers.filter(t=>t.type==='DEPOSIT').reduce((s,t)=>s+t.gross,0);
   const totalOutward = DB.transfers.filter(t=>t.type==='WITHDRAWAL').reduce((s,t)=>s+t.gross,0);
   const transferFees = totalTransferFees();
+  const totalRewards = (DB.adjustments||[]).reduce((s,a)=>s+a.amount,0);
   const positions = computePositions(); // includes closed tickers, needed for lifetime realized P/L
   const tradingFees = positions.reduce((s,p)=>s+p.buyFees+p.sellFees,0);
   const realizedPL = positions.reduce((s,p)=>s+p.realized,0);
@@ -1094,8 +1150,10 @@ function cashSummary(){
   const cashBalance = ledger.length ? ledger[ledger.length-1].balance : 0;
   const netWorth = cashBalance + portfolioValue;
   const totalCharges = transferFees + tradingFees;
-  const netPL = realizedPL + unrealizedPL - transferFees; // buy/sell commissions are already inside realized/unrealized; transfer fees aren't, so subtract them here
-  return { totalInward, totalOutward, transferFees, tradingFees, totalCharges, realizedPL, unrealizedPL, netPL, cashBalance, portfolioValue, netWorth, ledger };
+  // buy/sell commissions are already inside realized/unrealized; transfer fees
+  // aren't, so subtract them here; broker rewards are found money, so add them.
+  const netPL = realizedPL + unrealizedPL - transferFees + totalRewards;
+  return { totalInward, totalOutward, transferFees, tradingFees, totalCharges, totalRewards, realizedPL, unrealizedPL, netPL, cashBalance, portfolioValue, netWorth, ledger };
 }
 
 function getMarketPrice(ticker){
@@ -1177,12 +1235,10 @@ function renderDashboard(){
   const roi = totalInvestment>0 ? (totalValue-totalInvestment)/totalInvestment*100 : 0;
 
   const transferFees = totalTransferFees();
-  const allFees = totalFees + transferFees;
   const cards = [
     {label:'Total Investment', value: fmtMoney(totalInvestment), sub:'cost basis of open positions'},
     {label:'Current Value', value: fmtMoney(totalValue), sub:'at last entered market price'},
     {label:'Unrealized P/L', value: fmtMoney(totalValue-totalInvestment), sub: roi.toFixed(2)+'% ROI', cls: (totalValue-totalInvestment)>=0?'pos':'neg'},
-    {label:'Total Fees Paid', value: fmtMoney(allFees), sub:`${fmtMoney(totalFees)} trading + ${fmtMoney(transferFees)} transfers`},
   ];
   document.getElementById('dashCards').innerHTML = cards.map(c=>`
     <div class="card stat-card">
@@ -1193,9 +1249,9 @@ function renderDashboard(){
 
   const cs = cashSummary();
   const cashCards1 = [
-    {label:'Cash balance', value: fmtMoney(cs.cashBalance), sub:'deposits − withdrawals − net buys + net sells'},
+    {label:'Cash balance', value: fmtMoney(cs.cashBalance), sub:'deposits − withdrawals − net buys + net sells + rewards'},
     {label:'Net worth', value: fmtMoney(cs.netWorth), sub:'cash balance + current portfolio value'},
-    {label:'Net profit / loss', value: fmtMoney(cs.netPL), sub:'realized + unrealized, all fees included', cls: cs.netPL>=0?'pos':'neg'},
+    {label:'Net profit / loss', value: fmtMoney(cs.netPL), sub:`incl. ${fmtMoney(cs.totalRewards)} in broker rewards`, cls: cs.netPL>=0?'pos':'neg'},
   ];
   const cashCards2 = [
     {label:'Total inward', value: fmtMoney(cs.totalInward), sub:'gross deposits'},
@@ -1289,12 +1345,19 @@ function renderDashboard(){
   renderTape(rows);
 }
 
+// Small helper for the modal's grouped info-card layout — one label/value pair.
+function mcard(label, value, cls='', sub='', wide=false){
+  return `<div class="mcard${wide?' wide':''}">
+    <div class="mlabel">${label}</div>
+    <div class="mvalue ${cls}">${value}</div>
+    ${sub?`<div class="msub">${sub}</div>`:''}
+  </div>`;
+}
+
 // Full detail popup for one symbol — pulled fresh at click time so it always
 // reflects the latest transactions / market price, not a stale snapshot.
-// Works for open positions (shares>0) and fully-closed tickers alike: the
-// "Current holding" section only shows when shares are actually held; the
-// "All-time stats" section always shows, since realized P/L and lifetime
-// fees matter even after a position is fully closed.
+// Grouped into short card rows (Position / Cost & fees / Profit outlook /
+// Lifetime) instead of one long stacked table, so it reads at a glance.
 function openPositionModal(ticker){
   const p = computePositions().find(x=>x.ticker===ticker);
   if(!p){ toast('No transactions found for that symbol.'); return; }
@@ -1310,36 +1373,45 @@ function openPositionModal(ticker){
     const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
     const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
     currentHtml = `
-      <div class="section-title" style="margin:14px 0 4px 0; font-size:12px;">Current holding</div>
-      ${resultLine('Shares held', fmt(p.shares,0))}
-      ${resultLine('Avg. buy price', fmt(avg,3))}
-      ${resultLine('Current / market price', mp>0?fmt(mp,3):'—')}
-      ${resultLine('Buy commission (this lot)', fmtMoney(p.buyFees))}
-      ${resultLine('Est. sell commission (at market)', mp>0?fmtMoney(sellFeeAtMarket):'—')}
-      ${resultLine('Total buy price', fmtMoney(p.invested))}
-      ${resultLine('Current value', fmtMoney(value))}
-      ${resultLine('Unrealized profit / loss', fmtMoney(profit)+' ('+pct.toFixed(2)+'%)', profit>=0?'pos':'neg')}
-      ${resultLine('Break-even sell price', fmt(be,3))}
-      ${resultLine('Sell price for +2% / +5%', fmt(sell2,3)+' / '+fmt(sell5,3))}`;
+      <div class="mgroup-title">Position</div>
+      <div class="mgrid">
+        ${mcard('Shares held', fmt(p.shares,0))}
+        ${mcard('Avg. buy price', fmt(avg,3))}
+        ${mcard('Market price', mp>0?fmt(mp,3):'—')}
+        ${mcard('Current value', fmtMoney(value))}
+      </div>
+      <div class="mgroup-title">Cost &amp; fees</div>
+      <div class="mgrid">
+        ${mcard('Buy commission', fmtMoney(p.buyFees))}
+        ${mcard('Est. sell commission', mp>0?fmtMoney(sellFeeAtMarket):'—', '', 'at market price')}
+        ${mcard('Total buy price', fmtMoney(p.invested), '', 'buy price × shares + commission', true)}
+      </div>
+      <div class="mgroup-title">Profit outlook</div>
+      <div class="mgrid">
+        ${mcard('Unrealized P/L', fmtMoney(profit), profit>=0?'pos':'neg', pct.toFixed(2)+'%')}
+        ${mcard('Break-even price', fmt(be,3))}
+        ${mcard('Sell price for +2%', fmt(sell2,3))}
+        ${mcard('Sell price for +5%', fmt(sell5,3))}
+      </div>`;
   } else {
-    currentHtml = `<div class="rule-note" style="margin:14px 0 0 0;">No open shares right now — this position has been fully closed. Stats below cover its entire history.</div>`;
+    currentHtml = `<div class="rule-note" style="margin:2px 0 0 0;">No open shares right now — this position has been fully closed. Stats below cover its entire history.</div>`;
   }
   const allFees = p.buyFees + p.sellFees;
   const statusHtml = `
-    <div class="section-title" style="margin:16px 0 4px 0; font-size:12px;">All-time stats for ${p.ticker}</div>
-    ${resultLine('Status', p.shares>0 ? 'Open position' : 'Closed')}
-    ${resultLine('First / last trade', p.firstDate+' → '+p.lastDate)}
-    ${resultLine('Total shares bought', fmt(p.totalBoughtShares,0)+' across '+p.buyCount+' buy(s)')}
-    ${resultLine('Total shares sold', fmt(p.totalSoldShares,0)+' across '+p.sellCount+' sell(s)')}
-    ${resultLine('Total buy commission', fmtMoney(p.buyFees))}
-    ${resultLine('Total sell commission', fmtMoney(p.sellFees))}
-    ${resultLine('Total commission (lifetime)', fmtMoney(allFees))}
-    ${resultLine('Realized profit / loss', fmtMoney(p.realized), p.realized>=0?'pos':'neg')}`;
+    <div class="mgroup-title">All-time stats for ${p.ticker}</div>
+    <div class="mgrid">
+      ${mcard('Status', p.shares>0 ? 'Open' : 'Closed')}
+      ${mcard('Trades', p.buyCount+' buy / '+p.sellCount+' sell')}
+      ${mcard('Shares bought', fmt(p.totalBoughtShares,0))}
+      ${mcard('Shares sold', fmt(p.totalSoldShares,0))}
+      ${mcard('Lifetime commission', fmtMoney(allFees), '', fmtMoney(p.buyFees)+' buy + '+fmtMoney(p.sellFees)+' sell', true)}
+      ${mcard('Realized P/L', fmtMoney(p.realized), p.realized>=0?'pos':'neg', p.firstDate+' → '+p.lastDate, true)}
+    </div>`;
   const body = `
     <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">${tickerName(p.ticker) || 'No company name on file'}</div>
     ${currentHtml}
     ${statusHtml}
-    <button class="btn secondary" style="width:100%; margin-top:14px;" onclick="viewTickerHistory('${p.ticker}')">View transaction history</button>
+    <button class="btn secondary" style="width:100%; margin-top:16px;" onclick="viewTickerHistory('${p.ticker}')">View transaction history</button>
   `;
   openModal(`${p.ticker} position`, body);
 }
@@ -1595,7 +1667,9 @@ function renderCashLedger(){
   });
   const rowsHtml = sorted.map(e=>`<tr>
     <td>${e.date}</td>
-    <td>${e.kind==='transfer' ? (e.action==='DEPOSIT'?'Deposit':'Withdrawal') : `<span class="pill ${e.action==='BUY'?'pill-buy':'pill-sell'}">${e.action}</span>`}</td>
+    <td>${e.kind==='transfer' ? (e.action==='DEPOSIT'?'Deposit':'Withdrawal')
+        : e.kind==='adjustment' ? `<span class="pill ${e.amount>=0?'pill-buy':'pill-sell'}">${e.amount>=0?'Reward':'Adjustment'}</span>`
+        : `<span class="pill ${e.action==='BUY'?'pill-buy':'pill-sell'}">${e.action}</span>`}</td>
     <td>${e.label}</td>
     <td class="num-cell">${fmtMoney(e.fee)}</td>
     <td class="num-cell ${e.amount>=0?'pos':'neg'}">${e.amount>=0?'+':''}${fmtMoney(e.amount)}</td>
@@ -1754,6 +1828,47 @@ function deleteTransfer(i){
   saveDB(); renderAll();
 }
 
+/* ============================= REWARDS / ADJUSTMENTS ============================= */
+function addAdjustment(){
+  const date = document.getElementById('adjDate').value || new Date().toISOString().slice(0,10);
+  const amount = parseFloat(document.getElementById('adjAmount').value);
+  const note = document.getElementById('adjNote').value.trim();
+  if(!amount){ toast('Enter a non-zero amount.'); return; }
+  if(!DB.adjustments) DB.adjustments = [];
+  DB.adjustments.push({date, amount, note});
+  document.getElementById('adjAmount').value=''; document.getElementById('adjNote').value='';
+  saveDB(); renderAll(); toast('Adjustment added.');
+}
+function deleteAdjustment(i){
+  DB.adjustments.splice(i,1);
+  saveDB(); renderAll();
+}
+function renderAdjustments(){
+  const wrap = document.getElementById('adjTableWrap');
+  if(!wrap) return;
+  const items = DB.adjustments || [];
+  if(!items.length){
+    wrap.innerHTML = `<div class="empty">No rewards or adjustments logged yet.</div>`;
+    return;
+  }
+  const sorted = [...items].map((a,i)=>({...a,_i:i})).sort((a,b)=> a.date.localeCompare(b.date));
+  const rows = sorted.map(a=>`<tr>
+    <td>${a.date}</td>
+    <td>${a.note || (a.amount>=0?'Trading reward':'Adjustment')}</td>
+    <td class="num-cell ${a.amount>=0?'pos':'neg'}">${a.amount>=0?'+':''}${fmtMoney(a.amount)}</td>
+    <td class="num-cell"><button class="btn ghost small" onclick="deleteAdjustment(${a._i})">Delete</button></td>
+  </tr>`).join('');
+  const total = items.reduce((s,a)=>s+a.amount,0);
+  wrap.innerHTML = `
+    <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Date</th><th>Note</th><th class="num-cell">Amount</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div style="margin-top:10px; color:var(--muted); font-size:12.5px;">Total rewards/adjustments: <span style="color:${total>=0?'var(--profit)':'var(--loss)'}; font-family:var(--mono); font-weight:700;">${fmtMoney(total)}</span></div>`;
+}
+
 /* ============================= RENDER: WATCHLIST ============================= */
 function renderWatchlist(){
   if(!DB.watchlist.length){
@@ -1822,7 +1937,7 @@ function importJSON(evt){
   reader.onload = ()=>{
     try{
       const parsed = JSON.parse(reader.result);
-      DB = { settings:{...DEFAULT_SETTINGS, ...(parsed.settings||{})}, transactions:parsed.transactions||[], transfers:parsed.transfers||[], marketPrices:parsed.marketPrices||{}, watchlist:parsed.watchlist||[] };
+      DB = { settings:{...DEFAULT_SETTINGS, ...(parsed.settings||{})}, transactions:parsed.transactions||[], transfers:parsed.transfers||[], adjustments:parsed.adjustments||[], marketPrices:parsed.marketPrices||{}, watchlist:parsed.watchlist||[] };
       saveDB(); renderAll(); toast('Data imported.');
     }catch(e){ toast('Could not read that file.'); }
   };
@@ -1830,7 +1945,7 @@ function importJSON(evt){
 }
 function clearAll(){
   if(!confirm('This clears all transactions, prices and watchlist entries in this browser. Continue?')) return;
-  DB = { settings: DB.settings, transactions: [], transfers: [], marketPrices:{}, watchlist:[] };
+  DB = { settings: DB.settings, transactions: [], transfers: [], adjustments: [], marketPrices:{}, watchlist:[] };
   saveDB(); renderAll(); toast('All data cleared.');
 }
 
@@ -1997,10 +2112,19 @@ function calcBudget(){
   const totalInvested = oldInvested+amount+fee;
   const newAvg = totalShares>0 ? totalInvested/totalShares : 0;
   const be = breakEvenPrice(totalInvested,totalShares);
-  const rows = [2.20,2.30,2.40,2.50].map(pr=>{
+  // Projection prices scale off the position's own average cost (percentage
+  // steps), not a fixed 2.20–2.50 band — that band only made sense for one
+  // specific ~2.5 QAR stock and was meaningless for anything priced
+  // differently (e.g. Qatar Fuel ~14, QIB ~21, Mesaied ~1.1).
+  const base = newAvg > 0 ? newAvg : price;
+  const steps = [-0.05, 0, 0.02, 0.05, 0.10];
+  const rows = steps.map(pct=>{
+    const pr = roundTick(base*(1+pct));
     const val = totalShares*pr;
-    const pl = val-totalInvested;
-    return resultLine(`Profit @ ${fmt(pr,2)}`, fmtMoney(pl), pl>=0?'pos':'neg');
+    const sellFee = pr>0 ? calcFee(val, false) : 0;
+    const pl = val - sellFee - totalInvested;
+    const stepLabel = pct===0 ? 'break-even ref.' : (pct>0?'+':'')+(pct*100).toFixed(0)+'%';
+    return resultLine(`Profit @ ${fmt(pr,3)} (${stepLabel})`, fmtMoney(pl), pl>=0?'pos':'neg');
   }).join('');
   document.getElementById('bgResults').innerHTML =
     resultLine('Maximum shares purchasable', fmt(N,0)) +
@@ -2129,7 +2253,7 @@ function calcScenario(){
 
 /* ============================= INIT ============================= */
 function renderAll(){
-  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderWatchlist, renderSettings, refreshCalcTickerSelects];
+  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderWatchlist, renderSettings, refreshCalcTickerSelects];
   for(const fn of sections){
     try{ fn(); }catch(e){ console.error(fn.name, e); }
   }
@@ -2141,6 +2265,7 @@ function populateTickerDatalist(){
 populateTickerDatalist();
 document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
 document.getElementById('trDate').value = new Date().toISOString().slice(0,10);
+document.getElementById('adjDate').value = new Date().toISOString().slice(0,10);
 renderAll();
 refreshMarketPricesFromFile(false);
 calcBuy(); calcReverse(); calcBudget(); calcProfitPlanner(); calcSellPlanner(); calcRecovery(); calcScenario();
