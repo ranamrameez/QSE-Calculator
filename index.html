@@ -281,7 +281,7 @@
     position:absolute;left:0;top:0;bottom:0;
     display:flex;align-items:center;
     padding:0 14px;
-    background:var(--accent);
+    background:color-mix(in srgb, var(--accent) 60%, #000);
     color:#fff;
     font-family:var(--mono);
     font-weight:700;
@@ -377,8 +377,8 @@
   .neutral{color:var(--warn);}
 
   .pill{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11.5px; font-family:var(--mono); font-weight:700;}
-  .pill-buy{background:#123024; color:var(--profit);}
-  .pill-sell{background:#3a1520; color:var(--loss);}
+  .pill-buy{background:color-mix(in srgb, var(--profit) 16%, var(--panel)); color:var(--profit);}
+  .pill-sell{background:color-mix(in srgb, var(--loss) 16%, var(--panel)); color:var(--loss);}
 
   label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
   input[type=text], input[type=number], input[type=date], select{
@@ -389,14 +389,15 @@
   .row{display:flex; gap:12px;}
   .row > *{flex:1;}
   .btn{
-    background:var(--accent); color:#fff; border:none; padding:11px 17px; border-radius:7px;
+    display:inline-flex; align-items:center; justify-content:center; width:auto;
+    background:color-mix(in srgb, var(--accent) 65%, #000); color:#fff; border:none; padding:11px 17px; border-radius:7px;
     font-weight:600; font-size:14px; cursor:pointer; font-family:var(--body);
   }
   .btn:hover{filter:brightness(1.1);}
   .btn.secondary{background:var(--panel-2); border:1px solid var(--border); color:var(--text);}
   .btn.ghost{background:transparent; border:1px solid var(--border); color:var(--muted);}
   .btn.small{padding:6px 11px; font-size:12.5px;}
-  .btn.danger{background:#3a1520; color:var(--loss); border:1px solid #5a1f2b;}
+  .btn.danger{background:color-mix(in srgb, var(--loss) 16%, var(--panel)); color:var(--loss); border:1px solid color-mix(in srgb, var(--loss) 45%, var(--panel));}
 
   .calc-panel{display:grid; grid-template-columns:280px 1fr; gap:24px;}
   @media(max-width:900px){.calc-panel{grid-template-columns:1fr;}}
@@ -571,7 +572,26 @@
 
   /* ---------- Sub-nav chip row (reuses .chip-tabs / .chip) ---------- */
   .subnav{margin-bottom:20px; margin-top:-6px;}
-  /* Final Material palette guard: ensures component backgrounds/text follow
+  /* Readability pass: keep semantic colors restrained and text high-contrast. */
+  .mgroup-title{color:var(--text);font-weight:800;border-bottom:1px solid var(--border);padding-bottom:7px;}
+  .mcard{background:var(--panel-2);border-color:var(--border);}
+  .mcard .mlabel{color:var(--muted);}
+  .mcard .msub{color:var(--muted);}
+  .mcard.mc-gold,.mcard.mc-blue{background:var(--panel-2);border-color:var(--border);}
+  .mcard.mc-gold .mlabel,.mcard.mc-blue .mlabel{color:var(--muted);}
+  .mcard.mc-gold .mvalue{color:var(--gold);text-shadow:0 0 0 transparent;}
+  .mcard.mc-blue .mvalue{color:var(--info);}
+  .hybrid-row{border-color:var(--border);background:var(--panel);}
+  .hybrid-row.hybrid-head{color:var(--muted);}
+  .hybrid-cell b{color:var(--text);}
+  html[data-color^="material-"] .mgroup-title{color:var(--accent);}
+  html[data-color^="material-"] .mcard.mc-gold .mvalue{color:var(--accent);}
+  html[data-color^="material-"] .mcard.mc-blue .mvalue{color:var(--accent);}
+  html[data-color^="material-"] .hybrid-status{background:var(--accent-soft);border:0;}
+  html[data-color^="material-"] .hybrid-status.pos{color:var(--profit);}
+  html[data-color^="material-"] .hybrid-status.neg{color:var(--loss);}
+  html[data-color^="material-"] .hybrid-status.watch{color:var(--accent);}
+    /* Final Material palette guard: ensures component backgrounds/text follow
      the selected Material palette instead of the generic root palette. */
   html[data-color^="material-"] body{background:var(--bg);color:var(--text);}
   html[data-color^="material-"] .topbar,
@@ -590,7 +610,7 @@
   html[data-color^="material-"] .navbtn.active{background:var(--accent-soft);color:var(--accent);}
   html[data-color^="material-"] .section-title .tag,
   html[data-color^="material-"] .chip{background:var(--accent-soft);color:var(--accent);}
-  html[data-color^="material-"] .btn.primary{background:var(--accent);color:#fff;}
+  html[data-color^="material-"] .btn.primary{background:color-mix(in srgb, var(--accent) 65%, #000);color:#fff;}
 
   /* ================================================================
      MATERIAL PALETTE OVERRIDE — FINAL SPECIFICITY FIX
@@ -662,7 +682,7 @@
   html[data-color^="material-"][data-theme="light"] .btn.primary,
   html[data-color^="material-"][data-theme="dark"] .btn.primary,
   html[data-color^="material-"][data-theme="light"] .btn:not(.secondary):not(.ghost):not(.danger),
-  html[data-color^="material-"][data-theme="dark"] .btn:not(.secondary):not(.ghost):not(.danger) { background:var(--accent); color:#fff; border-color:transparent; }
+  html[data-color^="material-"][data-theme="dark"] .btn:not(.secondary):not(.ghost):not(.danger) { background:color-mix(in srgb, var(--accent) 65%, #000); color:#fff; border-color:transparent; }
   html[data-color^="material-"][data-theme="light"] .btn.secondary,
   html[data-color^="material-"][data-theme="dark"] .btn.secondary { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
   html[data-color^="material-"][data-theme="light"] .btn.ghost,
@@ -691,6 +711,10 @@
   html[data-color^="material-"][data-theme="dark"] input:focus,
   html[data-color^="material-"][data-theme="light"] select:focus,
   html[data-color^="material-"][data-theme="dark"] select:focus { border-color:var(--accent); outline:3px solid var(--accent-soft); }
+
+/* Authentication UI guard: only one state is visible. */
+html.auth-signed-in #cloudSignedOutBox{display:none !important;}
+html.auth-signed-out #cloudSignedInBox{display:none !important;}
 </style>
 </head>
 <body>
@@ -1400,9 +1424,12 @@ function setCloudStatus(msg, cls){
 function updateCloudUI(){
   const signedIn = !!cloudUser;
   const outBox = document.getElementById('cloudSignedOutBox'), inBox = document.getElementById('cloudSignedInBox');
-  if(outBox) outBox.style.display = signedIn ? 'none' : '';
-  if(inBox) inBox.style.display = signedIn ? '' : 'none';
-  if(signedIn) document.getElementById('cloudUserEmail').textContent = cloudUser.email;
+  document.documentElement.classList.toggle('auth-signed-in', signedIn);
+  document.documentElement.classList.toggle('auth-signed-out', !signedIn);
+  if(outBox){ outBox.style.display = signedIn ? 'none' : 'block'; outBox.setAttribute('aria-hidden', signedIn ? 'true' : 'false'); }
+  if(inBox){ inBox.style.display = signedIn ? 'block' : 'none'; inBox.setAttribute('aria-hidden', signedIn ? 'false' : 'true'); }
+  const emailEl=document.getElementById('cloudUserEmail');
+  if(signedIn && emailEl) emailEl.textContent = cloudUser.email || cloudUser.phoneNumber || 'Signed-in user';
 }
 
 if(!firebaseReady){
@@ -1636,9 +1663,9 @@ function initCollapsibleSections(){
       el = el.nextElementSibling;
     }
     if(!siblings.length) return;
-    title.classList.add('collapsible', 'collapsed');
+    title.classList.add('collapsible');
     title.insertAdjacentHTML('beforeend', '<span class="collapse-arrow">▾</span>');
-    siblings.forEach(s=> s.style.display = 'none'); // collapsed by default
+    siblings.forEach(s=> s.style.display = ''); // expanded by default
     title.addEventListener('click', ()=>{
       const collapsed = title.classList.toggle('collapsed');
       siblings.forEach(s=> s.style.display = collapsed ? 'none' : '');
@@ -1817,7 +1844,18 @@ function cashSummary(){
 }
 
 function getMarketPrice(ticker){
-  return DB.marketPrices[ticker] !== undefined ? DB.marketPrices[ticker] : 0;
+  if(DB.marketPrices[ticker] !== undefined && Number(DB.marketPrices[ticker]) > 0){
+    return Number(DB.marketPrices[ticker]);
+  }
+  const buys = (DB.transactions || []).filter(t =>
+    String(t.ticker).toUpperCase() === String(ticker).toUpperCase() &&
+    String(t.action).toUpperCase() === 'BUY' && Number(t.price) > 0
+  );
+  if(buys.length){
+    buys.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    return Number(buys[buys.length-1].price);
+  }
+  return 0;
 }
 function setMarketPrice(ticker, val){
   DB.marketPrices[ticker] = val; saveDB(); renderAll();
@@ -1863,6 +1901,7 @@ function renderHybridBoard(){
 
   const targetPrice=(p,pct)=>breakEvenPrice(p.invested*(1+pct/100),p.shares);
   const status=(p,net)=>{
+    if(!Number.isFinite(net)) return '<span class="hybrid-status watch">PRICE NEEDED</span>';
     if(net>=0) return '<span class="hybrid-status pos">EXIT READY</span>';
     const lossPct=p.invested?net/p.invested*100:0;
     if(lossPct>-3) return '<span class="hybrid-status watch">WATCH</span>';
@@ -1870,13 +1909,14 @@ function renderHybridBoard(){
   };
   const rows=positions.map(p=>{
     const mp=getMarketPrice(p.ticker);
-    const gross=mp*p.shares;
-    const sellFee=mp>0?calcFee(gross,false):0;
-    const net=(gross-sellFee)-p.invested;
+    const hasMarket=Number(mp)>0;
+    const gross=hasMarket?mp*p.shares:0;
+    const sellFee=hasMarket?calcFee(gross,false):0;
+    const net=hasMarket?(gross-sellFee)-p.invested:NaN;
     const be=breakEvenPrice(p.invested,p.shares);
     return `<div class="hybrid-row">
       <div class="hybrid-main">${tickerLogo(p.ticker,'sm')}<span>${p.ticker}</span></div>
-      <div class="hybrid-cell"><div class="hybrid-head">Market</div><b>${fmt(mp,3)}</b></div>
+      <div class="hybrid-cell"><div class="hybrid-head">Market</div><b>${hasMarket?fmt(mp,3):'—'}</b></div>
       <div class="hybrid-cell"><div class="hybrid-head">Break-even</div><b>${fmt(be,3)}</b></div>
       <div class="hybrid-cell"><div class="hybrid-head">Net P/L</div><b class="${net>=0?'pos':'neg'}">${fmtMoney(net)}</b></div>
       <div class="hybrid-cell"><div class="hybrid-head">+1% exit</div>${fmt(targetPrice(p,1),3)}</div>
@@ -2104,6 +2144,7 @@ function renderDashboard(){
   }
 
   renderTape(rows);
+  renderHybridBoard();
 }
 // DOM-safe id for a ticker (tickers here are already plain alnum, but this
 // keeps card ids collision-free if that ever changes).
@@ -2173,13 +2214,40 @@ function mcard(label, value, cls='', sub='', wide=false, variant=''){
 // reflects the latest transactions / market price, not a stale snapshot.
 // Grouped into short card rows (Position / Cost & fees / Profit outlook /
 // Lifetime) instead of one long stacked table, so it reads at a glance.
+function latestTickerTransactionsHtml(ticker){
+  const list=(DB.transactions||[])
+    .map((t,i)=>({...t,_i:i}))
+    .filter(t=>String(t.ticker).toUpperCase()===String(ticker).toUpperCase())
+    .sort((a,b)=>{
+      const d=String(b.date).localeCompare(String(a.date));
+      return d!==0 ? d : (b._i-a._i);
+    })
+    .slice(0,10);
+  if(!list.length) return '<tr><td colspan="6" class="empty">No transactions yet.</td></tr>';
+  return list.map(tx=>{
+    const amount=Number(tx.shares)*Number(tx.price);
+    const fee=calcFee(amount, String(tx.action).toUpperCase()==='BUY');
+    return `<tr>
+      <td>${tx.date}</td>
+      <td><span class="pill ${tx.action==='BUY'?'pill-buy':'pill-sell'}">${tx.action}</span></td>
+      <td class="num-cell">${fmt(tx.shares,0)}</td>
+      <td class="num-cell">${fmt(tx.price,3)}</td>
+      <td class="num-cell">${fmt(amount,2)}</td>
+      <td class="num-cell">${fmt(fee,2)}</td>
+    </tr>`;
+  }).join('');
+}
+
 function openPositionModal(ticker){
   const p = computePositions().find(x=>x.ticker===ticker);
   if(!p){ toast('No transactions found for that symbol.'); return; }
+  // Resolve the working market price once at the top so it is available to
+  // both the position cards and the trade-entry form below. getMarketPrice()
+  // already falls back to the latest BUY price when no market price is set.
+  const mp = getMarketPrice(p.ticker);
   let currentHtml = '';
   if(p.shares > 0){
     const avg = p.invested/p.shares;
-    const mp = getMarketPrice(p.ticker);
     const grossValue = p.shares*mp;
     const sellFeeAtMarket = mp>0 ? calcFee(grossValue, false) : 0;
     // "Current worth" = what you'd actually walk away with if you sold right
@@ -2195,8 +2263,11 @@ function openPositionModal(ticker){
       <div class="mgroup">
         <div class="mgroup-title">Position</div>
         <div class="mgrid">
-          ${mcard('Shares held', fmt(p.shares,0), '', '', false, 'blue')}
+          ${mcard('Num of shares', fmt(p.shares,0), '', '', false, 'blue')}
+          ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           ${mcard('Avg. buy price', fmt(avg,3))}
+          ${mcard('Market price', mp>0?fmt(mp,3):'—')}
+          ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', 'shares × price − sell commission')}
         </div>
       </div>
       <div class="mgroup">
@@ -2210,10 +2281,7 @@ function openPositionModal(ticker){
       <div class="mgroup">
         <div class="mgroup-title">Profit outlook</div>
         <div class="mgrid">
-          ${mcard('Market price', mp>0?fmt(mp,3):'—')}
-          ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', 'shares × price − sell commission')}
           ${mcard('Unrealized P/L', mp>0?fmtMoney(profit):'—', profit>=0?'pos':'neg', mp>0?pct.toFixed(2)+'%':'set a market price')}
-          ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           ${mcard('Sell price for +2%', fmt(sell2,3))}
           ${mcard('Sell price for +5%', fmt(sell5,3))}
         </div>
@@ -2240,9 +2308,39 @@ function openPositionModal(ticker){
       ${currentHtml}
       ${statusHtml}
     </div>
-    <div class="row" style="margin-top:18px;">
-      <button class="btn" onclick="addTransactionForTicker('${p.ticker}')">Add transaction</button>
-      <button class="btn secondary" onclick="viewTickerHistory('${p.ticker}')">View transaction history</button>
+    <div class="mgroup" style="margin-top:18px;">
+      <div class="mgroup-title">Trade transaction</div>
+      <div class="row" style="align-items:end;">
+        <div class="field" style="min-width:110px;">
+          <label>Action</label>
+          <select id="modalTxAction_${tickerDomId(p.ticker)}"><option value="BUY">Buy</option><option value="SELL">Sell</option></select>
+        </div>
+        <div class="field" style="min-width:110px;">
+          <label>Shares</label>
+          <input type="number" min="0" step="1" id="modalTxShares_${tickerDomId(p.ticker)}" placeholder="0">
+        </div>
+        <div class="field" style="min-width:130px;">
+          <label>Price</label>
+          <input type="number" min="0" step="0.001" id="modalTxPrice_${tickerDomId(p.ticker)}" value="${mp>0?mp:''}" placeholder="0.000">
+        </div>
+        <div class="field" style="min-width:140px;">
+          <label>Date</label>
+          <input type="date" id="modalTxDate_${tickerDomId(p.ticker)}" value="${new Date().toISOString().slice(0,10)}">
+        </div>
+        <button class="btn" onclick="addModalTransaction('${p.ticker}')">Add trade</button>
+      </div>
+    </div>
+    <div class="mgroup" style="margin-top:18px;">
+      <div class="mgroup-title">Latest 10 transactions</div>
+      <div class="table-wrap" style="margin-top:8px; overflow-x:auto;">
+        <table class="data-table compact">
+          <thead><tr><th>Date</th><th>Action</th><th class="num-cell">Shares</th><th class="num-cell">Price</th><th class="num-cell">Amount</th><th class="num-cell">Fee</th></tr></thead>
+          <tbody>${latestTickerTransactionsHtml(p.ticker)}</tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary small" onclick="viewTickerHistory('${p.ticker}')">View all transaction history</button>
+      </div>
     </div>
   `;
   openModal(`${p.ticker} position`, body);
@@ -2250,6 +2348,24 @@ function openPositionModal(ticker){
 
 // Jumps to the Transactions page with the add-transaction form prefilled for
 // this ticker — used from the position modal and the watchlist.
+function addModalTransaction(ticker){
+  const id = tickerDomId(ticker);
+  const action = document.getElementById('modalTxAction_'+id)?.value || 'BUY';
+  const shares = parseFloat(document.getElementById('modalTxShares_'+id)?.value);
+  const price = parseFloat(document.getElementById('modalTxPrice_'+id)?.value);
+  const date = document.getElementById('modalTxDate_'+id)?.value || new Date().toISOString().slice(0,10);
+  if(!shares || shares <= 0 || !price || price <= 0){ toast('Enter valid shares and price.'); return; }
+  if(action==='SELL'){
+    const p = computePositions().find(x=>x.ticker===ticker);
+    if(!p || shares > p.shares){ toast(`You only hold ${p ? fmt(p.shares,0) : '0'} shares of ${ticker}.`); return; }
+  }
+  DB.transactions.push({date,ticker,action,shares,price});
+  saveDB();
+  toast(`${action==='BUY'?'Buy':'Sell'} transaction added.`);
+  closeModal();
+  renderAll();
+}
+
 function addTransactionForTicker(ticker){
   closeModal();
   cancelEditTx();
