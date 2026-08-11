@@ -1509,6 +1509,7 @@ function renderDashboard(){
             <input type="number" step="0.001" class="tc-price-input" value="${mp||''}" placeholder="0.000" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)">
           </div>
           ${mcard('Total cash value', mp>0?fmtMoney(totalCashValue):'—', profit>=0?'pos':'neg', mp>0?'price × shares − est. sell commission':'set current value to calculate')}
+          ${mcard('Profit / Loss', mp>0?`${profit>=0?'+':''}${fmtMoney(profit)}`:'—', profit>=0?'pos':'neg', mp>0?`${profit>=0?'+':''}${pct.toFixed(2)}% on total buy price`:'set current value to calculate')}
         </div>
         <div class="tc-divider"></div>
         <div class="tc-quickcalc" onclick="event.stopPropagation()">
