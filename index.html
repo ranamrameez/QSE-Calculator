@@ -108,6 +108,127 @@
     border-left:3px solid var(--accent);
   }
 
+  /* ---------- Material Design theme family --------------------------------
+     Each Material theme owns a complete tonal palette, not just --accent.
+     This makes the five Material themes visibly distinct in both light and
+     dark mode while preserving the app's semantic colors (profit/loss/etc.). */
+  html[data-color="material-blue"]{
+    --accent:#6750A4; --accent-soft:#E8DEF8;
+    --bg:#F7F5FA; --panel:#FFFBFE; --panel-2:#F3EDF7; --border:#E6E0E9; --text:#1D1B20; --muted:#6F6875;
+  }
+  html[data-color="material-green"]{
+    --accent:#386A20; --accent-soft:#D9EAD0;
+    --bg:#F5F8F2; --panel:#FBFDF8; --panel-2:#EFF5EA; --border:#DCE6D6; --text:#1A1C18; --muted:#687064;
+  }
+  html[data-color="material-purple"]{
+    --accent:#7D5260; --accent-soft:#FFD8E4;
+    --bg:#FBF5F7; --panel:#FFF8F9; --panel-2:#FCEEF2; --border:#EEDDE3; --text:#201A1B; --muted:#74676B;
+  }
+  html[data-color="material-teal"]{
+    --accent:#006A6A; --accent-soft:#CDE8E8;
+    --bg:#F3F9F9; --panel:#F8FAFA; --panel-2:#E8F2F2; --border:#D6E5E5; --text:#191C1C; --muted:#647171;
+  }
+  html[data-color="material-amber"]{
+    --accent:#8A5000; --accent-soft:#FFDCB5;
+    --bg:#FFF8F1; --panel:#FFFBF8; --panel-2:#FFF1E4; --border:#EFDFD0; --text:#211A13; --muted:#776A5D;
+  }
+
+  html[data-color="material-blue"][data-theme="dark"]{
+    --accent:#D0BCFF; --accent-soft:#4F378B; --bg:#141218; --panel:#211F26; --panel-2:#2B2930; --border:#39363F; --text:#E6E1E9; --muted:#CAC4D0;
+  }
+  html[data-color="material-green"][data-theme="dark"]{
+    --accent:#B0D49A; --accent-soft:#315724; --bg:#10140E; --panel:#1C2119; --panel-2:#252C21; --border:#394334; --text:#E4E9DE; --muted:#BDC6B6;
+  }
+  html[data-color="material-purple"][data-theme="dark"]{
+    --accent:#FFB1C6; --accent-soft:#633B49; --bg:#181113; --panel:#251B1E; --panel-2:#302327; --border:#49383D; --text:#F2DFE3; --muted:#D0BFC3;
+  }
+  html[data-color="material-teal"][data-theme="dark"]{
+    --accent:#4FDADA; --accent-soft:#004F50; --bg:#0C1414; --panel:#162020; --panel-2:#202B2B; --border:#334141; --text:#E0F2F2; --muted:#B8CCCC;
+  }
+  html[data-color="material-amber"][data-theme="dark"]{
+    --accent:#FFB96B; --accent-soft:#5F3B00; --bg:#17120D; --panel:#241C14; --panel-2:#30251A; --border:#493B2C; --text:#F4E4D1; --muted:#D0BCA4;
+  }
+
+  /* Soft, Material-like surfaces for every non-wine theme. */
+  html:not([data-color="wine"]) .card{
+    border:0;
+    box-shadow:0 1px 2px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.08);
+  }
+  html:not([data-color="wine"]) .card.stat-card,
+  html:not([data-color="wine"]) .card.chart-card{
+    border-left:0;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 52%, var(--panel)), var(--panel) 86px);
+  }
+  html:not([data-color="wine"]) .btn.secondary,
+  html:not([data-color="wine"]) .btn.ghost{
+    border:0;
+    box-shadow:none;
+  }
+  html:not([data-color="wine"]) .chip{
+    border:0;
+    box-shadow:none;
+  }
+  html:not([data-color="wine"]) .section-title .tag{ border:0; background:var(--accent-soft); padding:3px 9px; }
+  html:not([data-color="wine"]) tr.group-row td{ border-left:0; }
+
+  /* Material Design family: deliberately borderless, tonal and elevated. */
+  html[data-color^="material-"] body{ background:var(--bg); color:var(--text); }
+  html[data-color^="material-"] .card{
+    border-radius:16px;
+    background:var(--panel);
+    box-shadow:0 1px 2px rgba(0,0,0,.12), 0 6px 18px rgba(0,0,0,.10);
+  }
+  html[data-color^="material-"] .btn{
+    border:0 !important;
+    border-radius:999px;
+    box-shadow:none;
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  html[data-color^="material-"] .btn.secondary{
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  html[data-color^="material-"] .btn.ghost{
+    background:transparent;
+    color:var(--accent);
+  }
+  html[data-color^="material-"] .btn:hover{ filter:none; box-shadow:0 2px 6px rgba(0,0,0,.14); transform:translateY(-1px); }
+  html[data-color^="material-"] .chip{
+    border:0;
+    border-radius:999px;
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  html[data-color^="material-"] .navbtn.active{
+    box-shadow:none;
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  html[data-color^="material-"] .navbtn:hover{ background:color-mix(in srgb, var(--accent-soft) 55%, var(--panel-2)); }
+  html[data-color^="material-"] .section-title .tag{
+    border:0;
+    border-radius:999px;
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  html[data-color^="material-"] thead th{ border-bottom:0; color:var(--accent); }
+  html[data-color^="material-"] tbody td{ border-bottom:1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+  html[data-color^="material-"] tbody tr:hover{ background:color-mix(in srgb, var(--accent-soft) 32%, var(--panel)); }
+  html[data-color^="material-"] input[type=text],
+  html[data-color^="material-"] input[type=number],
+  html[data-color^="material-"] input[type=date],
+  html[data-color^="material-"] select{
+    border:1px solid color-mix(in srgb, var(--border) 75%, transparent);
+    border-radius:12px;
+    box-shadow:none;
+  }
+  html[data-color^="material-"] input:focus,
+  html[data-color^="material-"] select:focus{
+    border-color:var(--accent);
+    outline:3px solid color-mix(in srgb, var(--accent-soft) 75%, transparent);
+  }
+  html[data-color^="material-"] .pill{ border:0; }
+
   /* ---------- Font style presets — all typography already routes through
      var(--body)/--disp/--mono, so swapping these three variables re-skins
      the whole app instantly. ---------- */
@@ -417,6 +538,30 @@
   .ticker-logo{width:20px; height:20px; border-radius:5px; object-fit:contain; vertical-align:middle; margin-right:7px; background:#fff; padding:2px; flex-shrink:0;}
   .ticker-logo.lg{width:32px; height:32px; border-radius:7px; padding:3px; margin-right:10px;}
   .ticker-logo.sm{width:14px; height:14px; border-radius:3px; padding:1px; margin-right:5px;}
+   .ticker-logo-fallback{
+     display:inline-flex; align-items:center; justify-content:center;
+     box-sizing:border-box; overflow:hidden; flex:0 0 auto;
+     background:color-mix(in srgb, var(--ticker-accent) 18%, var(--panel));
+     color:var(--ticker-accent); border:1px solid color-mix(in srgb, var(--ticker-accent) 42%, transparent);
+     font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:-.2px;
+     line-height:1; user-select:none;
+   }
+   .ticker-logo-fallback.lg{font-size:12px;}
+   .ticker-logo-fallback.sm{font-size:7px;}
+  .hybrid-board{display:grid;gap:10px;}
+  .hybrid-row{display:grid;grid-template-columns:1.1fr repeat(6,minmax(78px,1fr));gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);}
+  .hybrid-head{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+  .hybrid-main{display:flex;align-items:center;min-width:0;font-weight:700;}
+  .hybrid-cell{font-variant-numeric:tabular-nums;font-size:12px;}
+  .hybrid-status{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px;display:inline-block;background:var(--panel);border:1px solid var(--border);}
+  .hybrid-status.pos{color:var(--profit);}
+  .hybrid-status.neg{color:var(--loss);}
+  .hybrid-status.watch{color:var(--accent);}
+  @media(max-width:900px){.hybrid-row{grid-template-columns:1.2fr repeat(3,minmax(78px,1fr));}.hybrid-row .optional{display:none;}}
+
+   @supports not (color: color-mix(in srgb, red 20%, white)){
+     .ticker-logo-fallback{background:var(--panel-2); border-color:var(--ticker-accent);}
+   }
 
   /* ---------- Collapsible sections ---------- */
   .section-title.collapsible{cursor:pointer; user-select:none;}
@@ -426,6 +571,126 @@
 
   /* ---------- Sub-nav chip row (reuses .chip-tabs / .chip) ---------- */
   .subnav{margin-bottom:20px; margin-top:-6px;}
+  /* Final Material palette guard: ensures component backgrounds/text follow
+     the selected Material palette instead of the generic root palette. */
+  html[data-color^="material-"] body{background:var(--bg);color:var(--text);}
+  html[data-color^="material-"] .topbar,
+  html[data-color^="material-"] .sidebar,
+  html[data-color^="material-"] .card,
+  html[data-color^="material-"] .modal,
+  html[data-color^="material-"] .table-wrap{background-color:var(--panel);color:var(--text);border-color:var(--border);}
+  html[data-color^="material-"] .card.stat-card,
+  html[data-color^="material-"] .card.chart-card{background:linear-gradient(180deg,var(--accent-soft),var(--panel) 86px);}
+  html[data-color^="material-"] input[type=text],
+  html[data-color^="material-"] input[type=number],
+  html[data-color^="material-"] input[type=date],
+  html[data-color^="material-"] select,
+  html[data-color^="material-"] textarea{background:var(--panel-2);color:var(--text);border-color:var(--border);}
+  html[data-color^="material-"] .navbtn{color:var(--muted);}
+  html[data-color^="material-"] .navbtn.active{background:var(--accent-soft);color:var(--accent);}
+  html[data-color^="material-"] .section-title .tag,
+  html[data-color^="material-"] .chip{background:var(--accent-soft);color:var(--accent);}
+  html[data-color^="material-"] .btn.primary{background:var(--accent);color:#fff;}
+
+  /* ================================================================
+     MATERIAL PALETTE OVERRIDE — FINAL SPECIFICITY FIX
+     The original light-mode rule is :root[data-theme="light"], which
+     outranks html[data-color="material-*"]. These selectors intentionally
+     include BOTH attributes so the selected Material palette wins.
+     ================================================================ */
+  html[data-color^="material-"][data-theme="light"] {
+    --bg: var(--material-bg, #F7F5FA);
+    --panel: var(--material-panel, #FFFBFE);
+    --panel-2: var(--material-panel-2, #F3EDF7);
+    --border: var(--material-border, #E6E0E9);
+    --text: var(--material-text, #1D1B20);
+    --muted: var(--material-muted, #6F6875);
+    --accent: var(--material-accent, #6750A4);
+    --accent-soft: var(--material-accent-soft, #E8DEF8);
+  }
+  html[data-color="material-blue"][data-theme="light"] { --material-bg:#F7F5FA; --material-panel:#FFFBFE; --material-panel-2:#F3EDF7; --material-border:#E6E0E9; --material-text:#1D1B20; --material-muted:#6F6875; --material-accent:#6750A4; --material-accent-soft:#E8DEF8; }
+  html[data-color="material-green"][data-theme="light"] { --material-bg:#F5F8F2; --material-panel:#FBFDF8; --material-panel-2:#EFF5EA; --material-border:#DCE6D6; --material-text:#1A1C18; --material-muted:#687064; --material-accent:#386A20; --material-accent-soft:#D9EAD0; }
+  html[data-color="material-purple"][data-theme="light"] { --material-bg:#FBF5F7; --material-panel:#FFF8F9; --material-panel-2:#FCEEF2; --material-border:#EEDDE3; --material-text:#201A1B; --material-muted:#74676B; --material-accent:#7D5260; --material-accent-soft:#FFD8E4; }
+  html[data-color="material-teal"][data-theme="light"] { --material-bg:#F3F9F9; --material-panel:#F8FAFA; --material-panel-2:#E8F2F2; --material-border:#D6E5E5; --material-text:#191C1C; --material-muted:#647171; --material-accent:#006A6A; --material-accent-soft:#CDE8E8; }
+  html[data-color="material-amber"][data-theme="light"] { --material-bg:#FFF8F1; --material-panel:#FFFBF8; --material-panel-2:#FFF1E4; --material-border:#EFDFD0; --material-text:#211A13; --material-muted:#776A5D; --material-accent:#8A5000; --material-accent-soft:#FFDCB5; }
+
+  html[data-color="material-blue"][data-theme="dark"] { --bg:#141218; --panel:#211F26; --panel-2:#2B2930; --border:#39363F; --text:#E6E1E9; --muted:#CAC4D0; --accent:#D0BCFF; --accent-soft:#4F378B; }
+  html[data-color="material-green"][data-theme="dark"] { --bg:#10140E; --panel:#1C2119; --panel-2:#252C21; --border:#394334; --text:#E4E9DE; --muted:#BDC6B6; --accent:#B0D49A; --accent-soft:#315724; }
+  html[data-color="material-purple"][data-theme="dark"] { --bg:#181113; --panel:#251B1E; --panel-2:#302327; --border:#49383D; --text:#F2DFE3; --muted:#D0BFC3; --accent:#FFB1C6; --accent-soft:#633B49; }
+  html[data-color="material-teal"][data-theme="dark"] { --bg:#0C1414; --panel:#162020; --panel-2:#202B2B; --border:#334141; --text:#E0F2F2; --muted:#B8CCCC; --accent:#4FDADA; --accent-soft:#004F50; }
+  html[data-color="material-amber"][data-theme="dark"] { --bg:#17120D; --panel:#241C14; --panel-2:#30251A; --border:#493B2C; --text:#F4E4D1; --muted:#D0BCA4; --accent:#FFB96B; --accent-soft:#5F3B00; }
+
+  /* Material components must also outrank the original light/dark component rules. */
+  html[data-color^="material-"][data-theme="light"] body,
+  html[data-color^="material-"][data-theme="dark"] body { background:var(--bg); color:var(--text); }
+  html[data-color^="material-"][data-theme="light"] .topbar,
+  html[data-color^="material-"][data-theme="dark"] .topbar,
+  html[data-color^="material-"][data-theme="light"] .sidebar,
+  html[data-color^="material-"][data-theme="dark"] .sidebar,
+  html[data-color^="material-"][data-theme="light"] .card,
+  html[data-color^="material-"][data-theme="dark"] .card,
+  html[data-color^="material-"][data-theme="light"] .modal,
+  html[data-color^="material-"][data-theme="dark"] .modal,
+  html[data-color^="material-"][data-theme="light"] .table-wrap,
+  html[data-color^="material-"][data-theme="dark"] .table-wrap {
+    background-color:var(--panel); color:var(--text); border-color:var(--border);
+  }
+  html[data-color^="material-"][data-theme="light"] input[type=text],
+  html[data-color^="material-"][data-theme="dark"] input[type=text],
+  html[data-color^="material-"][data-theme="light"] input[type=number],
+  html[data-color^="material-"][data-theme="dark"] input[type=number],
+  html[data-color^="material-"][data-theme="light"] input[type=date],
+  html[data-color^="material-"][data-theme="dark"] input[type=date],
+  html[data-color^="material-"][data-theme="light"] input[type=email],
+  html[data-color^="material-"][data-theme="dark"] input[type=email],
+  html[data-color^="material-"][data-theme="light"] input[type=password],
+  html[data-color^="material-"][data-theme="dark"] input[type=password],
+  html[data-color^="material-"][data-theme="light"] input[type=tel],
+  html[data-color^="material-"][data-theme="dark"] input[type=tel],
+  html[data-color^="material-"][data-theme="light"] select,
+  html[data-color^="material-"][data-theme="dark"] select,
+  html[data-color^="material-"][data-theme="light"] textarea,
+  html[data-color^="material-"][data-theme="dark"] textarea {
+    background:var(--panel-2); color:var(--text); border-color:var(--border);
+  }
+  html[data-color^="material-"][data-theme="light"] .navbtn,
+  html[data-color^="material-"][data-theme="dark"] .navbtn { color:var(--muted); }
+  html[data-color^="material-"][data-theme="light"] .navbtn:hover,
+  html[data-color^="material-"][data-theme="dark"] .navbtn:hover { background:var(--panel-2); color:var(--text); }
+  html[data-color^="material-"][data-theme="light"] .navbtn.active,
+  html[data-color^="material-"][data-theme="dark"] .navbtn.active { background:var(--accent-soft); color:var(--accent); box-shadow:none; }
+  html[data-color^="material-"][data-theme="light"] .btn.primary,
+  html[data-color^="material-"][data-theme="dark"] .btn.primary,
+  html[data-color^="material-"][data-theme="light"] .btn:not(.secondary):not(.ghost):not(.danger),
+  html[data-color^="material-"][data-theme="dark"] .btn:not(.secondary):not(.ghost):not(.danger) { background:var(--accent); color:#fff; border-color:transparent; }
+  html[data-color^="material-"][data-theme="light"] .btn.secondary,
+  html[data-color^="material-"][data-theme="dark"] .btn.secondary { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  html[data-color^="material-"][data-theme="light"] .btn.ghost,
+  html[data-color^="material-"][data-theme="dark"] .btn.ghost { background:transparent; color:var(--accent); border-color:transparent; }
+  html[data-color^="material-"][data-theme="light"] .chip,
+  html[data-color^="material-"][data-theme="dark"] .chip,
+  html[data-color^="material-"][data-theme="light"] .section-title .tag,
+  html[data-color^="material-"][data-theme="dark"] .section-title .tag { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  html[data-color^="material-"][data-theme="light"] thead th,
+  html[data-color^="material-"][data-theme="dark"] thead th { background:var(--panel); color:var(--accent); border-bottom-color:var(--border); }
+  html[data-color^="material-"][data-theme="light"] tbody td,
+  html[data-color^="material-"][data-theme="dark"] tbody td { border-bottom-color:var(--border); color:var(--text); }
+  html[data-color^="material-"][data-theme="light"] tbody tr:hover,
+  html[data-color^="material-"][data-theme="dark"] tbody tr:hover { background:var(--accent-soft); }
+  html[data-color^="material-"][data-theme="light"] .card.stat-card,
+  html[data-color^="material-"][data-theme="dark"] .card.stat-card,
+  html[data-color^="material-"][data-theme="light"] .card.chart-card,
+  html[data-color^="material-"][data-theme="dark"] .card.chart-card { background:linear-gradient(180deg,var(--accent-soft),var(--panel) 86px); border-left:0; }
+  html[data-color^="material-"][data-theme="light"] .section-title,
+  html[data-color^="material-"][data-theme="dark"] .section-title { color:var(--text); }
+  html[data-color^="material-"][data-theme="light"] .pagetitle,
+  html[data-color^="material-"][data-theme="dark"] .pagetitle { color:var(--text); }
+  html[data-color^="material-"][data-theme="light"] .pagesub,
+  html[data-color^="material-"][data-theme="dark"] .pagesub { color:var(--muted); }
+  html[data-color^="material-"][data-theme="light"] input:focus,
+  html[data-color^="material-"][data-theme="dark"] input:focus,
+  html[data-color^="material-"][data-theme="light"] select:focus,
+  html[data-color^="material-"][data-theme="dark"] select:focus { border-color:var(--accent); outline:3px solid var(--accent-soft); }
 </style>
 </head>
 <body>
@@ -480,6 +745,15 @@
           <div class="field"><label>Price</label><input type="number" step="0.001" id="qcPrice" value="0" oninput="calcQuick()"></div>
         </div>
         <div id="qcResults" class="mgrid" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="section-title" id="dash-hybrid">Hybrid Trading Board <span class="tag">existing capital only · fee-aware exits</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <div class="rule-note" style="margin-bottom:12px;">
+          This board is intentionally <b>not a buy-more signal</b>. It shows what your existing positions need to do for a clean short-term exit.
+          Targets include the current QSE fee setting and do not assume any new deposit.
+        </div>
+        <div id="hybridBoard" class="hybrid-board"></div>
       </div>
 
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
@@ -858,11 +1132,20 @@
           </div>
           <div class="field"><label>Color theme</label>
             <select id="setColorTheme" onchange="applyAppearance()">
-              <option value="wine">Classic — Wine &amp; Gold (default)</option>
-              <option value="ocean">Ocean Blue</option>
-              <option value="forest">Forest Green</option>
-              <option value="violet">Violet</option>
-              <option value="sunset">Sunset Amber</option>
+              <optgroup label="Classic themes">
+                <option value="wine">Wine &amp; Gold — Classic</option>
+                <option value="ocean">Ocean Blue — Classic</option>
+                <option value="forest">Forest Green — Classic</option>
+                <option value="violet">Violet — Classic</option>
+                <option value="sunset">Sunset Amber — Classic</option>
+              </optgroup>
+              <optgroup label="Material Design themes">
+                <option value="material-blue">Material Purple / Blue</option>
+                <option value="material-green">Material Green</option>
+                <option value="material-purple">Material Rose</option>
+                <option value="material-teal">Material Teal</option>
+                <option value="material-amber">Material Amber</option>
+              </optgroup>
             </select>
             <div style="font-size:11px; color:var(--muted); margin-top:4px; text-transform:none;">Applies to buttons, cards, table headers and chart accents everywhere — not just the nav. Classic keeps its original look; the other themes use soft, tinted "tonal" surfaces (Material-style) instead of hard outlines, so buttons and cards read as more distinct without feeling harsh. Break-even (gold) and share-count (blue) highlights stay put so they're always recognizable.</div>
           </div>
@@ -910,8 +1193,17 @@
   // the file directly as file:// instead of through http/https, etc.) don't
   // let the whole app crash — fall back to local-only mode and say why.
   let fbAuth = null, fbDb = null, firebaseReady = false;
-  if(typeof firebase === 'undefined'){
-    console.warn('Firebase SDK did not load — cloud sync disabled, saving locally only. This usually means the page was opened as a local file:// (Firebase requires http/https) or the gstatic.com scripts were blocked.');
+  const LOCAL_FILE_MODE = window.location.protocol === 'file:';
+
+  // Firebase Auth can create hidden iframes/windows which browsers reject when
+  // the workbook is opened directly from file://. In local-file mode the
+  // workbook is intentionally local-only; cloud sync is enabled automatically
+  // when the same file is served over http/https.
+  if(LOCAL_FILE_MODE){
+    // Do not initialize Firebase at all. This prevents the
+    // "Unsafe attempt to load URL file://..." console/security error.
+  } else if(typeof firebase === 'undefined'){
+    console.warn('Firebase SDK did not load — cloud sync disabled, saving locally only.');
   } else {
     try{
       firebase.initializeApp(firebaseConfig);
@@ -1017,8 +1309,47 @@ function tickerName(sym){ return TICKER_NAMES[sym] || ''; }
 // Ticker logos are served from the broker's own logo CDN, one SVG per symbol.
 // onerror hides the <img> instead of showing a broken-image icon if a symbol
 // doesn't have a logo there yet.
+// Broker logo URLs are intentionally retained as the primary source.
+// When this workbook is hosted on an origin permitted by the broker CDN,
+// the real SVG logo is shown. When opened directly as file:// and the CDN
+// blocks it, we fall back to a local ticker badge so the UI remains usable.
+// LOGO_DATA_URI can hold locally cached/base64 SVGs later without changing
+// the rendering code.
+const LOGO_BASE_URL = 'https://webd.thegroup.com.qa/logos/';
+const LOCAL_LOGO_BASE = './logos/';
+const LOCAL_LOGOS = new Set(['GWCS','IQCD','MARK','MCGS','MERS','MPHC','QFBQ','QFLS','QIBK','QIIK','TQES','UDCD','VFQS']);
+/* Optional embedded cache. Leave empty unless real SVG bytes are supplied. */
+const LOGO_DATA_URI = Object.create(null);
+
 function tickerLogo(ticker, cls=''){
-  return `<img src="https://webd.thegroup.com.qa/logos/${ticker}.svg" alt="" class="ticker-logo ${cls}" onerror="this.style.display='none'">`;
+  const symbol = String(ticker || '').toUpperCase();
+  const accent = tickerColor(symbol);
+  const local = LOCAL_LOGOS.has(symbol) ? `${LOCAL_LOGO_BASE}${encodeURIComponent(symbol)}.svg` : '';
+  const remote = `${LOGO_BASE_URL}${encodeURIComponent(symbol)}.svg`;
+  const embedded = LOGO_DATA_URI[symbol] || '';
+  const primary = embedded || local || remote;
+  const label = symbol.slice(0, 2) || '?';
+  const fallback = `<span class="ticker-logo ticker-logo-fallback ${cls}" aria-label="${symbol}"
+      style="--ticker-accent:${accent};display:none;">${label}</span>`;
+  /* Local /logos is the normal source now. The broker URL is retained as a
+     fallback so the original source is never lost. */
+  return `<img class="ticker-logo ${cls}" src="${primary}" alt="${symbol}" loading="lazy"
+    referrerpolicy="no-referrer"
+    data-local-src="${local}" data-remote-src="${remote}"
+    onerror="logoFallback(this);">${fallback}`;
+}
+function logoFallback(img){
+  const local = img.dataset.localSrc || '';
+  const remote = img.dataset.remoteSrc || '';
+  /* If local failed, try the original broker URL once; then show ticker badge. */
+  if(local && img.src !== new URL(local, document.baseURI).href && !img.dataset.localTried){
+    img.dataset.localTried='1'; img.src=local; return;
+  }
+  if(remote && !img.dataset.remoteTried){
+    img.dataset.remoteTried='1'; img.src=remote; return;
+  }
+  img.style.display='none';
+  if(img.nextElementSibling) img.nextElementSibling.style.display='inline-flex';
 }
 function tickerLabel(sym){ const n = tickerName(sym); return n ? `${sym} — ${n}` : sym; }
 // Deterministic, distinct accent color per ticker so dashboard cards are easy
@@ -1075,7 +1406,12 @@ function updateCloudUI(){
 }
 
 if(!firebaseReady){
-  setCloudStatus('Cloud sync unavailable in this browser — saving locally only. (Firebase script failed to load — check the console, or open this over http/https rather than as a local file.)', 'neg');
+  setCloudStatus(
+    LOCAL_FILE_MODE
+      ? 'Local mode — changes are saved on this device. Serve the workbook over http/https to enable cloud sync.'
+      : 'Cloud sync unavailable — changes are saved locally on this device.',
+    'neg'
+  );
 } else {
   fbAuth.onAuthStateChanged(async (user)=>{
     cloudUser = user;
@@ -1517,6 +1853,42 @@ document.getElementById('ppMode').addEventListener('change', (e)=>{
   document.getElementById('ppTargetLabel').textContent = e.target.value==='roi' ? 'Desired ROI (%)' : 'Desired profit ('+DB.settings.currency+')';
   calcProfitPlanner();
 });
+
+/* ============================= HYBRID TRADING BOARD ============================= */
+function renderHybridBoard(){
+  const el=document.getElementById('hybridBoard');
+  if(!el) return;
+  const positions=computePositions().filter(p=>p.shares>0);
+  if(!positions.length){ el.innerHTML='<div class="empty">No open positions yet.</div>'; return; }
+
+  const targetPrice=(p,pct)=>breakEvenPrice(p.invested*(1+pct/100),p.shares);
+  const status=(p,net)=>{
+    if(net>=0) return '<span class="hybrid-status pos">EXIT READY</span>';
+    const lossPct=p.invested?net/p.invested*100:0;
+    if(lossPct>-3) return '<span class="hybrid-status watch">WATCH</span>';
+    return '<span class="hybrid-status neg">HOLD / REVIEW</span>';
+  };
+  const rows=positions.map(p=>{
+    const mp=getMarketPrice(p.ticker);
+    const gross=mp*p.shares;
+    const sellFee=mp>0?calcFee(gross,false):0;
+    const net=(gross-sellFee)-p.invested;
+    const be=breakEvenPrice(p.invested,p.shares);
+    return `<div class="hybrid-row">
+      <div class="hybrid-main">${tickerLogo(p.ticker,'sm')}<span>${p.ticker}</span></div>
+      <div class="hybrid-cell"><div class="hybrid-head">Market</div><b>${fmt(mp,3)}</b></div>
+      <div class="hybrid-cell"><div class="hybrid-head">Break-even</div><b>${fmt(be,3)}</b></div>
+      <div class="hybrid-cell"><div class="hybrid-head">Net P/L</div><b class="${net>=0?'pos':'neg'}">${fmtMoney(net)}</b></div>
+      <div class="hybrid-cell"><div class="hybrid-head">+1% exit</div>${fmt(targetPrice(p,1),3)}</div>
+      <div class="hybrid-cell optional"><div class="hybrid-head">+2% exit</div>${fmt(targetPrice(p,2),3)}</div>
+      <div class="hybrid-cell optional"><div class="hybrid-head">+5% exit</div>${fmt(targetPrice(p,5),3)}</div>
+      <div class="hybrid-cell">${status(p,net)}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="hybrid-row hybrid-head" style="background:transparent;border:0;padding:4px 12px;">
+    <div>Position</div><div>Market</div><div>Break-even</div><div>Net P/L</div><div>+1%</div><div class="optional">+2%</div><div class="optional">+5%</div><div>Status</div>
+  </div>${rows}`;
+}
 
 /* ============================= RENDER: DASHBOARD ============================= */
 let chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees;
