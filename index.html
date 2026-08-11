@@ -76,7 +76,7 @@
   html[data-fontsize="large"] body{zoom:1.15;}
   html[data-fontsize="xl"] body{zoom:1.3;}
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;overflow-x:hidden;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
   a{color:inherit;}
@@ -154,6 +154,7 @@
   .navbtn .num{font-family:var(--mono); color:var(--gold); font-size:11px; width:16px; flex-shrink:0;}
 
   .main{flex:1; padding:26px 30px 60px 30px; max-width:1180px;}
+  @media(max-width:700px){ .main{padding:18px 14px 50px 14px;} }
   .page{display:none;}
   .page.active{display:block; animation:fadein .18s ease;}
   @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
@@ -291,6 +292,8 @@
   .psum-row .psum-nums{text-align:right; display:flex; flex-direction:column; gap:2px;}
   .psum-row .psum-invested{font-family:var(--mono); font-size:13px;}
   .psum-row .psum-be{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .table-scroll{overflow-x:auto; max-height:480px; overflow-y:auto;}
+  .table-scroll table thead th{position:sticky; top:0; background:var(--panel); z-index:1;}
   .rule-note{
     font-size:12px; color:var(--muted); background:var(--panel-2); border:1px solid var(--border);
     border-radius:8px; padding:10px 12px; margin-bottom:16px; line-height:1.5;
@@ -324,21 +327,11 @@
   .tc-price-input{width:100%; background:transparent; border:none; padding:0; font-family:var(--mono); font-size:15.5px; font-weight:700; color:var(--text);}
   .tc-price-input:focus-visible{outline:none;}
   .mcard.tc-price-card{cursor:default;}
-  .tc-divider{height:1px; background:var(--border); margin:14px 0 12px 0;}
-  .tc-quickcalc .tc-qc-label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; font-weight:600;}
-  .tc-quickcalc .tc-qc-row{display:flex; gap:10px; align-items:stretch; flex-wrap:wrap;}
-  .tc-qc-input{
-    width:104px; flex-shrink:0; background:var(--panel-2); border:1px solid var(--border);
-    border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:13.5px;
-    font-weight:600; color:var(--text);
-  }
-  .tc-qc-result{flex:1; min-width:150px; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; display:flex; flex-direction:column; justify-content:center; gap:2px;}
-  .tc-qc-result.pos{border-color:rgba(52,199,123,.4); background:rgba(52,199,123,.08);}
-  .tc-qc-result.neg{border-color:rgba(229,72,77,.4); background:rgba(229,72,77,.08);}
-  .tc-qc-pl{font-family:var(--mono); font-weight:700; font-size:14px; line-height:1.3;}
-  .tc-qc-pl .tc-qc-pct{font-weight:700;}
-  .tc-qc-be{font-size:11px; margin-top:1px; font-weight:600;}
-  .tc-qc-hint{font-size:11.5px; color:var(--muted); padding:2px 0;}
+  .tc-pl-inline{font-family:var(--mono); font-size:13px; font-weight:700; margin-top:8px; color:var(--muted);}
+  .tc-pl-inline.pos{color:var(--profit);}
+  .tc-pl-inline.neg{color:var(--loss);}
+  .tc-qc-toggle{width:100%; margin-top:12px; cursor:pointer;}
+  .tc-qc-panel{margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); cursor:default;}
   .ticker-logo{width:20px; height:20px; border-radius:5px; object-fit:contain; vertical-align:middle; margin-right:7px; background:#fff; padding:2px; flex-shrink:0;}
   .ticker-logo.lg{width:32px; height:32px; border-radius:7px; padding:3px; margin-right:10px;}
   .ticker-logo.sm{width:14px; height:14px; border-radius:3px; padding:1px; margin-right:5px;}
@@ -383,12 +376,29 @@
 
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
+        <button class="chip" onclick="scrollToSection('dash-quickcalc')">Quick Calc</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
         <button class="chip" onclick="scrollToSection('dash-charts')">Charts</button>
         <button class="chip" onclick="scrollToSection('dash-alerts')">Alerts</button>
       </div>
 
       <div class="grid grid-4" id="dashCards"></div>
+
+      <div class="section-title" id="dash-quickcalc">Quick Calculator <span class="tag">buy / sell, right here — no page switch</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <div class="row">
+          <div class="field" style="flex:1.6;"><label>Ticker (optional)</label><select id="qcTickerSel" onchange="onQuickCalcTickerChange()"></select></div>
+          <div class="field"><label>Action</label>
+            <select id="qcAction" onchange="calcQuick()">
+              <option value="BUY">Buy</option>
+              <option value="SELL">Sell</option>
+            </select>
+          </div>
+          <div class="field"><label>Shares</label><input type="number" id="qcShares" value="100" oninput="calcQuick()"></div>
+          <div class="field"><label>Price</label><input type="number" step="0.001" id="qcPrice" value="0" oninput="calcQuick()"></div>
+        </div>
+        <div id="qcResults" class="mgrid" style="margin-top:14px;"></div>
+      </div>
 
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
       <div class="grid grid-3" id="dashPortfolioBox"></div>
@@ -435,7 +445,8 @@
       <p class="pagesub">Record every buy and sell. Shares, weighted average cost, fees, and break-even all roll up automatically.</p>
 
       <div class="chip-tabs subnav">
-        <button class="chip" onclick="scrollToSection('tx-log')">Transaction log</button>
+        <button class="chip" onclick="scrollToSection('tx-log')">Add transaction</button>
+        <button class="chip" onclick="scrollToSection('tx-list')">Transaction list</button>
         <button class="chip" onclick="scrollToSection('tx-transfers')">Cash transfers</button>
         <button class="chip" onclick="scrollToSection('tx-adjustments')">Rewards &amp; adjustments</button>
         <button class="chip" onclick="scrollToSection('tx-ledger')">Cash ledger</button>
@@ -458,6 +469,7 @@
         </div>
       </div>
 
+      <div class="section-title" style="margin-top:32px;" id="tx-list">Transaction list</div>
       <div class="toolbar">
         <div style="color:var(--muted); font-size:12.5px;" id="txCount"></div>
         <div class="right">
@@ -541,10 +553,8 @@
             <div class="field"><label>Buy price</label><input type="number" step="0.001" id="bcNewPrice" value="0" oninput="calcBuy()"></div>
             <div class="field">
               <label>Current / market price</label>
-              <div style="display:flex; gap:8px;">
-                <input type="number" step="0.001" id="bcMarket" value="0" oninput="calcBuy()" style="flex:1;">
-                <button class="btn secondary" style="flex:0 0 auto;" onclick="saveBcMarketPrice()">Set as current price</button>
-              </div>
+              <input type="number" step="0.001" id="bcMarket" value="0" oninput="calcBuy()" style="width:100%;">
+              <button class="btn secondary" style="width:100%; margin-top:8px;" onclick="saveBcMarketPrice()">Set as current price</button>
               <div style="font-size:11px; color:var(--muted); margin-top:4px;">Saves to the selected ticker's portfolio price — updates the Dashboard and every other calculator too.</div>
             </div>
           </div>
@@ -557,11 +567,11 @@
         <div class="calc-panel">
           <div class="card">
             <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="rcTickerSel" onchange="applyCalcTicker('rc')"></select></div>
-            <div class="field"><label>Current shares</label><input type="number" id="rcCurShares" value="0"></div>
-            <div class="field"><label>Current average cost</label><input type="number" step="0.001" id="rcCurAvg" value="0"></div>
-            <div class="field"><label>New buy price</label><input type="number" step="0.001" id="rcNewPrice" value="0"></div>
-            <div class="field"><label>Target average cost</label><input type="number" step="0.001" id="rcTargetAvg" value="0"></div>
-            <button class="btn" onclick="calcReverse()">Calculate shares needed</button>
+            <div class="field"><label>Current shares</label><input type="number" id="rcCurShares" value="0" oninput="calcReverse()"></div>
+            <div class="field"><label>Current average cost</label><input type="number" step="0.001" id="rcCurAvg" value="0" oninput="calcReverse()"></div>
+            <div class="field"><label>New buy price</label><input type="number" step="0.001" id="rcNewPrice" value="0" oninput="calcReverse()"></div>
+            <div class="field"><label>Target average cost</label><input type="number" step="0.001" id="rcTargetAvg" value="0" oninput="calcReverse()"></div>
+            <button class="btn secondary" onclick="calcReverse()">Recalculate</button>
           </div>
           <div class="card"><div id="rcResults"></div></div>
         </div>
@@ -572,11 +582,11 @@
         <div class="calc-panel">
           <div class="card">
             <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="bgTickerSel" onchange="applyCalcTicker('bg')"></select></div>
-            <div class="field"><label>Available cash</label><input type="number" id="bgCash" value="0"></div>
-            <div class="field"><label>Buy price</label><input type="number" step="0.001" id="bgPrice" value="0"></div>
-            <div class="field"><label>Current shares (optional)</label><input type="number" id="bgCurShares" value="0"></div>
-            <div class="field"><label>Current average (optional)</label><input type="number" step="0.001" id="bgCurAvg" value="0"></div>
-            <button class="btn" onclick="calcBudget()">Calculate max shares</button>
+            <div class="field"><label>Available cash</label><input type="number" id="bgCash" value="0" oninput="calcBudget()"></div>
+            <div class="field"><label>Buy price</label><input type="number" step="0.001" id="bgPrice" value="0" oninput="calcBudget()"></div>
+            <div class="field"><label>Current shares (optional)</label><input type="number" id="bgCurShares" value="0" oninput="calcBudget()"></div>
+            <div class="field"><label>Current average (optional)</label><input type="number" step="0.001" id="bgCurAvg" value="0" oninput="calcBudget()"></div>
+            <button class="btn secondary" onclick="calcBudget()">Recalculate</button>
           </div>
           <div class="card"><div id="bgResults"></div></div>
         </div>
@@ -587,13 +597,13 @@
         <div class="calc-panel">
           <div class="card">
             <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="ppTickerSel" onchange="applyCalcTicker('pp')"></select></div>
-            <div class="field"><label>Shares held</label><input type="number" id="ppShares" value="0"></div>
-            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="ppAvg" value="0"></div>
+            <div class="field"><label>Shares held</label><input type="number" id="ppShares" value="0" oninput="calcProfitPlanner()"></div>
+            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="ppAvg" value="0" oninput="calcProfitPlanner()"></div>
             <div class="field"><label>Target mode</label>
               <select id="ppMode"><option value="amount">Desired profit (amount)</option><option value="roi">Desired ROI %</option></select>
             </div>
-            <div class="field"><label id="ppTargetLabel">Desired profit (QAR)</label><input type="number" id="ppTarget" value="0"></div>
-            <button class="btn" onclick="calcProfitPlanner()">Calculate required sell price</button>
+            <div class="field"><label id="ppTargetLabel">Desired profit (QAR)</label><input type="number" id="ppTarget" value="0" oninput="calcProfitPlanner()"></div>
+            <button class="btn secondary" onclick="calcProfitPlanner()">Recalculate</button>
           </div>
           <div class="card"><div id="ppResults"></div></div>
         </div>
@@ -604,13 +614,13 @@
         <div class="calc-panel">
           <div class="card">
             <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="spTickerSel" onchange="applyCalcTicker('sp')"></select></div>
-            <div class="field"><label>Shares held</label><input type="number" id="spShares" value="0"></div>
-            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="spAvg" value="0"></div>
-            <div class="field"><label>Sell price</label><input type="number" step="0.001" id="spPrice" value="0"></div>
+            <div class="field"><label>Shares held</label><input type="number" id="spShares" value="0" oninput="calcSellPlanner()"></div>
+            <div class="field"><label>Average cost</label><input type="number" step="0.001" id="spAvg" value="0" oninput="calcSellPlanner()"></div>
+            <div class="field"><label>Sell price</label><input type="number" step="0.001" id="spPrice" value="0" oninput="calcSellPlanner()"></div>
             <div class="field"><label>Percent to sell</label>
-              <select id="spPct"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option></select>
+              <select id="spPct" onchange="calcSellPlanner()"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option></select>
             </div>
-            <button class="btn" onclick="calcSellPlanner()">Calculate</button>
+            <button class="btn secondary" onclick="calcSellPlanner()">Recalculate</button>
           </div>
           <div class="card"><div id="spResults"></div></div>
         </div>
@@ -621,10 +631,10 @@
         <div class="calc-panel">
           <div class="card">
             <div class="field"><label>Ticker (optional — autofills from your portfolio)</label><select id="rpTickerSel" onchange="applyCalcTicker('rp')"></select></div>
-            <div class="field"><label>Shares held</label><input type="number" id="rpShares" value="0"></div>
-            <div class="field"><label>Average cost (bought at)</label><input type="number" step="0.001" id="rpAvg" value="0"></div>
-            <div class="field"><label>Current market price</label><input type="number" step="0.001" id="rpMarket" value="0"></div>
-            <button class="btn" onclick="calcRecovery()">Build recovery table</button>
+            <div class="field"><label>Shares held</label><input type="number" id="rpShares" value="0" oninput="calcRecovery()"></div>
+            <div class="field"><label>Average cost (bought at)</label><input type="number" step="0.001" id="rpAvg" value="0" oninput="calcRecovery()"></div>
+            <div class="field"><label>Current market price</label><input type="number" step="0.001" id="rpMarket" value="0" oninput="calcRecovery()"></div>
+            <button class="btn secondary" onclick="calcRecovery()">Recalculate</button>
           </div>
           <div class="card"><div id="rpResults"></div></div>
         </div>
@@ -656,6 +666,7 @@
     <div class="page" id="page-watchlist">
       <h1 class="pagetitle">Watchlist</h1>
       <p class="pagesub">Track tickers you don't own yet. Green means your target has been hit.</p>
+      <div class="section-title" id="wl-add">Add to watchlist</div>
       <div class="card" style="margin-bottom:20px;">
         <div class="row">
           <div class="field"><label>Ticker</label><input type="text" id="wlTicker" list="tickerList" style="text-transform:uppercase;"></div>
@@ -664,6 +675,7 @@
           <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="btn" onclick="addWatch()">Add</button></div>
         </div>
       </div>
+      <div class="section-title" id="wl-list">Watchlist</div>
       <div id="watchTableWrap"></div>
     </div>
 
@@ -727,8 +739,8 @@
           <p style="color:var(--muted); font-size:13px;">Both apply instantly and everywhere — including popups and tables.</p>
           <div class="field"><label>Font style</label>
             <select id="setFontFamily" onchange="applyAppearance()">
-              <option value="default">Default (Inter / Space Grotesk)</option>
               <option value="system">Clean system font</option>
+              <option value="default">Inter / Space Grotesk</option>
               <option value="legible">Atkinson Hyperlegible (max readability)</option>
               <option value="rounded">Lexend (reading-friendly)</option>
               <option value="serif">Serif (Source Serif)</option>
@@ -745,7 +757,6 @@
         </div>
         <div class="card">
           <div class="section-title" style="margin-top:0;" id="set-amount">Amount settings <span class="tag">fee &amp; rounding</span></div>
-          <div class="rule-note">Verified against the real account statement (33 trades, 03/05/2026–09/08/2026): commission is simply <b>amount × fee % rounded to the nearest cent</b> — no minimum floor was ever applied, and the trade's cash impact is never separately rounded to a whole Riyal (the statement's own "Balance" column keeps full cents). Example: 200 sh @ 2.899, amount 579.80, fee 579.80×0.275% = 1.59445 → 1.59, net −581.39 — matches the statement exactly. The old "ceiling" / "round to nearest whole unit" modes have been removed since they didn't match real charges.</div>
           <div class="field"><label>Broker fee %</label><input type="number" step="0.001" id="setFeePct"></div>
           <div class="field"><label>Minimum fee (QAR)</label><input type="number" step="0.01" id="setMinFee"></div>
           <div class="field"><label>Tick size</label><input type="number" step="0.001" id="setTick"></div>
@@ -880,6 +891,13 @@ function tickerLogo(ticker, cls=''){
   return `<img src="https://webd.thegroup.com.qa/logos/${ticker}.svg" alt="" class="ticker-logo ${cls}" onerror="this.style.display='none'">`;
 }
 function tickerLabel(sym){ const n = tickerName(sym); return n ? `${sym} — ${n}` : sym; }
+// Deterministic, distinct accent color per ticker so dashboard cards are easy
+// to tell apart at a glance — same ticker always gets the same color.
+const TICKER_PALETTE = ['#e5484d','#f4a340','#e0c341','#34c77b','#2dd4bf','#38bdf8','#818cf8','#c084fc','#f472b6','#fb7185','#a3e635','#22c1c3'];
+function tickerColor(sym){
+  let h=0; for(let i=0;i<sym.length;i++) h = (h*31 + sym.charCodeAt(i))>>>0;
+  return TICKER_PALETTE[h % TICKER_PALETTE.length];
+}
 
 function loadDB(){
   try{
@@ -1097,14 +1115,14 @@ applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 const FONT_FAMILY_KEY = 'qse_font_family';
 const FONT_SIZE_KEY = 'qse_font_size';
 function applyAppearance(){
-  const family = document.getElementById('setFontFamily') ? document.getElementById('setFontFamily').value : (localStorage.getItem(FONT_FAMILY_KEY) || 'default');
+  const family = document.getElementById('setFontFamily') ? document.getElementById('setFontFamily').value : (localStorage.getItem(FONT_FAMILY_KEY) || 'system');
   const size = document.getElementById('setFontSize') ? document.getElementById('setFontSize').value : (localStorage.getItem(FONT_SIZE_KEY) || 'medium');
   document.documentElement.setAttribute('data-font', family);
   document.documentElement.setAttribute('data-fontsize', size);
   localStorage.setItem(FONT_FAMILY_KEY, family);
   localStorage.setItem(FONT_SIZE_KEY, size);
 }
-document.documentElement.setAttribute('data-font', localStorage.getItem(FONT_FAMILY_KEY) || 'default');
+document.documentElement.setAttribute('data-font', localStorage.getItem(FONT_FAMILY_KEY) || 'system');
 document.documentElement.setAttribute('data-fontsize', localStorage.getItem(FONT_SIZE_KEY) || 'medium');
 
 function toast(msg){
@@ -1333,37 +1351,6 @@ function setMarketPrice(ticker, val){
 // Dashboard ticker-card mini calculator: type a hypothetical sale price and
 // see net profit/loss plus how it stacks up against the break-even price —
 // no need to open the full position modal for a quick "what if I sold at X".
-function calcQuickSale(ticker){
-  const input = document.getElementById('qc-price-'+ticker);
-  const resultEl = document.getElementById('qc-result-'+ticker);
-  if(!input || !resultEl) return;
-  const price = parseFloat(input.value)||0;
-  const p = computePositions().find(x=>x.ticker===ticker);
-  if(!p || p.shares<=0){
-    resultEl.className = 'tc-qc-result';
-    resultEl.innerHTML = `<div class="tc-qc-hint">No open position.</div>`;
-    return;
-  }
-  if(price<=0){
-    resultEl.className = 'tc-qc-result';
-    resultEl.innerHTML = `<div class="tc-qc-hint">Enter a sale price to see profit/loss.</div>`;
-    return;
-  }
-  const be = breakEvenPrice(p.invested, p.shares);
-  const amount = p.shares*price;
-  const fee = calcFee(amount, false);
-  const net = amount - fee;
-  const pl = net - p.invested;
-  const pct = p.invested>0 ? pl/p.invested*100 : 0;
-  const diff = price - be;
-  const diffPct = be>0 ? diff/be*100 : 0;
-  const cls = pl>=0 ? 'pos' : 'neg';
-  resultEl.className = 'tc-qc-result ' + cls;
-  resultEl.innerHTML = `
-    <div class="tc-qc-pl ${cls}">${pl>=0?'+':''}${fmtMoney(pl)} <span class="tc-qc-pct">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span></div>
-    <div class="tc-qc-be ${cls}">vs. break-even ${fmt(be,3)}: ${diff>=0?'+':''}${fmt(diff,3)} (${diffPct>=0?'+':''}${diffPct.toFixed(2)}%)</div>`;
-}
-
 /* ============================= NAV ============================= */
 document.querySelectorAll('.navbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1383,6 +1370,7 @@ document.querySelectorAll('#calcTabs .chip').forEach(chip=>{
 });
 document.getElementById('ppMode').addEventListener('change', (e)=>{
   document.getElementById('ppTargetLabel').textContent = e.target.value==='roi' ? 'Desired ROI (%)' : 'Desired profit ('+DB.settings.currency+')';
+  calcProfitPlanner();
 });
 
 /* ============================= RENDER: DASHBOARD ============================= */
@@ -1393,9 +1381,10 @@ function renderDashboard(){
   const rows = positions.map(p=>{
     const mp = getMarketPrice(p.ticker);
     const value = p.shares*mp;
-    const profit = value - p.invested;
+    const sellFee = mp>0 ? calcFee(value, false) : 0;
+    const profit = (value - sellFee) - p.invested; // net of estimated sell commission — matches the position modal & cashSummary
     totalInvestment += p.invested;
-    totalValue += value;
+    totalValue += value; // "Stocks Current Value" card stays gross — that's the literal market value of the shares
     totalFees += p.buyFees + p.sellFees;
     if(!largestWinner || profit>largestWinner.profit) largestWinner = {ticker:p.ticker, profit};
     if(!largestLoser || profit<largestLoser.profit) largestLoser = {ticker:p.ticker, profit};
@@ -1412,7 +1401,7 @@ function renderDashboard(){
     {label:'Total Withdraw', value: fmtMoney(cs.totalOutward), sub:'gross, before wire fees'},
     {label:'Current Shares Investment', value: fmtMoney(totalInvestment), sub:'cost basis of open positions'},
     {label:'Stocks Current Value', value: fmtMoney(totalValue), sub:'at last entered market price'},
-    {label:'Current Worth', value: fmtMoney(cs.netWorth), sub:'cash balance + stocks current value'},
+    {label:'Current Worth', value: fmtMoney(cs.netWorth), sub:'cash balance + stocks worth (net of sell fees)'},
     {label:'Net P/L (all-in)', value: fmtMoney(cs.netPL), sub:`incl. all fees + ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg'},
     {label:'Total Charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`},
   ];
@@ -1484,18 +1473,18 @@ function renderDashboard(){
       const be = breakEvenPrice(p.invested, p.shares);
       const mp = getMarketPrice(p.ticker);
       const value = p.shares*mp;
-      const sellFeeAtMarket = mp>0 ? calcFee(value, false) : 0;
-      const totalCashValue = value - sellFeeAtMarket;
       const profit = value - p.invested;
       const pct = p.invested>0 ? profit/p.invested*100 : 0;
       let statusColor = 'var(--warn)';
       if(pct>1) statusColor='var(--profit)'; else if(pct<-1) statusColor='var(--loss)';
-      return `<div class="card ticker-card" onclick="openPositionModal('${p.ticker}')">
+      const accent = tickerColor(p.ticker);
+      const qid = tickerDomId(p.ticker);
+      return `<div class="card ticker-card" style="border-top:3px solid ${accent};" onclick="openPositionModal('${p.ticker}')">
         <div class="ticker-card-head">
           <div style="display:flex; align-items:center;">
             ${tickerLogo(p.ticker, 'lg')}
             <div>
-              <div class="tc-ticker">${p.ticker}</div>
+              <div class="tc-ticker" style="color:${accent};">${p.ticker}</div>
               <div class="tc-company">${tickerName(p.ticker) || 'Position'}</div>
             </div>
           </div>
@@ -1504,27 +1493,85 @@ function renderDashboard(){
         <div class="mgrid" style="margin-top:12px;">
           ${mcard('Num of shares', fmt(p.shares,0))}
           ${mcard('Break-even price', fmt(be,3))}
-          <div class="mcard tc-price-card" onclick="event.stopPropagation()">
-            <div class="mlabel">Current value</div>
+          <div class="mcard tc-price-card wide" onclick="event.stopPropagation()">
+            <div class="mlabel">Current price</div>
             <input type="number" step="0.001" class="tc-price-input" value="${mp||''}" placeholder="0.000" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)">
+            <div class="tc-pl-inline ${mp>0?(profit>=0?'pos':'neg'):''}">${mp>0?`${profit>=0?'+':''}${fmtMoney(profit)} &nbsp;(${profit>=0?'+':''}${pct.toFixed(2)}%)`:'Set a price to see P/L'}</div>
           </div>
-          ${mcard('Total cash value', mp>0?fmtMoney(totalCashValue):'—', profit>=0?'pos':'neg', mp>0?'price × shares − est. sell commission':'set current value to calculate')}
-          ${mcard('Profit / Loss', mp>0?`${profit>=0?'+':''}${fmtMoney(profit)}`:'—', profit>=0?'pos':'neg', mp>0?`${profit>=0?'+':''}${pct.toFixed(2)}% on total buy price`:'set current value to calculate')}
         </div>
-        <div class="tc-divider"></div>
-        <div class="tc-quickcalc" onclick="event.stopPropagation()">
-          <div class="tc-qc-label">Quick sale calculator</div>
-          <div class="tc-qc-row">
-            <input type="number" step="0.001" class="tc-qc-input" id="qc-price-${p.ticker}" placeholder="Sale price" value="${be>0?be:''}" oninput="calcQuickSale('${p.ticker}')">
-            <div class="tc-qc-result" id="qc-result-${p.ticker}"><div class="tc-qc-hint">Enter a sale price to see profit/loss.</div></div>
+        <button class="btn ghost small tc-qc-toggle" onclick="event.stopPropagation(); toggleTickerQuickCalc('${p.ticker}')" id="qcToggle_${qid}">Quick calc ▾</button>
+        <div class="tc-qc-panel" id="qcPanel_${qid}" style="display:none;" onclick="event.stopPropagation()">
+          <div class="row">
+            <div class="field"><label>Action</label>
+              <select id="qcA_${qid}" onchange="calcTickerQuickCalc('${p.ticker}')">
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+              </select>
+            </div>
+            <div class="field"><label>Shares</label><input type="number" id="qcS_${qid}" value="${fmt(p.shares,0).replace(/,/g,'')}" oninput="calcTickerQuickCalc('${p.ticker}')"></div>
+            <div class="field"><label>Price</label><input type="number" step="0.001" id="qcP_${qid}" value="${mp||''}" oninput="calcTickerQuickCalc('${p.ticker}')"></div>
           </div>
+          <div class="mgrid" id="qcR_${qid}" style="margin-top:8px;"></div>
         </div>
       </div>`;
     }).join('');
-    positions.forEach(p=>calcQuickSale(p.ticker));
   }
 
   renderTape(rows);
+}
+// DOM-safe id for a ticker (tickers here are already plain alnum, but this
+// keeps card ids collision-free if that ever changes).
+function tickerDomId(ticker){ return ticker.replace(/[^a-zA-Z0-9]/g,'_'); }
+// Per-position inline Quick Calculator: expand/collapse without a full
+// dashboard re-render (which would also refetch prices and lose scroll).
+function toggleTickerQuickCalc(ticker){
+  const qid = tickerDomId(ticker);
+  const panel = document.getElementById('qcPanel_'+qid);
+  const toggle = document.getElementById('qcToggle_'+qid);
+  if(!panel) return;
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if(toggle) toggle.textContent = opening ? 'Quick calc ▴' : 'Quick calc ▾';
+  if(opening) calcTickerQuickCalc(ticker);
+}
+function calcTickerQuickCalc(ticker){
+  const qid = tickerDomId(ticker);
+  const resultsEl = document.getElementById('qcR_'+qid);
+  if(!resultsEl) return;
+  const p = computePositions().find(x=>x.ticker===ticker && x.shares>0);
+  const action = document.getElementById('qcA_'+qid).value;
+  const shares = parseFloat(document.getElementById('qcS_'+qid).value)||0;
+  const price = parseFloat(document.getElementById('qcP_'+qid).value)||0;
+  const amount = shares*price;
+  const isBuy = action==='BUY';
+  const fee = amount>0 ? calcFee(amount, isBuy) : 0;
+  const total = isBuy ? amount+fee : amount-fee;
+
+  const cards = [
+    mcard(isBuy?'Buy amount':'Sell amount', fmtMoney(amount)),
+    mcard('Commission', fmtMoney(fee)),
+    mcard(isBuy?'Total cost':'Net proceeds', fmtMoney(total)),
+  ];
+  if(isBuy){
+    const priorShares = p ? p.shares : 0;
+    const priorInvested = p ? p.invested : 0;
+    const newShares = priorShares+shares;
+    const newInvested = priorInvested+total;
+    const newAvg = newShares>0 ? newInvested/newShares : 0;
+    const be = newShares>0 ? breakEvenPrice(newInvested, newShares) : 0;
+    cards.push(mcard('New average cost', newShares>0?fmt(newAvg,3):'—'));
+    cards.push(mcard('New break-even', newShares>0?fmt(be,3):'—'));
+  } else if(p){
+    const avg = p.invested/p.shares;
+    const costBasis = avg * Math.min(shares, p.shares);
+    const realized = total - costBasis;
+    const pct = costBasis>0 ? realized/costBasis*100 : 0;
+    cards.push(mcard('Realized P/L on this sale', fmtMoney(realized), realized>=0?'pos':'neg', pct.toFixed(2)+'%'));
+    if(shares > p.shares){ cards.push(mcard('Note', `you only hold ${fmt(p.shares,0)} sh`, 'neg')); }
+  } else {
+    cards.push(mcard('Realized P/L', '—', '', 'no shares held'));
+  }
+  resultsEl.innerHTML = cards.join('');
 }
 
 // Small helper for the modal's grouped info-card layout — one label/value pair.
@@ -1547,11 +1594,15 @@ function openPositionModal(ticker){
   if(p.shares > 0){
     const avg = p.invested/p.shares;
     const mp = getMarketPrice(p.ticker);
-    const value = p.shares*mp;
-    const profit = value - p.invested;
+    const grossValue = p.shares*mp;
+    const sellFeeAtMarket = mp>0 ? calcFee(grossValue, false) : 0;
+    // "Current worth" = what you'd actually walk away with if you sold right
+    // now (price × shares, minus the sell commission) — this is what P/L
+    // should be measured against, not the gross share value.
+    const netWorth = grossValue - sellFeeAtMarket;
+    const profit = netWorth - p.invested;
     const pct = p.invested>0 ? profit/p.invested*100 : 0;
     const be = breakEvenPrice(p.invested, p.shares);
-    const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
     const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
     const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
     currentHtml = `
@@ -1560,8 +1611,6 @@ function openPositionModal(ticker){
         <div class="mgrid">
           ${mcard('Shares held', fmt(p.shares,0))}
           ${mcard('Avg. buy price', fmt(avg,3))}
-          ${mcard('Market price', mp>0?fmt(mp,3):'—')}
-          ${mcard('Current value', fmtMoney(value))}
         </div>
       </div>
       <div class="mgroup">
@@ -1575,7 +1624,9 @@ function openPositionModal(ticker){
       <div class="mgroup">
         <div class="mgroup-title">Profit outlook</div>
         <div class="mgrid">
-          ${mcard('Unrealized P/L', fmtMoney(profit), profit>=0?'pos':'neg', pct.toFixed(2)+'%')}
+          ${mcard('Market price', mp>0?fmt(mp,3):'—')}
+          ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', 'shares × price − sell commission')}
+          ${mcard('Unrealized P/L', mp>0?fmtMoney(profit):'—', profit>=0?'pos':'neg', mp>0?pct.toFixed(2)+'%':'set a market price')}
           ${mcard('Break-even price', fmt(be,3))}
           ${mcard('Sell price for +2%', fmt(sell2,3))}
           ${mcard('Sell price for +5%', fmt(sell5,3))}
@@ -1645,7 +1696,8 @@ function pfSortValue(p, col){
   const avg = p.shares>0 ? p.invested/p.shares : 0;
   const mp = getMarketPrice(p.ticker);
   const value = p.shares*mp;
-  const profit = value - p.invested;
+  const sellFee = mp>0 ? calcFee(value, false) : 0;
+  const profit = (value - sellFee) - p.invested;
   const pct = p.invested>0 ? profit/p.invested*100 : 0;
   switch(col){
     case 'shares': return p.shares;
@@ -1703,49 +1755,40 @@ function renderPortfolio(){
     const avg = p.invested/p.shares;
     const mp = getMarketPrice(p.ticker);
     const value = p.shares*mp;
-    const profit = value - p.invested;
+    const sellFee = mp>0 ? calcFee(value, false) : 0;
+    const profit = (value - sellFee) - p.invested; // net of estimated sell commission
     const pct = p.invested>0 ? profit/p.invested*100 : 0;
     const be = breakEvenPrice(p.invested, p.shares);
-    const sellFeeAtMarket = mp>0 ? calcFee(p.shares*mp, false) : 0;
-    const sell2 = requiredSellPrice(p.invested, p.shares, p.invested*0.02);
-    const sell5 = requiredSellPrice(p.invested, p.shares, p.invested*0.05);
     let statusColor = 'var(--warn)';
     if(pct>1) statusColor='var(--profit)'; else if(pct<-1) statusColor='var(--loss)';
     return `<tr style="cursor:pointer;" onclick="openPositionModal('${p.ticker}')">
       <td><span class="badge-dot" style="background:${statusColor}"></span>${tickerLogo(p.ticker)}<b>${p.ticker}</b>${tickerName(p.ticker)?` <span style="color:var(--muted); font-size:11px;">${tickerName(p.ticker)}</span>`:''}</td>
       <td class="num-cell">${fmt(p.shares,0)}</td>
       <td class="num-cell">${fmt(avg,3)}</td>
-      <td class="num-cell">${fmtMoney(p.buyFees)}</td>
-      <td class="num-cell">${fmtMoney(p.invested)}</td>
       <td class="num-cell" onclick="event.stopPropagation()"><input type="number" step="0.001" value="${mp||''}" style="width:90px; text-align:right;" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)"></td>
-      <td class="num-cell">${mp>0?fmtMoney(sellFeeAtMarket):'—'}</td>
       <td class="num-cell">${fmtMoney(value)}</td>
       <td class="num-cell ${profit>=0?'pos':'neg'}">${fmtMoney(profit)}</td>
       <td class="num-cell ${pct>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
       <td class="num-cell">${fmt(be,3)}</td>
-      <td class="num-cell">${fmt(sell2,3)} / ${fmt(sell5,3)}</td>
     </tr>`;
   }).join('');
   document.getElementById('portfolioTableWrap').innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table>
       <thead><tr>
         <th class="sortable" onclick="sortPf('ticker')">Ticker${pfArrow('ticker')}</th>
         <th class="num-cell sortable" onclick="sortPf('shares')">Shares${pfArrow('shares')}</th>
         <th class="num-cell sortable" onclick="sortPf('avg')">Buy price${pfArrow('avg')}</th>
-        <th class="num-cell sortable" onclick="sortPf('buyFees')">Buy commission${pfArrow('buyFees')}</th>
-        <th class="num-cell sortable" onclick="sortPf('invested')">Total buy price${pfArrow('invested')}</th>
         <th class="num-cell sortable" onclick="sortPf('market')">Market${pfArrow('market')}</th>
-        <th class="num-cell">Sell commission (est.)</th>
         <th class="num-cell sortable" onclick="sortPf('value')">Value${pfArrow('value')}</th>
         <th class="num-cell sortable" onclick="sortPf('profit')">P/L${pfArrow('profit')}</th>
         <th class="num-cell sortable" onclick="sortPf('pct')">P/L %${pfArrow('pct')}</th>
         <th class="num-cell sortable" onclick="sortPf('be')">Break-even${pfArrow('be')}</th>
-        <th class="num-cell">Sell +2% / +5%</th>
       </tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
-    </div>`;
+    </div>
+    <div style="color:var(--muted); font-size:11.5px; margin-top:8px;">Tap a row for buy/sell commission, total buy price, and sell targets.</div>`;
   }
 
   // Fully-closed tickers: shares back to zero, but their lifetime stats
@@ -1769,7 +1812,7 @@ function renderPortfolio(){
       <td class="num-cell">${p.lastDate}</td>
     </tr>`).join('');
     closedWrap.innerHTML = `
-      <div class="card" style="overflow-x:auto;">
+      <div class="card table-scroll">
       <table>
         <thead><tr>
           <th class="sortable" onclick="sortCp('ticker')">Ticker${cpArrow('ticker')}</th>
@@ -1878,7 +1921,7 @@ function renderTransactions(){
     }).join('');
   }
   document.getElementById('txTableWrap').innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table>
       <thead><tr>
         <th class="sortable" onclick="sortTx('date')">Date${sortArrow('date')}</th>
@@ -1951,7 +1994,7 @@ function renderCashLedger(){
     <td class="num-cell" style="font-weight:700;">${fmtMoney(e.balance)}</td>
   </tr>`).join('');
   wrap.innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table>
       <thead><tr>
         <th class="sortable" onclick="sortCl('date')">Date${clSortArrow('date')}</th>
@@ -2072,7 +2115,7 @@ function renderTransfers(){
   }).join('');
   const total = totalTransferFees();
   document.getElementById('trTableWrap').innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table>
       <thead><tr>
         <th class="sortable" onclick="sortTr('date')">Date${trArrow('date')}</th>
@@ -2187,7 +2230,7 @@ function renderAdjustments(){
   </tr>`).join('');
   const total = items.reduce((s,a)=>s+a.amount,0);
   wrap.innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table>
       <thead><tr>
         <th class="sortable" onclick="sortAdj('date')">Date${adjArrow('date')}</th>
@@ -2243,7 +2286,7 @@ function renderWatchlist(){
     </tr>`;
   }).join('');
   document.getElementById('watchTableWrap').innerHTML = `
-    <div class="card" style="overflow-x:auto;">
+    <div class="card table-scroll">
     <table><thead><tr>
       <th class="sortable" onclick="sortWl('ticker')">Ticker${wlArrow('ticker')}</th>
       <th class="num-cell sortable" onclick="sortWl('target')">Target buy${wlArrow('target')}</th>
@@ -2272,7 +2315,7 @@ function renderSettings(){
   document.getElementById('setMinFee').value = DB.settings.minFee;
   document.getElementById('setTick').value = DB.settings.tick;
   document.getElementById('setCurrency').value = DB.settings.currency;
-  document.getElementById('setFontFamily').value = localStorage.getItem(FONT_FAMILY_KEY) || 'default';
+  document.getElementById('setFontFamily').value = localStorage.getItem(FONT_FAMILY_KEY) || 'system';
   document.getElementById('setFontSize').value = localStorage.getItem(FONT_SIZE_KEY) || 'medium';
 }
 function saveSettings(){
@@ -2317,7 +2360,7 @@ function resultLine(k,v,cls=''){ return `<div class="result-line"><span class="k
 
 // Lets each calculator tab pull "current shares / average cost" straight from
 // an existing open position instead of typing them in by hand.
-const CALC_TICKER_IDS = ['bcTickerSel','rcTickerSel','bgTickerSel','ppTickerSel','spTickerSel','rpTickerSel','scTickerSel'];
+const CALC_TICKER_IDS = ['bcTickerSel','rcTickerSel','bgTickerSel','ppTickerSel','spTickerSel','rpTickerSel','scTickerSel','qcTickerSel'];
 const CALC_FIELD_MAP = {
   bc: {shares:'bcCurShares', avg:'bcCurAvg', market:'bcMarket', newPrice:'bcNewPrice'},
   rc: {shares:'rcCurShares', avg:'rcCurAvg', newPrice:'rcNewPrice'},
@@ -2364,6 +2407,61 @@ function applyCalcTicker(prefix){
   CALC_FN[prefix]();
 }
 
+/* ============================= QUICK CALCULATOR (dashboard) ============================= */
+// Held position for whatever ticker is currently picked, if any — used to
+// show a blended new average (buy) or realized P/L (sell) without requiring
+// a full trip to the Calculators page.
+let qcHeld = null;
+function onQuickCalcTickerChange(){
+  const sym = document.getElementById('qcTickerSel').value;
+  const priceEl = document.getElementById('qcPrice');
+  if(!sym){ qcHeld = null; calcQuick(); return; }
+  const p = computePositions().find(x=>x.ticker===sym && x.shares>0);
+  qcHeld = p ? {shares:p.shares, avg:p.invested/p.shares} : null;
+  const mp = getMarketPrice(sym);
+  if(mp) priceEl.value = mp;
+  calcQuick();
+}
+function calcQuick(){
+  const resultsEl = document.getElementById('qcResults');
+  if(!resultsEl) return; // widget not in the DOM yet on first paint
+  const action = document.getElementById('qcAction').value;
+  const shares = parseFloat(document.getElementById('qcShares').value)||0;
+  const price = parseFloat(document.getElementById('qcPrice').value)||0;
+  const amount = shares*price;
+  const isBuy = action==='BUY';
+  const fee = amount>0 ? calcFee(amount, isBuy) : 0;
+  const total = isBuy ? amount+fee : amount-fee;
+
+  const cards = [
+    mcard(isBuy?'Buy amount':'Sell amount', fmtMoney(amount)),
+    mcard('Commission', fmtMoney(fee)),
+    mcard(isBuy?'Total cost':'Net proceeds', fmtMoney(total), '', isBuy?'leaves your cash balance':'lands in your cash balance'),
+  ];
+
+  if(isBuy){
+    const priorShares = qcHeld ? qcHeld.shares : 0;
+    const priorInvested = qcHeld ? qcHeld.shares*qcHeld.avg : 0;
+    const newShares = priorShares+shares;
+    const newInvested = priorInvested+total;
+    const newAvg = newShares>0 ? newInvested/newShares : 0;
+    const be = newShares>0 ? breakEvenPrice(newInvested, newShares) : 0;
+    cards.push(mcard('New average cost', newShares>0?fmt(newAvg,3):'—', '', qcHeld?'blended with '+fmt(priorShares,0)+' sh already held':'this purchase only'));
+    cards.push(mcard('New break-even', newShares>0?fmt(be,3):'—'));
+  } else if(qcHeld){
+    const costBasis = qcHeld.avg * Math.min(shares, qcHeld.shares);
+    const realized = total - costBasis;
+    const pct = costBasis>0 ? realized/costBasis*100 : 0;
+    cards.push(mcard('Realized P/L on this sale', fmtMoney(realized), realized>=0?'pos':'neg', pct.toFixed(2)+'%'));
+    if(shares > qcHeld.shares){
+      cards.push(mcard('Note', `you only hold ${fmt(qcHeld.shares,0)} sh`, 'neg'));
+    }
+  } else {
+    cards.push(mcard('Realized P/L', '—', '', 'pick a ticker you hold to see this'));
+  }
+  resultsEl.innerHTML = cards.join('');
+}
+
 function calcBuy(){
   const s1=parseFloat(document.getElementById('bcCurShares').value)||0;
   const a1=parseFloat(document.getElementById('bcCurAvg').value)||0;
@@ -2378,8 +2476,10 @@ function calcBuy(){
   const totalInvested = oldInvested + thisLotCost;
   const newAvg = totalShares>0 ? totalInvested/totalShares : 0;
   const be = breakEvenPrice(totalInvested, totalShares);
-  const value = totalShares*mp;
-  const profit = value - totalInvested;
+  const value = totalShares*mp; // gross value at current price
+  const sellFeeAtMarket = mp>0 ? calcFee(value, false) : 0;
+  const netWorth = value - sellFeeAtMarket; // what you'd actually walk away with if you sold right now
+  const profit = netWorth - totalInvested;
   const profitPct = totalInvested>0 ? (profit/totalInvested*100) : 0;
 
   // The 4 numbers you want at a glance, up top, live as you type.
@@ -2404,7 +2504,7 @@ function calcBuy(){
     resultLine('Total cash invested', fmtMoney(totalInvested)) +
     resultLine('New average cost', fmt(newAvg,3)) +
     resultLine('New break-even', fmt(be,3)) +
-    resultLine('Portfolio value @ current price', fmtMoney(value)) +
+    resultLine('Current worth @ current price (net of sell fee)', fmtMoney(netWorth)) +
     resultLine('Profit/loss @ current price', fmtMoney(profit)+' ('+profitPct.toFixed(2)+'%)', profit>=0?'pos':'neg');
 }
 function saveBcMarketPrice(){
@@ -2638,7 +2738,7 @@ initCollapsibleSections();
 // number the user has to look up and retype.
 const bgCashEl = document.getElementById('bgCash');
 if(bgCashEl && (!bgCashEl.value || parseFloat(bgCashEl.value)===0)) bgCashEl.value = cashSummary().cashBalance.toFixed(2);
-calcBuy(); calcReverse(); calcBudget(); calcProfitPlanner(); calcSellPlanner(); calcRecovery(); calcScenario();
+calcBuy(); calcReverse(); calcBudget(); calcProfitPlanner(); calcSellPlanner(); calcRecovery(); calcScenario(); calcQuick();
 </script>
 </body>
 </html>
