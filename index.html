@@ -17,6 +17,9 @@
     --accent:#9a1b3e;
     --accent-soft:#3a1520;
     --gold:#c9a227;
+    --gold-rgb:201,162,39;
+    --info:#3d8bd6;
+    --info-rgb:61,139,214;
     --profit:#34c77b;
     --loss:#e5484d;
     --warn:#e5a93f;
@@ -35,6 +38,9 @@
     --accent:#9a1b3e;
     --accent-soft:#f7e3e9;
     --gold:#a9790a;
+    --gold-rgb:169,121,10;
+    --info:#1c64c9;
+    --info-rgb:28,100,201;
     --profit:#18874a;
     --loss:#c8302f;
     --warn:#a9790a;
@@ -46,6 +52,19 @@
   :root[data-theme="light"] select{ background:#f7f8fa; }
   :root[data-theme="light"] .navbtn.active{ color:var(--accent); }
   :root[data-theme="light"] .chip.active{ color:var(--accent); }
+
+  /* ---------- Color themes — only the accent (buttons, active nav, chart
+     bars) changes; gold/blue highlight semantics and profit/loss colors
+     stay fixed so "break-even = gold" and "shares = blue" always read the
+     same regardless of theme. ---------- */
+  html[data-color="ocean"]{ --accent:#1f6fb2; --accent-soft:#173044; }
+  html[data-color="ocean"][data-theme="light"]{ --accent-soft:#e2eefb; }
+  html[data-color="forest"]{ --accent:#1f8a5c; --accent-soft:#123423; }
+  html[data-color="forest"][data-theme="light"]{ --accent-soft:#e1f3ea; }
+  html[data-color="violet"]{ --accent:#6d4fc9; --accent-soft:#241b3f; }
+  html[data-color="violet"][data-theme="light"]{ --accent-soft:#ece6fa; }
+  html[data-color="sunset"]{ --accent:#c9611f; --accent-soft:#3a2312; }
+  html[data-color="sunset"][data-theme="light"]{ --accent-soft:#fbe9db; }
 
   /* ---------- Font style presets — all typography already routes through
      var(--body)/--disp/--mono, so swapping these three variables re-skins
@@ -317,6 +336,22 @@
   .mcard .mvalue.pos{color:var(--profit);}
   .mcard .mvalue.neg{color:var(--loss);}
   .mcard .msub{font-size:11.5px; color:var(--muted); margin-top:3px;}
+  /* Semantic highlight variants — break-even is always the "important
+     reference number" (gold), share count is always the "how much do I
+     hold" number (blue). Gentle gradient, not a flat fill, so it reads as
+     an accent rather than a warning/alert block. */
+  .mcard.mc-gold{
+    background:linear-gradient(135deg, rgba(var(--gold-rgb),.20), rgba(var(--gold-rgb),.04));
+    border-color:rgba(var(--gold-rgb),.45);
+  }
+  .mcard.mc-gold .mlabel{color:rgba(var(--gold-rgb),.85);}
+  .mcard.mc-gold .mvalue{color:var(--gold);}
+  .mcard.mc-blue{
+    background:linear-gradient(135deg, rgba(var(--info-rgb),.20), rgba(var(--info-rgb),.04));
+    border-color:rgba(var(--info-rgb),.45);
+  }
+  .mcard.mc-blue .mlabel{color:rgba(var(--info-rgb),.85);}
+  .mcard.mc-blue .mvalue{color:var(--info);}
 
   /* ---------- Dashboard ticker cards ---------- */
   .ticker-card{cursor:pointer; transition:border-color .12s, transform .12s;}
@@ -754,6 +789,16 @@
               <option value="xl">Extra large</option>
             </select>
           </div>
+          <div class="field"><label>Color theme</label>
+            <select id="setColorTheme" onchange="applyAppearance()">
+              <option value="wine">Wine &amp; Gold (default)</option>
+              <option value="ocean">Ocean Blue</option>
+              <option value="forest">Forest Green</option>
+              <option value="violet">Violet</option>
+              <option value="sunset">Sunset Amber</option>
+            </select>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px; text-transform:none;">Changes buttons, active nav, and chart accents. Break-even (gold) and share-count (blue) highlights stay put so they're always recognizable.</div>
+          </div>
         </div>
         <div class="card">
           <div class="section-title" style="margin-top:0;" id="set-amount">Amount settings <span class="tag">fee &amp; rounding</span></div>
@@ -1111,19 +1156,25 @@ function toggleTheme(){
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
-/* ============================= APPEARANCE (font style / size) ============================= */
+/* ============================= APPEARANCE (font style / size / color theme) ============================= */
 const FONT_FAMILY_KEY = 'qse_font_family';
 const FONT_SIZE_KEY = 'qse_font_size';
+const COLOR_THEME_KEY = 'qse_color_theme';
 function applyAppearance(){
   const family = document.getElementById('setFontFamily') ? document.getElementById('setFontFamily').value : (localStorage.getItem(FONT_FAMILY_KEY) || 'system');
   const size = document.getElementById('setFontSize') ? document.getElementById('setFontSize').value : (localStorage.getItem(FONT_SIZE_KEY) || 'medium');
+  const color = document.getElementById('setColorTheme') ? document.getElementById('setColorTheme').value : (localStorage.getItem(COLOR_THEME_KEY) || 'wine');
   document.documentElement.setAttribute('data-font', family);
   document.documentElement.setAttribute('data-fontsize', size);
+  document.documentElement.setAttribute('data-color', color);
   localStorage.setItem(FONT_FAMILY_KEY, family);
   localStorage.setItem(FONT_SIZE_KEY, size);
+  localStorage.setItem(COLOR_THEME_KEY, color);
+  renderDashboard(); // chart accent colors depend on the theme
 }
 document.documentElement.setAttribute('data-font', localStorage.getItem(FONT_FAMILY_KEY) || 'system');
 document.documentElement.setAttribute('data-fontsize', localStorage.getItem(FONT_SIZE_KEY) || 'medium');
+document.documentElement.setAttribute('data-color', localStorage.getItem(COLOR_THEME_KEY) || 'wine');
 
 function toast(msg){
   const t = document.getElementById('toast');
@@ -1491,8 +1542,8 @@ function renderDashboard(){
           <span class="badge-dot" style="background:${statusColor}; margin-top:4px;"></span>
         </div>
         <div class="mgrid" style="margin-top:12px;">
-          ${mcard('Num of shares', fmt(p.shares,0))}
-          ${mcard('Break-even price', fmt(be,3))}
+          ${mcard('Num of shares', fmt(p.shares,0), '', '', false, 'blue')}
+          ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           <div class="mcard tc-price-card wide" onclick="event.stopPropagation()">
             <div class="mlabel">Current price</div>
             <input type="number" step="0.001" class="tc-price-input" value="${mp||''}" placeholder="0.000" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)">
@@ -1575,8 +1626,8 @@ function calcTickerQuickCalc(ticker){
 }
 
 // Small helper for the modal's grouped info-card layout — one label/value pair.
-function mcard(label, value, cls='', sub='', wide=false){
-  return `<div class="mcard${wide?' wide':''}">
+function mcard(label, value, cls='', sub='', wide=false, variant=''){
+  return `<div class="mcard${wide?' wide':''}${variant?' mc-'+variant:''}">
     <div class="mlabel">${label}</div>
     <div class="mvalue ${cls}">${value}</div>
     ${sub?`<div class="msub">${sub}</div>`:''}
@@ -1609,7 +1660,7 @@ function openPositionModal(ticker){
       <div class="mgroup">
         <div class="mgroup-title">Position</div>
         <div class="mgrid">
-          ${mcard('Shares held', fmt(p.shares,0))}
+          ${mcard('Shares held', fmt(p.shares,0), '', '', false, 'blue')}
           ${mcard('Avg. buy price', fmt(avg,3))}
         </div>
       </div>
@@ -1627,7 +1678,7 @@ function openPositionModal(ticker){
           ${mcard('Market price', mp>0?fmt(mp,3):'—')}
           ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', 'shares × price − sell commission')}
           ${mcard('Unrealized P/L', mp>0?fmtMoney(profit):'—', profit>=0?'pos':'neg', mp>0?pct.toFixed(2)+'%':'set a market price')}
-          ${mcard('Break-even price', fmt(be,3))}
+          ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           ${mcard('Sell price for +2%', fmt(sell2,3))}
           ${mcard('Sell price for +5%', fmt(sell5,3))}
         </div>
@@ -2317,6 +2368,7 @@ function renderSettings(){
   document.getElementById('setCurrency').value = DB.settings.currency;
   document.getElementById('setFontFamily').value = localStorage.getItem(FONT_FAMILY_KEY) || 'system';
   document.getElementById('setFontSize').value = localStorage.getItem(FONT_SIZE_KEY) || 'medium';
+  document.getElementById('setColorTheme').value = localStorage.getItem(COLOR_THEME_KEY) || 'wine';
 }
 function saveSettings(){
   DB.settings = {
