@@ -14,8 +14,8 @@
     --border:#232b33;
     --text:#e8ecef;
     --muted:#8a97a3;
-    --accent:#9a1b3e;
-    --accent-soft:#3a1520;
+    --accent:#3d4b58;
+    --accent-soft:#1c242c;
     --gold:#c9a227;
     --gold-rgb:201,162,39;
     --info:#3d8bd6;
@@ -24,6 +24,7 @@
     --loss:#e5484d;
     --warn:#e5a93f;
     --radius:10px;
+    --on-accent-soft:#fff;
     --mono:'JetBrains Mono',monospace;
     --disp:'Space Grotesk',sans-serif;
     --body:'Inter',sans-serif;
@@ -35,8 +36,8 @@
     --border:#dde1e6;
     --text:#1b2027;
     --muted:#667085;
-    --accent:#9a1b3e;
-    --accent-soft:#f7e3e9;
+    --accent:#33414d;
+    --accent-soft:#e7ebee;
     --gold:#a9790a;
     --gold-rgb:169,121,10;
     --info:#1c64c9;
@@ -44,14 +45,12 @@
     --profit:#18874a;
     --loss:#c8302f;
     --warn:#a9790a;
+    --on-accent-soft:var(--accent);
   }
-  :root[data-theme="light"] .card{ box-shadow:0 1px 3px rgba(20,20,30,.06); }
   :root[data-theme="light"] input[type=text],
   :root[data-theme="light"] input[type=number],
   :root[data-theme="light"] input[type=date],
   :root[data-theme="light"] select{ background:#f7f8fa; }
-  :root[data-theme="light"] .navbtn.active{ color:var(--accent); }
-  :root[data-theme="light"] .chip.active{ color:var(--accent); }
 
   /* ---------- Color themes — only the accent (buttons, active nav, chart
      bars) changes; gold/blue highlight semantics and profit/loss colors
@@ -352,7 +351,7 @@
     transition:background .12s, color .12s;
   }
   .navbtn:hover{background:var(--panel-2); color:var(--text);}
-  .navbtn.active{background:var(--accent-soft); color:#fff; box-shadow:inset 3px 0 0 var(--accent);}
+  .navbtn.active{background:var(--accent-soft); color:var(--on-accent-soft); box-shadow:inset 3px 0 0 var(--accent);}
   .navbtn .num{font-family:var(--mono); color:var(--gold); font-size:11px; width:16px; flex-shrink:0;}
 
   .main{flex:1; padding:26px 30px 60px 30px; max-width:1180px;}
@@ -366,7 +365,7 @@
   }
   .pagesub{color:var(--muted); font-size:14.5px; margin:0 0 22px 0; line-height:1.5;}
 
-  .grid{display:grid; gap:16px;}
+  .grid{display:grid; gap:12px;}
   .grid-4{grid-template-columns:repeat(4,1fr);}
   .grid-3{grid-template-columns:repeat(3,1fr);}
   .grid-2{grid-template-columns:repeat(2,1fr);}
@@ -375,12 +374,35 @@
   .card{
     background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
     padding:18px;
+    box-shadow:0 1px 2px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.10);
   }
-  .stat-card .label{color:var(--muted); font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
-  .stat-card .value{font-family:var(--mono); font-size:22px; font-weight:700;}
-  .stat-card .sub{font-size:12.5px; margin-top:6px; color:var(--muted); line-height:1.4;}
+  :root[data-theme="light"] .card{ box-shadow:0 1px 2px rgba(20,20,30,.05), 0 4px 14px rgba(20,20,30,.06); }
+  .stat-card{padding:11px 13px;}
+  .stat-card .label{color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; line-height:1.25;}
+  .stat-card .value{font-family:var(--mono); font-size:17px; font-weight:700; line-height:1.2;}
+  .stat-card .sub{font-size:10.5px; margin-top:3px; color:var(--muted); line-height:1.3;}
 
-  .section-title{font-family:var(--disp); font-size:15px; font-weight:600; margin:28px 0 12px 0; display:flex; align-items:center; gap:8px;}
+  /* ---------- Density: Compact — an even tighter pass for people who want
+     to see as much data as possible with minimal scrolling. Comfortable
+     (default) is the sizing above; Compact shrinks it all further. ---------- */
+  html[data-density="compact"] .grid{gap:8px;}
+  html[data-density="compact"] .card{padding:10px 12px;}
+  html[data-density="compact"] .stat-card{padding:8px 10px;}
+  html[data-density="compact"] .stat-card .label{font-size:9px; margin-bottom:2px;}
+  html[data-density="compact"] .stat-card .value{font-size:14px;}
+  html[data-density="compact"] .stat-card .sub{font-size:9px; margin-top:2px;}
+  html[data-density="compact"] .section-title{margin:12px 0 6px 0; font-size:13px;}
+  html[data-density="compact"] .mgrid{gap:4px;}
+  html[data-density="compact"] .mcard{padding:6px 8px;}
+  html[data-density="compact"] .mcard .mvalue{font-size:13px;}
+  html[data-density="compact"] .mcard .mlabel{font-size:9.5px; margin-bottom:2px;}
+  html[data-density="compact"] .ticker-card{padding:8px 10px;}
+  html[data-density="compact"] .portfolio-grid{grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:8px;}
+  html[data-density="compact"] .pagesub{margin-bottom:12px;}
+  html[data-density="compact"] table, html[data-density="compact"] thead th, html[data-density="compact"] tbody td{font-size:12.5px;}
+  html[data-density="compact"] tbody td{padding:7px 8px;}
+
+  .section-title{font-family:var(--disp); font-size:15px; font-weight:600; margin:20px 0 10px 0; display:flex; align-items:center; gap:8px;}
   .section-title .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:20px; padding:1px 8px;}
 
   table{width:100%; border-collapse:collapse; font-size:14px;}
@@ -445,7 +467,7 @@
     background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
     padding:7px 13px; border-radius:20px; font-size:12.5px; cursor:pointer; font-weight:500;
   }
-  .chip.active{background:var(--accent-soft); color:#fff; border-color:var(--accent);}
+  .chip.active{background:var(--accent-soft); color:var(--on-accent-soft); border-color:var(--accent);}
 
   .subpage{display:none;}
   .subpage.active{display:block;}
@@ -537,19 +559,19 @@
     font-family:var(--disp); font-size:13px; font-weight:700; text-transform:uppercase;
     letter-spacing:.04em; color:var(--gold); margin:0 0 8px 0;
   }
-  .mgrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px;}
+  .mgrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:6px;}
   .mcard{
     background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
-    padding:10px 12px;
+    padding:8px 10px;
   }
   .mcard.wide{grid-column:1 / -1;}
-  .mcard .mlabel{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+  .mcard .mlabel{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px;}
   .mcard .mlabel .info-tip{width:12px; height:12px; font-size:9px; margin-left:4px; vertical-align:text-top;}
   .stat-card .label .info-tip{vertical-align:text-top;}
-  .mcard .mvalue{font-family:var(--mono); font-size:15.5px; font-weight:700; line-height:1.3;}
+  .mcard .mvalue{font-family:var(--mono); font-size:14.5px; font-weight:700; line-height:1.25;}
   .mcard .mvalue.pos{color:var(--profit);}
   .mcard .mvalue.neg{color:var(--loss);}
-  .mcard .msub{font-size:11.5px; color:var(--muted); margin-top:3px;}
+  .mcard .msub{font-size:10.5px; color:var(--muted); margin-top:2px;}
   /* Semantic highlight variants — break-even is always the "important
      reference number" (gold), share count is always the "how much do I
      hold" number (blue). Gentle gradient, not a flat fill, so it reads as
@@ -567,22 +589,36 @@
   .mcard.mc-blue .mlabel{color:rgba(var(--info-rgb),.85);}
   .mcard.mc-blue .mvalue{color:var(--info);}
 
-  /* ---------- Dashboard ticker cards ---------- */
-  .ticker-card{cursor:pointer; transition:border-color .12s, transform .12s;}
-  .ticker-card:hover{border-color:var(--gold);}
+  /* ---------- Dashboard ticker cards ----------
+     These are the highest-priority items on the page, so they get a
+     noticeably stronger shadow than a regular .card (not just the ambient
+     baseline one) plus a hover lift — and tighter internal spacing so more
+     of them fit on screen without scrolling. */
+  .ticker-card{
+    cursor:pointer; padding:12px 14px;
+    box-shadow:0 2px 5px rgba(0,0,0,.20), 0 10px 26px rgba(0,0,0,.24);
+    transition:border-color .12s, transform .12s, box-shadow .12s;
+  }
+  .ticker-card:hover{
+    border-color:var(--gold); transform:translateY(-2px);
+    box-shadow:0 4px 10px rgba(0,0,0,.26), 0 14px 34px rgba(0,0,0,.30);
+  }
+  :root[data-theme="light"] .ticker-card{ box-shadow:0 2px 5px rgba(20,20,30,.10), 0 10px 24px rgba(20,20,30,.12); }
+  :root[data-theme="light"] .ticker-card:hover{ box-shadow:0 4px 10px rgba(20,20,30,.14), 0 14px 30px rgba(20,20,30,.16); }
   .ticker-card-head{display:flex; justify-content:space-between; align-items:flex-start;}
-  .tc-ticker{font-family:var(--mono); font-weight:700; font-size:15px;}
-  .tc-company{font-size:11px; color:var(--muted); margin-top:2px;}
-  .tc-price-input{width:100%; background:transparent; border:none; padding:0; font-family:var(--mono); font-size:15.5px; font-weight:700; color:var(--text);}
+  .tc-ticker{font-family:var(--mono); font-weight:700; font-size:14px; line-height:1.2;}
+  .tc-company{font-size:10.5px; color:var(--muted); margin-top:1px;}
+  .tc-price-input{width:100%; background:transparent; border:none; padding:0; font-family:var(--mono); font-size:14.5px; font-weight:700; color:var(--text);}
   .tc-price-input:focus-visible{outline:none;}
   .mcard.tc-price-card{cursor:default;}
-  .tc-pl-inline{font-family:var(--mono); font-size:13px; font-weight:700; margin-top:8px; color:var(--muted);}
+  .tc-pl-inline{font-family:var(--mono); font-size:12px; font-weight:700; margin-top:5px; color:var(--muted);}
   .tc-pl-inline.pos{color:var(--profit);}
   .tc-pl-inline.neg{color:var(--loss);}
-  .tc-qc-toggle{width:100%; margin-top:12px; cursor:pointer;}
-  .tc-qc-panel{margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); cursor:default;}
+  .tc-qc-toggle{width:100%; margin-top:8px; cursor:pointer;}
+  .tc-qc-panel{margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); cursor:default;}
+  .portfolio-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(226px,1fr)); gap:12px;}
   .ticker-logo{width:20px; height:20px; border-radius:5px; object-fit:contain; vertical-align:middle; margin-right:7px; background:#fff; padding:2px; flex-shrink:0;}
-  .ticker-logo.lg{width:32px; height:32px; border-radius:7px; padding:3px; margin-right:10px;}
+  .ticker-logo.lg{width:26px; height:26px; border-radius:6px; padding:3px; margin-right:8px;}
   .ticker-logo.sm{width:14px; height:14px; border-radius:3px; padding:1px; margin-right:5px;}
    .ticker-logo-fallback{
      display:inline-flex; align-items:center; justify-content:center;
@@ -612,7 +648,13 @@
   /* ---------- Collapsible sections ---------- */
   .section-title.collapsible{cursor:pointer; user-select:none;}
   .section-title.collapsible:hover{color:var(--gold);}
-  .section-title .collapse-arrow{color:var(--muted); font-size:10px; margin-left:4px; display:inline-block; transition:transform .15s ease;}
+  .section-title.collapsible:hover .collapse-arrow{color:var(--gold);}
+  .section-title .collapse-arrow{
+    color:var(--muted); font-size:20px; line-height:1; margin-left:6px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; background:var(--panel-2);
+    transition:transform .15s ease, color .12s ease, background .12s ease;
+  }
   .section-title.collapsed .collapse-arrow{transform:rotate(-90deg);}
 
   /* ---------- Sub-nav chip row (reuses .chip-tabs / .chip) ---------- */
@@ -829,7 +871,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
   </select>
   <select id="setColorTheme" onchange="applyAppearance()" title="Color theme">
     <optgroup label="Classic themes">
-      <option value="wine">Wine &amp; Gold</option>
+      <option value="wine">Classic (Graphite &amp; Gold)</option>
       <option value="ocean">Ocean Blue</option>
       <option value="forest">Forest Green</option>
       <option value="violet">Violet</option>
@@ -842,6 +884,10 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <option value="material-teal">Material Teal</option>
       <option value="material-amber">Material Amber</option>
     </optgroup>
+  </select>
+  <select id="setDensity" onchange="applyAppearance()" title="Card density">
+    <option value="comfortable">Comfortable</option>
+    <option value="compact">Compact</option>
   </select>
   <button class="btn secondary small" id="themeToggle" onclick="toggleTheme()">☀ Light mode</button>
 </div>
@@ -882,7 +928,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <div class="grid grid-4" id="dashCards"></div>
 
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
-      <div class="grid grid-3" id="dashPortfolioBox"></div>
+      <div class="portfolio-grid" id="dashPortfolioBox"></div>
 
       <div class="section-title" id="dash-quickcalc">Quick Calculator <span class="tag">buy / sell, right here — no page switch</span></div>
       <div class="card" style="margin-bottom:24px;">
@@ -1345,7 +1391,7 @@ const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, tick: 0.001, currency: 'QAR
 // Appearance now lives in DB.appearance, so it's saved (and cloud-synced)
 // the same way as every other setting instead of sitting only in
 // localStorage on one device.
-const DEFAULT_APPEARANCE = { theme: 'dark', font: 'system', fontSize: 'medium', colorTheme: 'wine' };
+const DEFAULT_APPEARANCE = { theme: 'dark', font: 'system', fontSize: 'medium', colorTheme: 'wine', density: 'comfortable' };
 const STORAGE_KEY = 'qse_workbook_db_v1';
 // Legacy per-device keys from before appearance moved into DB — read once
 // as a migration fallback for anyone updating from an older version.
@@ -1702,6 +1748,7 @@ function applyThemeAttrs(){
   document.documentElement.setAttribute('data-font', a.font);
   document.documentElement.setAttribute('data-fontsize', a.fontSize);
   document.documentElement.setAttribute('data-color', a.colorTheme);
+  document.documentElement.setAttribute('data-density', a.density || 'comfortable');
   const btn = document.getElementById('themeToggle');
   if(btn) btn.textContent = a.theme==='light' ? '● Dark mode' : '☀ Light mode';
 }
@@ -1716,9 +1763,11 @@ function applyAppearance(){
   const familyEl = document.getElementById('setFontFamily');
   const sizeEl = document.getElementById('setFontSize');
   const colorEl = document.getElementById('setColorTheme');
+  const densityEl = document.getElementById('setDensity');
   if(familyEl) DB.appearance.font = familyEl.value;
   if(sizeEl) DB.appearance.fontSize = sizeEl.value;
   if(colorEl) DB.appearance.colorTheme = colorEl.value;
+  if(densityEl) DB.appearance.density = densityEl.value;
   applyThemeAttrs();
   saveDB();
   renderDashboard(); // chart accent colors depend on the theme
@@ -2085,13 +2134,13 @@ function renderDashboard(){
   // still one hover/tap away. Cards whose "sub" carries an actual computed
   // number (not just a description) keep it visible underneath.
   const cards = [
-    {label:'Current Balance', value: fmtMoney(cs.cashBalance), tip:'Cash sitting uninvested — money in your account not tied up in any stock.'},
-    {label:'Total Cash Deposit', value: fmtMoney(cs.totalInward), tip:'Total gross amount deposited, before wire transfer fees are deducted.'},
-    {label:'Total Withdraw', value: fmtMoney(cs.totalOutward), tip:'Total gross amount withdrawn, before wire transfer fees are deducted.'},
-    {label:'Current Shares Investment', value: fmtMoney(totalInvestment), tip:'Cost basis of all currently open positions — what you paid, not what they\'re worth now.'},
-    {label:'Stocks Current Value', value: fmtMoney(totalValue), tip:'Market value of open positions at the last price you entered, before any sell fee.'},
-    {label:'Current Worth', value: fmtMoney(cs.netWorth), tip:'Cash balance plus stocks worth, net of estimated sell fees — your total net worth right now.'},
-    {label:'Net P/L (all-in)', value: fmtMoney(cs.netPL), sub:`incl. all fees + ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg', tip:'Total profit or loss since day one, including every fee paid and every reward received.'},
+    {label:'Cash Balance', value: fmtMoney(cs.cashBalance), tip:'Cash sitting uninvested — money in your account not tied up in any stock.'},
+    {label:'Total Deposited', value: fmtMoney(cs.totalInward), tip:'Total gross amount deposited, before wire transfer fees are deducted.'},
+    {label:'Total Withdrawn', value: fmtMoney(cs.totalOutward), tip:'Total gross amount withdrawn, before wire transfer fees are deducted.'},
+    {label:'Shares Invested', value: fmtMoney(totalInvestment), tip:'Cost basis of all currently open positions — what you paid, not what they\'re worth now.'},
+    {label:'Stocks Value', value: fmtMoney(totalValue), tip:'Market value of open positions at the last price you entered, before any sell fee.'},
+    {label:'Net Worth', value: fmtMoney(cs.netWorth), tip:'Cash balance plus stocks worth, net of estimated sell fees — your total net worth right now.'},
+    {label:'Net P/L', value: fmtMoney(cs.netPL), sub:`incl. ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg', tip:'Total profit or loss since day one, including every fee paid and every reward received.'},
     {label:'Total Charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`, tip:'Every Riyal of cost that isn\'t the stock itself — trading commissions plus wire transfer fees.'},
   ];
   document.getElementById('dashCards').innerHTML = cards.map(c=>`
@@ -2140,7 +2189,7 @@ function renderDashboard(){
 
     chartInvest = new Chart(investCanvas.getContext('2d'), {
       type:'doughnut',
-      data:{ labels, datasets:[{data: rows.map(r=>r.invested), backgroundColor:['#9a1b3e','#c9a227','#34c77b','#3b6bd6','#8a97a3','#e5484d','#7b5cd6','#2ea3a3']}]},
+      data:{ labels, datasets:[{data: rows.map(r=>r.invested), backgroundColor:['#3d4b58','#c9a227','#34c77b','#3b6bd6','#8a97a3','#e5484d','#7b5cd6','#2ea3a3']}]},
       options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend} }
     });
     chartProfit = new Chart(profitCanvas.getContext('2d'), {
@@ -2307,7 +2356,7 @@ function renderDashboard(){
           </div>
           <span class="badge-dot" style="background:${statusColor}; margin-top:4px;"></span>
         </div>
-        <div class="mgrid" style="margin-top:12px;">
+        <div class="mgrid" style="margin-top:8px;">
           ${mcard('Num of shares', fmt(p.shares,0), '', '', false, 'blue')}
           ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           <div class="mcard tc-price-card wide" onclick="event.stopPropagation()">
@@ -3272,6 +3321,7 @@ function renderSettings(){
   document.getElementById('setFontFamily').value = DB.appearance.font;
   document.getElementById('setFontSize').value = DB.appearance.fontSize;
   document.getElementById('setColorTheme').value = DB.appearance.colorTheme;
+  document.getElementById('setDensity').value = DB.appearance.density || 'comfortable';
 }
 function saveSettings(){
   DB.settings = {
