@@ -3,7 +3,14 @@
     "feePct": 0.275,
     "minFee": 0,
     "tick": 0.01,
-    "currency": "QAR"
+    "currency": "QAR",
+    "depositFee": 10
+  },
+  "appearance": {
+    "theme": "light",
+    "font": "rounded",
+    "fontSize": "medium",
+    "colorTheme": "material-green"
   },
   "transactions": [
     {
@@ -313,11 +320,11 @@
     }
   ],
   "marketPrices": {
-    "IQCD": 10.27,
-    "MARK": 1.974,
-    "MPHC": 1.07,
-    "QFLS": 13.52,
-    "TQES": 2.1
+    "IQCD": 10.28,
+    "MARK": 1.977,
+    "MPHC": 1.074,
+    "QFLS": 13.55,
+    "TQES": 2.08
   },
   "watchlist": []
 }
