@@ -640,7 +640,7 @@
   .hybrid-status.neg{color:var(--loss);}
   .hybrid-status.watch{color:var(--accent);}
   @media(max-width:900px){.hybrid-row{grid-template-columns:1.2fr repeat(3,minmax(78px,1fr));}.hybrid-row .optional{display:none;}}
-  .trade-cycle-grid{display:grid;grid-template-columns:1.95fr repeat(4,minmax(90px,1fr));gap:10px;align-items:end}
+  .trade-cycle-grid{display:grid;grid-template-columns:1.15fr repeat(6,minmax(120px,1fr));gap:10px;align-items:end}
   .trade-cycle-grid .field{min-width:0}
   .trade-cycle-grid .field label{font-size:10px}.trade-cycle-grid input,.trade-cycle-grid select{width:100%;box-sizing:border-box}.trade-cycle-hint{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px}
   .trade-cycle-result{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-top:12px}
@@ -648,6 +648,9 @@
   .trade-cycle-card .k{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
   .trade-cycle-card .v{font-family:var(--mono);font-size:14px;font-weight:750;margin-top:3px}
   .trade-cycle-note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px}
+  .tc-current-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(100px,1fr));gap:10px;padding:12px 14px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;margin:14px 0;}
+  .tc-current-grid .k{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .tc-current-grid .v{font-family:var(--mono);font-size:15px;font-weight:750;margin-top:3px}
   @media(max-width:1050px){.trade-cycle-grid{grid-template-columns:repeat(3,minmax(150px,1fr));}}@media(max-width:700px){.trade-cycle-grid{grid-template-columns:repeat(2,minmax(140px,1fr));}.trade-cycle-result{grid-template-columns:repeat(2,minmax(120px,1fr));}}
 
 
@@ -859,47 +862,72 @@ html[data-color^="material-"][data-theme="dark"] select{
 /* Authentication UI guard: only one state is visible. */
 html.auth-signed-in #cloudSignedOutBox{display:none !important;}
 html.auth-signed-out #cloudSignedInBox{display:none !important;}
+
+/* FINAL surgical Appearance popover */
+.appearance-popover{position:relative;display:inline-flex;align-items:center;}
+.appearance-trigger{min-width:108px;}
+.appearance-panel{
+  position:absolute;right:0;top:calc(100% + 7px);z-index:1000;
+  display:none;width:255px;padding:10px;
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 14px 35px rgba(0,0,0,.28);
+}
+.appearance-panel.open{display:grid;gap:8px;}
+.appearance-panel-title{
+  font-family:var(--disp);font-weight:700;font-size:13px;
+  color:var(--text);padding:2px 2px 3px;
+}
+.appearance-panel select{width:100%;padding:7px 9px;font-size:12px;}
+.appearance-panel .btn{width:100%;padding:7px 10px;font-size:12px;}
+
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <select id="setFontFamily" onchange="applyAppearance()" title="Font style">
-    <option value="system">Clean system font</option>
-    <option value="arial">Arial</option>
-    <option value="arial-narrow">Arial Narrow</option>
-    <option value="default">Inter / Space Grotesk</option>
-    <option value="legible">Atkinson Hyperlegible (max readability)</option>
-    <option value="rounded">Lexend (reading-friendly)</option>
-    <option value="serif">Serif (Source Serif)</option>
-  </select>
-  <select id="setFontSize" onchange="applyAppearance()" title="Text size">
-    <option value="small">Small text</option>
-    <option value="medium">Medium text</option>
-    <option value="large">Large text</option>
-    <option value="xl">Extra large text</option>
-  </select>
-  <select id="setColorTheme" onchange="applyAppearance()" title="Color theme">
-    <optgroup label="Classic themes">
-      <option value="wine">Classic (Graphite &amp; Gold)</option>
-      <option value="ocean">Ocean Blue</option>
-      <option value="forest">Forest Green</option>
-      <option value="violet">Violet</option>
-      <option value="sunset">Sunset Amber</option>
-    </optgroup>
-    <optgroup label="Material Design themes">
-      <option value="material-blue">Material Purple / Blue</option>
-      <option value="material-green">Material Green</option>
-      <option value="material-purple">Material Rose</option>
-      <option value="material-teal">Material Teal</option>
-      <option value="material-amber">Material Amber</option>
-    </optgroup>
-  </select>
-  <select id="setDensity" onchange="applyAppearance()" title="Card density">
-    <option value="comfortable">Comfortable</option>
-    <option value="compact">Compact</option>
-  </select>
-  <button class="btn secondary small" id="themeToggle" onclick="toggleTheme()">☀ Light mode</button>
+  <div class="appearance-popover" id="appearancePopover">
+    <button class="btn secondary small appearance-trigger" id="appearanceTrigger"
+            type="button" title="Appearance settings">Appearance ▾</button>
+    <div class="appearance-panel" id="appearancePanel">
+      <div class="appearance-panel-title">Appearance</div>
+      <select id="setFontFamily" onchange="applyAppearance()" title="Font style">
+        <option value="system">Clean system font</option>
+        <option value="arial">Arial</option>
+        <option value="arial-narrow">Arial Narrow</option>
+        <option value="default">Inter / Space Grotesk</option>
+        <option value="legible">Atkinson Hyperlegible (max readability)</option>
+        <option value="rounded">Lexend (reading-friendly)</option>
+        <option value="serif">Serif (Source Serif)</option>
+      </select>
+      <select id="setFontSize" onchange="applyAppearance()" title="Text size">
+        <option value="small">Small text</option>
+        <option value="medium">Medium text</option>
+        <option value="large">Large text</option>
+        <option value="xl">Extra large text</option>
+      </select>
+      <select id="setColorTheme" onchange="applyAppearance()" title="Color theme">
+        <optgroup label="Classic themes">
+          <option value="wine">Classic (Graphite &amp; Gold)</option>
+          <option value="ocean">Ocean Blue</option>
+          <option value="forest">Forest Green</option>
+          <option value="violet">Violet</option>
+          <option value="sunset">Sunset Amber</option>
+        </optgroup>
+        <optgroup label="Material Design themes">
+          <option value="material-blue">Material Purple / Blue</option>
+          <option value="material-green">Material Green</option>
+          <option value="material-purple">Material Rose</option>
+          <option value="material-teal">Material Teal</option>
+          <option value="material-amber">Material Amber</option>
+        </optgroup>
+      </select>
+      <select id="setDensity" onchange="applyAppearance()" title="Card density">
+        <option value="comfortable">Comfortable</option>
+        <option value="compact">Compact</option>
+      </select>
+      <button class="btn secondary small" id="themeToggle" onclick="toggleTheme()">☀ Light mode</button>
+    </div>
+  </div>
 </div>
 
 <div class="tape-wrap"><div class="tape-track" id="tapeTrack">&nbsp;</div></div>
@@ -930,7 +958,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
-        <button class="chip" onclick="scrollToSection('dash-quickcalc')">Quick Calc</button>
+        <button class="chip" onclick="scrollToSection('dash-tradecalc')">Trade Calc</button>
         <button class="chip" onclick="scrollToSection('dash-charts')">Charts</button>
         <button class="chip" onclick="scrollToSection('dash-alerts')">Alerts</button>
       </div>
@@ -940,38 +968,35 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
       <div class="portfolio-grid" id="dashPortfolioBox"></div>
 
-      <div class="section-title" id="dash-cycle">Trade Cycle Planner <span class="tag">model an average-down trade and its exit</span></div>
+      <div class="section-title" id="dash-tradecalc">Trade Calc <span class="tag">the one calculator — buy, sell, or full cycle</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Pick a stock, pick what you're planning, and every number — commission, break-even, required bounce, net P/L — comes from the same fee-aware engine the rest of the workbook uses. No more checking three calculators and getting three different break-evens.">i</span></div>
       <div class="card" style="margin-bottom:24px;">
-        <div class="trade-cycle-grid">
-          <div class="field"><label>Stock</label><select id="tcTicker" onchange="tcOnTickerChange()"></select></div>
-          <div class="field"><label>Available cash</label><input type="number" id="tcCash" min="0" step="0.01" oninput="calcTradeCycle()"></div>
-          <div class="field"><label>Amount to add</label><input type="number" id="tcAdd" min="0" step="1" value="500" oninput="tcAmountChanged()"></div>
-          <div class="field"><label>Buy price</label><input type="number" id="tcEntry" step="0.001" oninput="tcPriceChanged()"></div>
-          <div class="field"><label>New shares</label><input type="number" id="tcAddedShares" min="0" step="1" oninput="tcSharesChanged()"></div>
-          <div class="field"><label>Target sell price</label><input type="number" id="tcTarget" step="0.001" oninput="calcTradeCycle()"></div>
-          <div class="field"><label>Quick amount</label><select id="tcPreset" onchange="tcUseCashPreset(this.value)"><option value="">Choose</option><option value="100">QAR 100</option><option value="250">QAR 250</option><option value="500">QAR 500</option><option value="750">QAR 750</option><option value="1000">QAR 1,000</option><option value="1500">QAR 1,500</option><option value="2000">QAR 2,000</option><option value="3000">QAR 3,000</option></select></div>
-        </div>
-        <div class="trade-cycle-hint">Buy price and New shares are editable. Changing either recalculates the Amount to add. Target sell price starts at the position's current break-even and can be changed to test any exit.</div>
-        <div id="tradeCycleResults" class="trade-cycle-result"></div>
-        <div id="tradeCycleNote" class="trade-cycle-note"></div>
-      </div>
-
-
-      <div class="section-title" id="dash-quickcalc">Quick Calculator <span class="tag">buy / sell, right here — no page switch</span></div>
-      <div class="card" style="margin-bottom:24px;">
-        <div class="row">
-          <div class="field" style="flex:1.4;"><label>Stock</label><select id="qcTickerSel" onchange="onQuickCalcTickerChange()"></select></div>
+        <div class="row" style="align-items:flex-end;">
+          <div class="field" style="flex:1.6;"><label>Stock</label><select id="tcaTicker" onchange="tcaOnTickerChange()"></select></div>
           <div class="field"><label>Action</label>
-            <select id="qcAction" onchange="onQuickCalcActionChange()">
-              <option value="BUY">Buy</option>
-              <option value="SELL">Sell</option>
+            <select id="tcaMode" onchange="tcaOnModeChange()">
+              <option value="BUY">BUY / AVG DOWN</option>
+              <option value="SELL">SELL</option>
+              <option value="CYCLE">FULL CYCLE — buy then sell at target</option>
             </select>
           </div>
-          <div class="field"><label>Shares</label><input type="number" id="qcShares" value="100" oninput="calcQuick()"></div>
-          <div class="field"><label id="qcPriceLabel">Buy price</label><input type="number" step="0.001" id="qcPrice" value="0" oninput="calcQuick()"></div>
-          <div class="field"><label>Target sell price</label><input type="number" step="0.001" id="qcTargetSell" value="0" oninput="calcQuick()"></div>
         </div>
-        <div id="qcResults" class="mgrid" style="margin-top:14px;"></div>
+
+        <div class="section-title" style="font-size:11px; margin:16px 0 0 0;" data-no-collapse>Current position</div>
+        <div id="tcaCurrent"></div>
+
+        <div class="section-title" style="font-size:11px; margin:14px 0 0 0;" data-no-collapse>Plan</div>
+        <div class="trade-cycle-grid" id="tcaPlanFields"></div>
+
+        <div class="section-title" style="font-size:11px; margin:14px 0 0 0;" data-no-collapse>Result</div>
+        <div id="tcaResult"></div>
+
+        <div id="tcaCycle" style="display:none;">
+          <div class="section-title" style="font-size:11px; margin:14px 0 0 0;" data-no-collapse>Cycle</div>
+          <div id="tcaCycleBody"></div>
+        </div>
+
+        <button class="btn" id="tcaAddBtn" style="width:100%; margin-top:16px;" onclick="tcAddTrade()">Add Trade</button>
+        <div id="tcaNote" class="trade-cycle-note"></div>
       </div>
 
       <div class="section-title" id="dash-hybrid">Hybrid Trading Board <span class="tag">existing capital only · fee-aware exits</span></div>
@@ -1296,7 +1321,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('set-cloud')">Cloud sync</button>
-        <button class="chip" onclick="scrollToSection('set-appearance')">Appearance</button>
         <button class="chip" onclick="scrollToSection('set-amount')">Amount settings</button>
       </div>
 
@@ -1341,10 +1365,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
             <label class="btn secondary" style="cursor:pointer;">Import JSON<input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importJSON(event)"></label>
             <button class="btn danger" onclick="clearAll()">Clear all data</button>
           </div>
-        </div>
-        <div class="card">
-          <div class="section-title" style="margin-top:0;" id="set-appearance">Appearance<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Font style, text size, color theme, and light/dark mode all moved to the bar at the very top of the page — always one click away, on every page. Changes there apply instantly everywhere and are saved with the rest of your data (synced to the cloud if you're signed in).">i</span></div>
-          <div style="color:var(--muted); font-size:13px;">↑ Look for the controls at the very top of the page.</div>
         </div>
         <div class="card">
           <div class="section-title" style="margin-top:0;" id="set-amount">Amount settings <span class="tag">fee &amp; rounding</span></div>
@@ -2200,6 +2220,247 @@ function tcSharesChanged(){
   }
   calcTradeCycle();
 }
+/* ============================= TRADE CALC — the one calculator ============================= */
+// Consolidates what used to be three separate dashboard tools (Trade Cycle
+// Planner, Quick Calculator, and the old per-mode calculators) into one
+// state -> calculateTrade() -> render path. Every number here comes from the
+// same calcFee/breakEvenPrice/computePositions the rest of the app uses, so
+// this can never disagree with the Portfolio table or the position modal.
+let TradeCalc = { mode: 'BUY', targetTouched: false, pending: null };
+
+function tcaOpenPositions(){ return computePositions().filter(p=>p.shares>0); }
+
+function tcaRefreshTickerSelect(){
+  const sel = document.getElementById('tcaTicker');
+  if(!sel) return;
+  const prev = sel.value;
+  const held = tcaOpenPositions().sort((a,b)=>a.ticker.localeCompare(b.ticker));
+  const heldSet = new Set(held.map(p=>p.ticker));
+  const heldOptions = held.map(p=>`<option value="${p.ticker}">${tickerLabel(p.ticker)} — ${fmt(p.shares,0)} sh held</option>`).join('');
+  const freshOptions = Object.keys(TICKER_NAMES).filter(t=>!heldSet.has(t)).sort()
+    .map(t=>`<option value="${t}">${tickerLabel(t)} — new position</option>`).join('');
+  sel.innerHTML = (heldOptions ? `<optgroup label="Your positions">${heldOptions}</optgroup>` : '') +
+    `<optgroup label="Other QSE tickers">${freshOptions}</optgroup>`;
+  if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  else if(held.length) sel.value = held[0].ticker;
+  tcaRenderFields();
+}
+
+function tcaOnTickerChange(){
+  TradeCalc.targetTouched = false;
+  tcaRenderFields();
+}
+function tcaOnModeChange(){
+  TradeCalc.mode = document.getElementById('tcaMode').value;
+  TradeCalc.targetTouched = false;
+  document.getElementById('tcaAddBtn').textContent = TradeCalc.mode==='SELL' ? 'Add Trade (log this sell)' : 'Add Trade (log this buy)';
+  tcaRenderFields();
+}
+
+// Rebuilds the Plan inputs for the current mode, then calculates. Rebuilding
+// (rather than show/hide-ing three static blocks) keeps exactly one set of
+// field IDs alive at a time — no stale duplicates to keep in sync.
+function tcaRenderFields(){
+  const modeEl = document.getElementById('tcaMode');
+  if(modeEl) TradeCalc.mode = modeEl.value;
+  const ticker = document.getElementById('tcaTicker') ? document.getElementById('tcaTicker').value : '';
+  const p = ticker ? tcaOpenPositions().find(x=>x.ticker===ticker) : null;
+  const mp = ticker ? getMarketPrice(ticker) : 0;
+  const fields = document.getElementById('tcaPlanFields');
+  if(!fields) return;
+  const addBtn = document.getElementById('tcaAddBtn');
+  if(addBtn) addBtn.textContent = TradeCalc.mode==='SELL' ? 'Add Trade (log this sell)' : 'Add Trade (log this buy)';
+  if(TradeCalc.mode==='SELL'){
+    fields.innerHTML = `
+      <div class="field"><label>Shares to sell</label><input type="number" id="tcaSellShares" min="0" step="1" value="${p?p.shares:''}" oninput="calculateTrade()"></div>
+      <div class="field"><label>Sell price</label><input type="number" id="tcaSellPrice" step="0.001" value="${mp||''}" oninput="calculateTrade()"></div>
+    `;
+  } else {
+    fields.innerHTML = `
+      <div class="field"><label>Buy price</label><input type="number" id="tcaBuyPrice" step="0.001" value="${mp||''}" oninput="tcaPriceChanged()"></div>
+      <div class="field"><label>New shares</label><input type="number" id="tcaBuyShares" min="0" step="1" value="0" oninput="tcaSharesChanged()"></div>
+      <div class="field"><label>Amount</label><input type="number" id="tcaBuyAmount" min="0" step="0.01" value="0" oninput="tcaAmountChanged()"></div>
+      ${TradeCalc.mode==='CYCLE' ? `<div class="field"><label>Target sell price</label><input type="number" id="tcaTargetSell" step="0.001" value="" oninput="TradeCalc.targetTouched=true; calculateTrade();"></div>` : ''}
+    `;
+  }
+  calculateTrade();
+}
+// Amount is linked to shares both ways: typing shares fills the amount,
+// typing an amount solves back for whole shares at the current buy price.
+function tcaAmountChanged(){
+  const price = parseFloat(document.getElementById('tcaBuyPrice').value)||0;
+  const amount = parseFloat(document.getElementById('tcaBuyAmount').value)||0;
+  if(price>0) document.getElementById('tcaBuyShares').value = Math.floor(amount/price);
+  calculateTrade();
+}
+function tcaSharesChanged(){
+  const price = parseFloat(document.getElementById('tcaBuyPrice').value)||0;
+  const shares = parseFloat(document.getElementById('tcaBuyShares').value)||0;
+  document.getElementById('tcaBuyAmount').value = (shares*price).toFixed(2);
+  calculateTrade();
+}
+function tcaPriceChanged(){
+  const price = parseFloat(document.getElementById('tcaBuyPrice').value)||0;
+  const shares = parseFloat(document.getElementById('tcaBuyShares').value)||0;
+  if(shares>0) document.getElementById('tcaBuyAmount').value = (shares*price).toFixed(2);
+  calculateTrade();
+}
+
+// The single calculation path. Reads whatever fields tcaRenderFields() built
+// for the current mode, computes every output with calcFee/breakEvenPrice,
+// and calls renderTradeCalc() with the result.
+function calculateTrade(){
+  const ticker = document.getElementById('tcaTicker') ? document.getElementById('tcaTicker').value : '';
+  if(!ticker){ renderTradeCalc(null); return; }
+  const p = tcaOpenPositions().find(x=>x.ticker===ticker);
+  const shares = p ? p.shares : 0;
+  const invested = p ? p.invested : 0;
+  const avg = shares>0 ? invested/shares : 0;
+  const be = shares>0 ? breakEvenPrice(invested, shares) : 0;
+  const mp = getMarketPrice(ticker);
+  const grossValue = shares*mp;
+  const sellFeeNow = (mp>0 && shares>0) ? calcFee(grossValue, false) : 0;
+  const worth = grossValue - sellFeeNow;
+  const pl = shares>0 ? worth - invested : 0;
+  const current = {ticker, shares, invested, avg, be, mp, worth, pl};
+
+  if(TradeCalc.mode==='SELL'){
+    const rawSellShares = parseFloat(document.getElementById('tcaSellShares')?.value)||0;
+    const sellShares = shares>0 ? Math.min(rawSellShares, shares) : rawSellShares;
+    const sellPrice = parseFloat(document.getElementById('tcaSellPrice')?.value)||0;
+    const gross = sellShares*sellPrice;
+    const fee = gross>0 ? calcFee(gross, false) : 0;
+    const net = gross-fee;
+    const costBasis = avg*sellShares;
+    const realized = net-costBasis;
+    const remainingShares = shares-sellShares;
+    const remainingInvested = Math.max(0, invested-costBasis);
+    TradeCalc.pending = (sellShares>0 && sellPrice>0) ? {mode:'SELL', ticker, shares:sellShares, price:sellPrice} : null;
+    renderTradeCalc(current, {
+      kind:'SELL', overCap: rawSellShares>shares && shares>0,
+      lines:[
+        ['Gross proceeds', fmtMoney(gross)],
+        ['Sell commission', fmtMoney(fee)],
+        ['Net proceeds', fmtMoney(net)],
+        ['Cost basis (sold shares)', fmtMoney(costBasis)],
+        ['Realized P/L', fmtMoney(realized), realized>=0?'pos':'neg'],
+        ['Remaining shares', fmt(remainingShares,0)],
+        ['Remaining position value', remainingShares>0?fmtMoney(remainingInvested):'—'],
+      ],
+      note: sellShares>0 && sellPrice>0 ? `Selling ${fmt(sellShares,0)} of your ${fmt(shares,0)} shares at ${fmt(sellPrice,3)} realizes ${fmtMoney(realized)} after commission.` : 'Enter shares to sell and a sell price.'
+    });
+    return;
+  }
+
+  // BUY / AVG DOWN and FULL CYCLE share the same accumulation math.
+  const buyPrice = parseFloat(document.getElementById('tcaBuyPrice')?.value)||0;
+  const newShares = parseFloat(document.getElementById('tcaBuyShares')?.value)||0;
+  const buyAmount = newShares*buyPrice;
+  const buyFee = buyAmount>0 ? calcFee(buyAmount, true) : 0;
+  const additionalInvestment = buyAmount+buyFee;
+  const totalShares = shares+newShares;
+  const totalInvested = invested+additionalInvestment;
+  const newAvg = totalShares>0 ? totalInvested/totalShares : 0;
+  const newBe = totalShares>0 ? breakEvenPrice(totalInvested, totalShares) : 0;
+  const bounceRequired = buyPrice>0 ? (newBe-buyPrice)/buyPrice*100 : 0;
+
+  TradeCalc.pending = (newShares>0 && buyPrice>0) ? {mode:'BUY', ticker, shares:newShares, price:buyPrice} : null;
+
+  const resultLines = [
+    ['Buy commission', fmtMoney(buyFee)],
+    ['Additional investment', fmtMoney(additionalInvestment)],
+    ['New total shares', fmt(totalShares,0)],
+    ['New average buy', fmt(newAvg,3)],
+    ['New break-even', fmt(newBe,3)],
+    ['Required bounce from buy price', bounceRequired.toFixed(2)+'%', bounceRequired<=0?'pos':''],
+  ];
+
+  let cycle = null;
+  if(TradeCalc.mode==='CYCLE'){
+    const targetEl = document.getElementById('tcaTargetSell');
+    if(targetEl && !TradeCalc.targetTouched && newBe>0) targetEl.value = newBe.toFixed(3);
+    const targetSell = parseFloat(targetEl?.value)||0;
+    const sellAmount = totalShares*targetSell;
+    const sellFee = (sellAmount>0 && targetSell>0) ? calcFee(sellAmount, false) : 0;
+    const sellProceeds = sellAmount-sellFee;
+    const cycleNetPL = (targetSell>0 && totalShares>0) ? sellProceeds-totalInvested : NaN;
+    const cycleRoi = (totalInvested>0 && Number.isFinite(cycleNetPL)) ? cycleNetPL/totalInvested*100 : NaN;
+    cycle = {
+      lines:[
+        ['Investment (existing + new)', fmtMoney(totalInvested)],
+        ['Target sell proceeds', targetSell>0?fmtMoney(sellProceeds):'—'],
+        ['Net cycle P/L', Number.isFinite(cycleNetPL)?fmtMoney(cycleNetPL):'—', Number.isFinite(cycleNetPL)?(cycleNetPL>=0?'pos':'neg'):''],
+        ['ROI', Number.isFinite(cycleRoi)?cycleRoi.toFixed(2)+'%':'—', Number.isFinite(cycleRoi)?(cycleRoi>=0?'pos':'neg'):''],
+      ],
+      note: (targetSell>0 && newShares>0)
+        ? `${shares>0?fmt(shares,0)+' held':'Starting fresh'} → buy ${fmt(newShares,0)} @ ${fmt(buyPrice,3)} → new BE ${fmt(newBe,3)} → sell all ${fmt(totalShares,0)} @ ${fmt(targetSell,3)} → net ${Number.isFinite(cycleNetPL)?fmtMoney(cycleNetPL):'—'}.`
+        : 'Enter a buy price, new shares, and a target sell price to model the full cycle.'
+    };
+  }
+
+  renderTradeCalc(current, {
+    kind: TradeCalc.mode, lines: resultLines,
+    note: TradeCalc.mode==='CYCLE'
+      ? '"Add Trade" logs just the buy leg now — come back and log the sell once you actually make it.'
+      : (newShares>0 && buyPrice>0 ? `Buying ${fmt(newShares,0)} shares at ${fmt(buyPrice,3)} needs the price to bounce ${bounceRequired.toFixed(2)}% just to break even after both commissions.` : 'Enter a buy price and share count.')
+  }, cycle);
+}
+
+function renderTradeCalc(current, result, cycle){
+  const currentBox = document.getElementById('tcaCurrent');
+  const resultBox = document.getElementById('tcaResult');
+  const cycleWrap = document.getElementById('tcaCycle');
+  const cycleBox = document.getElementById('tcaCycleBody');
+  const noteBox = document.getElementById('tcaNote');
+  if(!currentBox) return;
+
+  if(!current){
+    currentBox.innerHTML = `<div class="empty">Pick a stock above to begin.</div>`;
+    resultBox.innerHTML = '';
+    cycleWrap.style.display = 'none';
+    noteBox.textContent = '';
+    return;
+  }
+  currentBox.innerHTML = current.shares>0 ? `
+    <div class="tc-current-grid">
+      <div><div class="k">Shares</div><div class="v">${fmt(current.shares,0)}</div></div>
+      <div><div class="k">Avg buy price</div><div class="v">${fmt(current.avg,3)}</div></div>
+      <div><div class="k">Break-even</div><div class="v">${fmt(current.be,3)}</div></div>
+      <div><div class="k">Market price</div><div class="v">${current.mp>0?fmt(current.mp,3):'—'}</div></div>
+      <div><div class="k">Current worth</div><div class="v">${current.mp>0?fmtMoney(current.worth):'—'}</div></div>
+      <div><div class="k">P/L</div><div class="v ${current.pl>=0?'pos':'neg'}">${current.mp>0?fmtMoney(current.pl):'—'}</div></div>
+    </div>` : `<div class="empty">No open position in ${current.ticker} yet — this will be a brand new buy.</div>`;
+
+  resultBox.innerHTML = result.lines.map(([k,v,cls])=> resultLine(k,v,cls||'')).join('');
+
+  if(cycle){
+    cycleWrap.style.display = 'block';
+    cycleBox.innerHTML = cycle.lines.map(([k,v,cls])=> resultLine(k,v,cls||'')).join('');
+  } else {
+    cycleWrap.style.display = 'none';
+    cycleBox.innerHTML = '';
+  }
+
+  let note = result.note || '';
+  if(cycle && cycle.note) note += ' ' + cycle.note;
+  if(result.overCap) note = `You only hold ${fmt(current.shares,0)} shares — capped at that. ${note}`;
+  noteBox.textContent = note;
+}
+
+// Logs the currently-calculated leg as a real transaction. In FULL CYCLE
+// mode this logs the buy only — the sell is a plan, not yet executed.
+function tcAddTrade(){
+  const pending = TradeCalc.pending;
+  if(!pending){ toast('Fill in the plan fields first.'); return; }
+  const date = new Date().toISOString().slice(0,10);
+  DB.transactions.push({date, ticker:pending.ticker, action:pending.mode, shares:pending.shares, price:pending.price});
+  saveDB();
+  toast(`${pending.mode==='BUY'?'Buy':'Sell'} of ${fmt(pending.shares,0)} ${pending.ticker} @ ${fmt(pending.price,3)} logged.`);
+  TradeCalc.targetTouched = false;
+  renderAll();
+  tcaRenderFields();
+}
+
 function calcTradeCycle(){
   const sel=document.getElementById('tcTicker');
   const ticker=sel?.value;
@@ -3505,7 +3766,7 @@ function infoTip(text){ return `<span class="info-tip" tabindex="0" onclick="eve
 
 // Lets each calculator tab pull "current shares / average cost" straight from
 // an existing open position instead of typing them in by hand.
-const CALC_TICKER_IDS = ['bcTickerSel','rcTickerSel','bgTickerSel','ppTickerSel','spTickerSel','rpTickerSel','scTickerSel','qcTickerSel'];
+const CALC_TICKER_IDS = ['bcTickerSel','rcTickerSel','bgTickerSel','ppTickerSel','spTickerSel','rpTickerSel','scTickerSel'];
 const CALC_FIELD_MAP = {
   bc: {shares:'bcCurShares', avg:'bcCurAvg', market:'bcMarket', newPrice:'bcNewPrice'},
   rc: {shares:'rcCurShares', avg:'rcCurAvg', newPrice:'rcNewPrice'},
@@ -3888,7 +4149,7 @@ function calcScenario(){
 
 /* ============================= INIT ============================= */
 function renderAll(){
-  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderWatchlist, renderSettings, refreshCalcTickerSelects, refreshTradeCycleTickers];
+  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderWatchlist, renderSettings, refreshCalcTickerSelects, refreshTradeCycleTickers, tcaRefreshTickerSelect];
   for(const fn of sections){
     try{ fn(); }catch(e){ console.error(fn.name, e); }
   }
@@ -3912,5 +4173,28 @@ const tcCashEl = document.getElementById('tcCash');
 if(tcCashEl) tcCashEl.value = cashSummary().cashBalance.toFixed(2);
 calcBuy(); calcReverse(); calcBudget(); calcProfitPlanner(); calcSellPlanner(); calcRecovery(); calcScenario(); calcQuick(); calcTradeCycle();
 </script>
+
+<script>
+/* FINAL: Appearance popover only */
+(function(){
+  function initAppearancePopover(){
+    const trigger=document.getElementById('appearanceTrigger');
+    const panel=document.getElementById('appearancePanel');
+    const wrap=document.getElementById('appearancePopover');
+    if(!trigger || !panel || !wrap || trigger.dataset.bound) return;
+    trigger.dataset.bound='1';
+    trigger.addEventListener('click',function(e){
+      e.stopPropagation();
+      panel.classList.toggle('open');
+    });
+    panel.addEventListener('click',function(e){e.stopPropagation();});
+    document.addEventListener('click',function(){
+      panel.classList.remove('open');
+    });
+  }
+  document.addEventListener('DOMContentLoaded',initAppearancePopover);
+})();
+</script>
+
 </body>
 </html>
