@@ -252,6 +252,16 @@
     --disp:'Lexend',sans-serif;
     --mono:'JetBrains Mono',monospace;
   }
+  html[data-font="arial"]{
+    --body:Arial,Helvetica,sans-serif;
+    --disp:Arial,Helvetica,sans-serif;
+    --mono:'Courier New',Courier,monospace;
+  }
+  html[data-font="arial-narrow"]{
+    --body:'Arial Narrow',Arial,sans-serif;
+    --disp:'Arial Narrow',Arial,sans-serif;
+    --mono:'Courier New',Courier,monospace;
+  }
   /* ---------- Text size — scales the whole rendered page, including the
      modal, so it isn't a per-selector patchwork. ---------- */
   html[data-fontsize="small"] body{zoom:0.9;}
@@ -266,8 +276,18 @@
   input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--gold); outline-offset:1px;}
 
   /* ---------- Ticker Tape ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;
+    padding:8px 16px; background:var(--panel); border-bottom:1px solid var(--border);
+  }
+  .topbar select{
+    width:auto; padding:6px 9px; font-size:12px; border-radius:6px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+  }
+  .topbar .btn{padding:6px 12px; font-size:12px;}
+  @media(max-width:700px){ .topbar{justify-content:center; padding:8px 10px;} }
   .tape-wrap{
-    background:linear-gradient(180deg, #14060b, #0b0e11);
+    background:linear-gradient(180deg, #0a0a0c, #000000);
     border-bottom:1px solid var(--border);
     overflow:hidden;
     white-space:nowrap;
@@ -300,10 +320,10 @@
   @media (prefers-reduced-motion: reduce){
     .tape-track{animation:none; padding-left:90px;}
   }
-  .tape-item{padding:0 22px;color:#8a97a3;border-right:1px solid rgba(255,255,255,.1);}
-  .tape-item b{color:#e8ecef;font-weight:600;margin-right:6px;}
-  .tape-up{color:#34c77b;}
-  .tape-down{color:#e5484d;}
+  .tape-item{padding:0 22px;color:#aab4bd;border-right:1px solid rgba(255,255,255,.12);}
+  .tape-item b{color:#ffffff;font-weight:700;margin-right:6px;}
+  .tape-up{color:#4ade80;font-weight:600;}
+  .tape-down{color:#f87171;font-weight:600;}
   @keyframes tape-scroll{
     0%{transform:translateX(0);}
     100%{transform:translateX(-100%);}
@@ -439,6 +459,29 @@
   .chart-card .section-title{margin:0 0 10px 0; font-size:13px;}
   .chart-box{position:relative; height:220px; width:100%;}
   .chart-box canvas{max-height:220px;}
+  /* ---------- Info tooltip — compact "what is this / how is it computed"
+     explainer. Pure CSS (no JS), so it's cheap to sprinkle everywhere a
+     paragraph of explanation used to sit permanently under a heading. ---------- */
+  .info-tip{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%; margin-left:6px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
+    font-size:10.5px; font-weight:700; font-style:italic; font-family:Georgia,'Times New Roman',serif;
+    cursor:help; position:relative; vertical-align:middle; flex-shrink:0;
+  }
+  .info-tip:hover{color:var(--accent); border-color:var(--accent);}
+  .info-tip::after{
+    content:attr(data-tip);
+    position:absolute; left:50%; bottom:135%; transform:translateX(-50%);
+    width:250px; max-width:64vw; background:var(--panel); color:var(--text);
+    border:1px solid var(--border); border-radius:8px; padding:9px 11px;
+    font-size:11.5px; font-style:normal; font-weight:400; letter-spacing:normal; text-transform:none; line-height:1.45; text-align:left;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+    opacity:0; visibility:hidden; transition:opacity .12s ease;
+    z-index:60; pointer-events:none;
+  }
+  .info-tip:hover::after, .info-tip:focus::after{ opacity:1; visibility:visible; }
+  @media(max-width:700px){ .info-tip::after{ left:auto; right:-8px; transform:none; } }
   .toast{
     position:fixed; bottom:20px; right:20px; background:var(--panel); border:1px solid var(--accent);
     padding:12px 18px; border-radius:8px; font-size:13px; box-shadow:0 6px 24px rgba(0,0,0,.4);
@@ -501,6 +544,8 @@
   }
   .mcard.wide{grid-column:1 / -1;}
   .mcard .mlabel{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+  .mcard .mlabel .info-tip{width:12px; height:12px; font-size:9px; margin-left:4px; vertical-align:text-top;}
+  .stat-card .label .info-tip{vertical-align:text-top;}
   .mcard .mvalue{font-family:var(--mono); font-size:15.5px; font-weight:700; line-height:1.3;}
   .mcard .mvalue.pos{color:var(--profit);}
   .mcard .mvalue.neg{color:var(--loss);}
@@ -712,6 +757,53 @@
   html[data-color^="material-"][data-theme="light"] select:focus,
   html[data-color^="material-"][data-theme="dark"] select:focus { border-color:var(--accent); outline:3px solid var(--accent-soft); }
 
+/* ---------- Card & field accents — minimal gradient, shadows not borders ---
+   1) The gradient on stat/chart cards is now barely-there: the top edge is
+      only ~6–8% shifted toward --accent-soft before settling back into
+      plain --panel — a hint of color, not a wash. Same tiny ratio for
+      every color theme, material included, so nothing goes pale/white.
+   2) No hard card borders — a soft two-layer shadow gives lift and
+      definition instead.
+   3) Colour only touches .card surfaces and input/select fields. The page
+      background, topbar, and sidebar are untouched by any of this and
+      stay their theme's plain white/off-white/grey (or dark) panel — no
+      accent tint leaks into them.
+   Placed last so it wins over the earlier, more saturated definitions
+   above regardless of theme. */
+html:not([data-color="wine"]) .card.stat-card,
+html:not([data-color="wine"]) .card.chart-card{
+  border:0;
+  box-shadow:0 1px 2px rgba(0,0,0,.10), 0 6px 18px rgba(0,0,0,.14);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 8%, var(--panel)), var(--panel) 60px);
+}
+html[data-color^="material-"][data-theme="light"] .card.stat-card,
+html[data-color^="material-"][data-theme="dark"] .card.stat-card,
+html[data-color^="material-"][data-theme="light"] .card.chart-card,
+html[data-color^="material-"][data-theme="dark"] .card.chart-card{
+  border:0;
+  box-shadow:0 1px 2px rgba(0,0,0,.10), 0 6px 18px rgba(0,0,0,.14);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 6%, var(--panel)), var(--panel) 60px);
+}
+
+/* Fields get the same whisper of color the cards get — background only,
+   border stays the plain theme border, no accent bleeding into it. */
+html:not([data-color="wine"]) input[type=text],
+html:not([data-color="wine"]) input[type=number],
+html:not([data-color="wine"]) input[type=date],
+html:not([data-color="wine"]) select{
+  background: color-mix(in srgb, var(--accent-soft) 6%, var(--panel-2));
+}
+html[data-color^="material-"][data-theme="light"] input[type=text],
+html[data-color^="material-"][data-theme="dark"] input[type=text],
+html[data-color^="material-"][data-theme="light"] input[type=number],
+html[data-color^="material-"][data-theme="dark"] input[type=number],
+html[data-color^="material-"][data-theme="light"] input[type=date],
+html[data-color^="material-"][data-theme="dark"] input[type=date],
+html[data-color^="material-"][data-theme="light"] select,
+html[data-color^="material-"][data-theme="dark"] select{
+  background: color-mix(in srgb, var(--accent-soft) 6%, var(--panel-2));
+}
+
 /* Authentication UI guard: only one state is visible. */
 html.auth-signed-in #cloudSignedOutBox{display:none !important;}
 html.auth-signed-out #cloudSignedInBox{display:none !important;}
@@ -719,12 +811,46 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 </head>
 <body>
 
+<div class="topbar">
+  <select id="setFontFamily" onchange="applyAppearance()" title="Font style">
+    <option value="system">Clean system font</option>
+    <option value="arial">Arial</option>
+    <option value="arial-narrow">Arial Narrow</option>
+    <option value="default">Inter / Space Grotesk</option>
+    <option value="legible">Atkinson Hyperlegible (max readability)</option>
+    <option value="rounded">Lexend (reading-friendly)</option>
+    <option value="serif">Serif (Source Serif)</option>
+  </select>
+  <select id="setFontSize" onchange="applyAppearance()" title="Text size">
+    <option value="small">Small text</option>
+    <option value="medium">Medium text</option>
+    <option value="large">Large text</option>
+    <option value="xl">Extra large text</option>
+  </select>
+  <select id="setColorTheme" onchange="applyAppearance()" title="Color theme">
+    <optgroup label="Classic themes">
+      <option value="wine">Wine &amp; Gold</option>
+      <option value="ocean">Ocean Blue</option>
+      <option value="forest">Forest Green</option>
+      <option value="violet">Violet</option>
+      <option value="sunset">Sunset Amber</option>
+    </optgroup>
+    <optgroup label="Material Design themes">
+      <option value="material-blue">Material Purple / Blue</option>
+      <option value="material-green">Material Green</option>
+      <option value="material-purple">Material Rose</option>
+      <option value="material-teal">Material Teal</option>
+      <option value="material-amber">Material Amber</option>
+    </optgroup>
+  </select>
+  <button class="btn secondary small" id="themeToggle" onclick="toggleTheme()">☀ Light mode</button>
+</div>
+
 <div class="tape-wrap"><div class="tape-track" id="tapeTrack">&nbsp;</div></div>
 
 <div class="shell">
   <div class="sidebar">
     <div class="brand">QSE WORKBOOK<span>trading assistant</span></div>
-    <button class="btn secondary small" id="themeToggle" style="width:100%; margin-bottom:14px;" onclick="toggleTheme()">☀ Light mode</button>
     <nav class="navlist">
       <button class="navbtn active" data-page="dashboard"><span class="num">01</span>Dashboard</button>
       <button class="navbtn" data-page="portfolio"><span class="num">02</span>Portfolio</button>
@@ -747,13 +873,16 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
-        <button class="chip" onclick="scrollToSection('dash-quickcalc')">Quick Calc</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
+        <button class="chip" onclick="scrollToSection('dash-quickcalc')">Quick Calc</button>
         <button class="chip" onclick="scrollToSection('dash-charts')">Charts</button>
         <button class="chip" onclick="scrollToSection('dash-alerts')">Alerts</button>
       </div>
 
       <div class="grid grid-4" id="dashCards"></div>
+
+      <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
+      <div class="grid grid-3" id="dashPortfolioBox"></div>
 
       <div class="section-title" id="dash-quickcalc">Quick Calculator <span class="tag">buy / sell, right here — no page switch</span></div>
       <div class="card" style="margin-bottom:24px;">
@@ -780,39 +909,49 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
         <div id="hybridBoard" class="hybrid-board"></div>
       </div>
 
-      <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for full detail</span></div>
-      <div class="grid grid-3" id="dashPortfolioBox"></div>
-
       <div class="charts-row section-boundary" id="dash-charts">
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>Allocation by ticker</div>
+          <div class="section-title" data-no-collapse>Allocation by ticker<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="How much of your total buy price (cost basis) sits in each open position — a doughnut slice per ticker. Shows where your capital is concentrated, not current value.">i</span></div>
           <div id="chartInvestEmpty" class="empty" style="display:none; padding:16px 8px;">No open positions yet.</div>
           <div class="chart-box"><canvas id="chartInvest"></canvas></div>
         </div>
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>P/L by ticker</div>
+          <div class="section-title" data-no-collapse>P/L by ticker<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Unrealized profit/loss per open position in cash terms, net of the estimated sell commission — bars above zero are winners, below zero are losers, at today's set price.">i</span></div>
           <div id="chartProfitEmpty" class="empty" style="display:none; padding:16px 8px;">No open positions yet.</div>
           <div class="chart-box"><canvas id="chartProfit"></canvas></div>
         </div>
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>ROI % by ticker</div>
+          <div class="section-title" data-no-collapse>ROI % by ticker<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Same P/L as the chart on the left, but as a percentage of that position's own cost basis — lets you compare a small winning position fairly against a large one, since ROI% ignores position size.">i</span></div>
           <div id="chartRoiEmpty" class="empty" style="display:none; padding:16px 8px;">No open positions yet.</div>
           <div class="chart-box"><canvas id="chartRoi"></canvas></div>
         </div>
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>Winners vs losers</div>
+          <div class="section-title" data-no-collapse>Winners vs losers<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Simple headcount: how many of your currently open positions are sitting in profit vs in loss right now, regardless of how big each gain or loss is.">i</span></div>
           <div id="chartWinLossEmpty" class="empty" style="display:none; padding:16px 8px;">No open positions yet.</div>
           <div class="chart-box"><canvas id="chartWinLoss"></canvas></div>
         </div>
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>Invested vs current value</div>
+          <div class="section-title" data-no-collapse>Invested vs current value<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Two bars per ticker: what you paid (total buy price) next to what it's worth now at the set market price. The gap between the pair is your unrealized gain or loss for that stock.">i</span></div>
           <div id="chartValueEmpty" class="empty" style="display:none; padding:16px 8px;">No open positions yet.</div>
           <div class="chart-box"><canvas id="chartValue"></canvas></div>
         </div>
         <div class="card chart-card">
-          <div class="section-title" data-no-collapse>Fees breakdown</div>
+          <div class="section-title" data-no-collapse>Fees breakdown<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Every Riyal of cost that isn't the stock itself, split into trading commissions (buy + sell) vs wire fees on deposits/withdrawals. Covers your whole history, not just open positions.">i</span></div>
           <div id="chartFeesEmpty" class="empty" style="display:none; padding:16px 8px;">No fees recorded yet.</div>
           <div class="chart-box"><canvas id="chartFees"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:16px;">
+        <div class="card chart-card">
+          <div class="section-title" data-no-collapse>Cash balance over time<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Your actual cash on hand after every deposit, withdrawal, buy, and sell, plotted chronologically. Pulled from the same running ledger as the Cash Ledger table on the Transactions page — the two always agree.">i</span></div>
+          <div id="chartCashEmpty" class="empty" style="display:none; padding:16px 8px;">No deposits, withdrawals, or trades yet.</div>
+          <div class="chart-box"><canvas id="chartCash"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <div class="section-title" data-no-collapse>Realized P/L over time <span class="tag">closed trades only</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="A running total that only moves when you actually SELL — each sell locks in a gain or loss (net of commission) using weighted-average cost, added to the running total. Unlike the other charts, this ignores today's market price entirely — it's what you've actually banked so far.">i</span></div>
+          <div id="chartRealizedEmpty" class="empty" style="display:none; padding:16px 8px;">No sells yet — this tracks profit/loss as you actually close positions.</div>
+          <div class="chart-box"><canvas id="chartRealized"></canvas></div>
         </div>
       </div>
 
@@ -890,17 +1029,16 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       </div>
       <div id="txTableWrap"></div>
 
-      <div class="section-title" style="margin-top:32px;" id="tx-transfers">Cash transfers <span class="tag">deposits / withdrawals</span></div>
-      <p class="pagesub" style="margin-top:-6px;">Wire fees on deposits are real money lost too — they're kept separate from trading fees but counted in your totals.</p>
+      <div class="section-title" style="margin-top:32px;" id="tx-transfers">Cash transfers <span class="tag">deposits / withdrawals</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Wire fees on deposits are real money lost too — they're kept separate from trading commissions but counted in your totals.">i</span></div>
       <div class="card" style="margin-bottom:20px;">
         <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;" id="trFormTitle">Add transfer</div>
         <div class="row">
           <div class="field"><label>Date</label><input type="date" id="trDate"></div>
           <div class="field"><label>Type</label>
-            <select id="trType"><option value="DEPOSIT">Deposit</option><option value="WITHDRAWAL">Withdrawal</option></select>
+            <select id="trType" onchange="onTrTypeChange()"><option value="DEPOSIT">Deposit</option><option value="WITHDRAWAL">Withdrawal</option></select>
           </div>
           <div class="field"><label>Gross amount</label><input type="number" id="trGross" placeholder="0"></div>
-          <div class="field"><label>Transfer fee</label><input type="number" id="trFee" placeholder="10"></div>
+          <div class="field"><label>Transfer fee</label><input type="number" id="trFee" placeholder="0"></div>
           <div class="field" style="flex:0 0 auto; align-self:flex-end; display:flex; gap:8px;">
             <button class="btn" id="trSubmitBtn" onclick="addTransfer()">Add</button>
             <button class="btn ghost" id="trCancelBtn" style="display:none;" onclick="cancelEditTransfer()">Cancel</button>
@@ -909,8 +1047,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       </div>
       <div id="trTableWrap"></div>
 
-      <div class="section-title" style="margin-top:32px;" id="tx-adjustments">Rewards &amp; adjustments <span class="tag">cashback, corrections</span></div>
-      <p class="pagesub" style="margin-top:-6px;">Broker trading rewards and other one-off cash corrections that aren't a buy/sell or a transfer — they still move your cash balance and count toward net profit/loss.</p>
+      <div class="section-title" style="margin-top:32px;" id="tx-adjustments">Rewards &amp; adjustments <span class="tag">cashback, corrections</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Broker trading rewards and other one-off cash corrections that aren't a buy/sell or a transfer — they still move your cash balance and count toward net profit/loss.">i</span></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="row">
           <div class="field"><label>Date</label><input type="date" id="adjDate"></div>
@@ -921,8 +1058,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       </div>
       <div id="adjTableWrap"></div>
 
-      <div class="section-title" style="margin-top:32px;" id="tx-ledger">Cash ledger <span class="tag">running balance</span></div>
-      <p class="pagesub" style="margin-top:-6px;">Every deposit, withdrawal, buy, sell, and reward in one chronological line, each with the cash balance right after it — the same shape as your broker statement's "Balance" column.</p>
+      <div class="section-title" style="margin-top:32px;" id="tx-ledger">Cash ledger <span class="tag">running balance</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Every deposit, withdrawal, buy, sell, and reward in one chronological line, each with the cash balance right after it — the same shape as your broker statement's Balance column.">i</span></div>
       <div id="cashLedgerWrap"></div>
     </div>
 
@@ -1092,8 +1228,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
       <div class="grid grid-2">
         <div class="card">
-          <div class="section-title" style="margin-top:0;" id="set-cloud">Cloud sync</div>
-          <p style="color:var(--muted); font-size:13px;">Sign in once and your workbook follows you to any device. Without signing in, everything still saves locally on this browser only — nothing is lost, it just won't sync elsewhere.</p>
+          <div class="section-title" style="margin-top:0;" id="set-cloud">Cloud sync<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Sign in once and your workbook follows you to any device. Without signing in, everything still saves locally on this browser only — nothing is lost, it just won't sync elsewhere.">i</span></div>
           <div id="cloudStatus" style="color:var(--muted); font-size:12.5px; margin:12px 0;">Connecting…</div>
           <div id="cloudSignedOutBox">
             <div class="field"><label>Email</label><input type="email" id="cloudEmail" placeholder="you@example.com"></div>
@@ -1126,8 +1261,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
             </div>
           </div>
 
-          <div class="section-title" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">Data management</div>
-          <p style="color:var(--muted); font-size:13px;">Everything — transactions, watchlist, amount settings, and appearance (theme, color, font) — is stored as JSON in this browser's localStorage, and in the cloud if you're signed in above. Export a backup any time, or to move the workbook manually.</p>
+          <div class="section-title" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">Data management<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Everything — transactions, watchlist, amount settings, and appearance (theme, color, font) — is stored as JSON in this browser's localStorage, and in the cloud if you're signed in above. Export a backup any time, or to move the workbook manually.">i</span></div>
           <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
             <button class="btn secondary" onclick="exportJSON()">Export JSON</button>
             <label class="btn secondary" style="cursor:pointer;">Import JSON<input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importJSON(event)"></label>
@@ -1135,44 +1269,8 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
           </div>
         </div>
         <div class="card">
-          <div class="section-title" style="margin-top:0;" id="set-appearance">Appearance</div>
-          <p style="color:var(--muted); font-size:13px;">All three apply instantly everywhere — including popups and tables — and are saved with the rest of your data (synced to the cloud if you're signed in).</p>
-          <div class="field"><label>Font style</label>
-            <select id="setFontFamily" onchange="applyAppearance()">
-              <option value="system">Clean system font</option>
-              <option value="default">Inter / Space Grotesk</option>
-              <option value="legible">Atkinson Hyperlegible (max readability)</option>
-              <option value="rounded">Lexend (reading-friendly)</option>
-              <option value="serif">Serif (Source Serif)</option>
-            </select>
-          </div>
-          <div class="field"><label>Text size</label>
-            <select id="setFontSize" onchange="applyAppearance()">
-              <option value="small">Small</option>
-              <option value="medium">Medium (default)</option>
-              <option value="large">Large</option>
-              <option value="xl">Extra large</option>
-            </select>
-          </div>
-          <div class="field"><label>Color theme</label>
-            <select id="setColorTheme" onchange="applyAppearance()">
-              <optgroup label="Classic themes">
-                <option value="wine">Wine &amp; Gold — Classic</option>
-                <option value="ocean">Ocean Blue — Classic</option>
-                <option value="forest">Forest Green — Classic</option>
-                <option value="violet">Violet — Classic</option>
-                <option value="sunset">Sunset Amber — Classic</option>
-              </optgroup>
-              <optgroup label="Material Design themes">
-                <option value="material-blue">Material Purple / Blue</option>
-                <option value="material-green">Material Green</option>
-                <option value="material-purple">Material Rose</option>
-                <option value="material-teal">Material Teal</option>
-                <option value="material-amber">Material Amber</option>
-              </optgroup>
-            </select>
-            <div style="font-size:11px; color:var(--muted); margin-top:4px; text-transform:none;">Applies to buttons, cards, table headers and chart accents everywhere — not just the nav. Classic keeps its original look; the other themes use soft, tinted "tonal" surfaces (Material-style) instead of hard outlines, so buttons and cards read as more distinct without feeling harsh. Break-even (gold) and share-count (blue) highlights stay put so they're always recognizable.</div>
-          </div>
+          <div class="section-title" style="margin-top:0;" id="set-appearance">Appearance<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Font style, text size, color theme, and light/dark mode all moved to the bar at the very top of the page — always one click away, on every page. Changes there apply instantly everywhere and are saved with the rest of your data (synced to the cloud if you're signed in).">i</span></div>
+          <div style="color:var(--muted); font-size:13px;">↑ Look for the controls at the very top of the page.</div>
         </div>
         <div class="card">
           <div class="section-title" style="margin-top:0;" id="set-amount">Amount settings <span class="tag">fee &amp; rounding</span></div>
@@ -1180,6 +1278,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
           <div class="field"><label>Minimum fee (QAR)</label><input type="number" step="0.01" id="setMinFee"></div>
           <div class="field"><label>Tick size</label><input type="number" step="0.001" id="setTick"></div>
           <div class="field"><label>Currency label</label><input type="text" id="setCurrency"></div>
+          <div class="field"><label>Default deposit fee (QAR)<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Pre-fills the Transfer fee field whenever you add a new Deposit on the Transactions page. You can still override it per transfer.">i</span></label><input type="number" step="0.01" id="setDepositFee"></div>
           <button class="btn" onclick="saveSettings()">Save settings</button>
         </div>
       </div>
@@ -1242,7 +1341,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
 <script>
 /* ============================= STATE ============================= */
-const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, tick: 0.001, currency: 'QAR' };
+const DEFAULT_SETTINGS = { feePct: 0.275, minFee: 0, tick: 0.001, currency: 'QAR', depositFee: 10 };
 // Appearance now lives in DB.appearance, so it's saved (and cloud-synced)
 // the same way as every other setting instead of sitting only in
 // localStorage on one device.
@@ -1645,6 +1744,7 @@ function openModal(title, bodyHtml){
 }
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('show');
+  if(typeof modalPriceChart !== 'undefined' && modalPriceChart){ modalPriceChart.destroy(); modalPriceChart = null; }
 }
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
 
@@ -1816,6 +1916,34 @@ function buildCashLedger(){
 }
 // The single all-in summary: what actually happened to your money, trading
 // gains/losses and every fee included.
+// Chronological running total of realized P/L, one point per SELL — same
+// weighted-average-cost convention as computePositions, just tracked over
+// time instead of collapsed into a single lifetime number.
+function computeRealizedPLTimeSeries(){
+  const byTicker = {};
+  const points = [];
+  const sorted = [...DB.transactions].sort((a,b)=> a.date.localeCompare(b.date));
+  let running = 0;
+  sorted.forEach(tx=>{
+    const t = tx.ticker;
+    if(!byTicker[t]) byTicker[t] = {shares:0, cost:0};
+    const amount = tx.shares*tx.price;
+    const fee = calcFee(amount, tx.action==='BUY');
+    if(tx.action==='BUY'){
+      byTicker[t].shares += tx.shares;
+      byTicker[t].cost += amount+fee;
+    } else {
+      const avg = byTicker[t].shares>0 ? byTicker[t].cost/byTicker[t].shares : 0;
+      const costRemoved = avg*tx.shares;
+      const proceeds = amount-fee;
+      running += proceeds - costRemoved;
+      byTicker[t].shares -= tx.shares;
+      byTicker[t].cost -= costRemoved;
+      points.push({date: tx.date, value: running});
+    }
+  });
+  return points;
+}
 function cashSummary(){
   const totalInward = DB.transfers.filter(t=>t.type==='DEPOSIT').reduce((s,t)=>s+t.gross,0);
   const totalOutward = DB.transfers.filter(t=>t.type==='WITHDRAWAL').reduce((s,t)=>s+t.gross,0);
@@ -1875,7 +2003,7 @@ document.querySelectorAll('.navbtn').forEach(btn=>{
       // A canvas measured while its page was hidden can end up with a
       // stale, low-res backing store — resize on return to dashboard so
       // the charts are always crisp, not blurry.
-      [chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees].forEach(c=> c && c.resize());
+      [chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees, chartCash, chartRealized].forEach(c=> c && c.resize());
     }
   });
 });
@@ -1931,7 +2059,7 @@ function renderHybridBoard(){
 }
 
 /* ============================= RENDER: DASHBOARD ============================= */
-let chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees;
+let chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees, chartCash, chartRealized;
 function renderDashboard(){
   const positions = computePositions().filter(p=>p.shares>0);
   let totalInvestment=0, totalValue=0, totalFees=0, largestWinner=null, largestLoser=null;
@@ -1951,22 +2079,26 @@ function renderDashboard(){
   const cs = cashSummary();
 
   // One ordered, quick-glance row: cash movements first, then what's actually
-  // in stocks, then the two "so how am I doing" roll-ups last.
+  // in stocks, then the two "so how am I doing" roll-ups last. Purely
+  // descriptive subtext moved into an info-tip on the label — keeps the
+  // card compact (one value line instead of two) while the explanation is
+  // still one hover/tap away. Cards whose "sub" carries an actual computed
+  // number (not just a description) keep it visible underneath.
   const cards = [
-    {label:'Current Balance', value: fmtMoney(cs.cashBalance), sub:'cash sitting uninvested'},
-    {label:'Total Cash Deposit', value: fmtMoney(cs.totalInward), sub:'gross, before wire fees'},
-    {label:'Total Withdraw', value: fmtMoney(cs.totalOutward), sub:'gross, before wire fees'},
-    {label:'Current Shares Investment', value: fmtMoney(totalInvestment), sub:'cost basis of open positions'},
-    {label:'Stocks Current Value', value: fmtMoney(totalValue), sub:'at last entered market price'},
-    {label:'Current Worth', value: fmtMoney(cs.netWorth), sub:'cash balance + stocks worth (net of sell fees)'},
-    {label:'Net P/L (all-in)', value: fmtMoney(cs.netPL), sub:`incl. all fees + ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg'},
-    {label:'Total Charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`},
+    {label:'Current Balance', value: fmtMoney(cs.cashBalance), tip:'Cash sitting uninvested — money in your account not tied up in any stock.'},
+    {label:'Total Cash Deposit', value: fmtMoney(cs.totalInward), tip:'Total gross amount deposited, before wire transfer fees are deducted.'},
+    {label:'Total Withdraw', value: fmtMoney(cs.totalOutward), tip:'Total gross amount withdrawn, before wire transfer fees are deducted.'},
+    {label:'Current Shares Investment', value: fmtMoney(totalInvestment), tip:'Cost basis of all currently open positions — what you paid, not what they\'re worth now.'},
+    {label:'Stocks Current Value', value: fmtMoney(totalValue), tip:'Market value of open positions at the last price you entered, before any sell fee.'},
+    {label:'Current Worth', value: fmtMoney(cs.netWorth), tip:'Cash balance plus stocks worth, net of estimated sell fees — your total net worth right now.'},
+    {label:'Net P/L (all-in)', value: fmtMoney(cs.netPL), sub:`incl. all fees + ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg', tip:'Total profit or loss since day one, including every fee paid and every reward received.'},
+    {label:'Total Charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`, tip:'Every Riyal of cost that isn\'t the stock itself — trading commissions plus wire transfer fees.'},
   ];
   document.getElementById('dashCards').innerHTML = cards.map(c=>`
     <div class="card stat-card">
-      <div class="label">${c.label}</div>
+      <div class="label">${c.label}${c.tip?infoTip(c.tip):''}</div>
       <div class="value ${c.cls||''}">${c.value}</div>
-      <div class="sub">${c.sub}</div>
+      ${c.sub?`<div class="sub">${c.sub}</div>`:''}
     </div>`).join('');
 
   // charts — canvases always stay in the DOM; only the empty-state hint toggles.
@@ -2066,6 +2198,65 @@ function renderDashboard(){
   } else {
     if(chartFees){ chartFees.destroy(); chartFees=null; }
     feesCanvas.style.display='none'; feesEmpty.style.display='block';
+  }
+
+  // Cash balance over time — straight off the same ledger that drives the
+  // Cash Ledger table, so the chart and the numbers always agree.
+  const cashCanvas = document.getElementById('chartCash');
+  const cashEmpty = document.getElementById('chartCashEmpty');
+  if(cs.ledger.length && window.Chart){
+    cashEmpty.style.display='none'; cashCanvas.style.display='block';
+    if(chartCash) chartCash.destroy();
+    const textColor = cssVar('--muted') || '#8a97a3';
+    const gridColor = cssVar('--border') || '#232b33';
+    const infoColor = cssVar('--info') || '#3d8bd6';
+    const ticks = { color:textColor, font:{size:11} };
+    const grid = { color:gridColor };
+    const dpr = window.devicePixelRatio || 1;
+    chartCash = new Chart(cashCanvas.getContext('2d'), {
+      type:'line',
+      data:{ labels: cs.ledger.map(e=>e.date), datasets:[{
+        label:'Cash balance', data: cs.ledger.map(e=>e.balance),
+        borderColor: infoColor, backgroundColor: infoColor+'26', fill:true, tension:0.2, pointRadius:2, pointHitRadius:10,
+      }]},
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
+    });
+    activeCharts.push(chartCash);
+  } else {
+    if(chartCash){ chartCash.destroy(); chartCash=null; }
+    cashCanvas.style.display='none'; cashEmpty.style.display='block';
+  }
+
+  // Realized P/L over time — walks the transaction log chronologically using
+  // the same weighted-average-cost convention as computePositions, and logs
+  // a running total every time a SELL actually locks in a gain or loss.
+  const realizedSeries = computeRealizedPLTimeSeries();
+  const realizedCanvas = document.getElementById('chartRealized');
+  const realizedEmpty = document.getElementById('chartRealizedEmpty');
+  if(realizedSeries.length && window.Chart){
+    realizedEmpty.style.display='none'; realizedCanvas.style.display='block';
+    if(chartRealized) chartRealized.destroy();
+    const textColor = cssVar('--muted') || '#8a97a3';
+    const gridColor = cssVar('--border') || '#232b33';
+    const profitColor = cssVar('--profit') || '#34c77b';
+    const lossColor = cssVar('--loss') || '#e5484d';
+    const last = realizedSeries[realizedSeries.length-1].value;
+    const lineColor = last>=0 ? profitColor : lossColor;
+    const ticks = { color:textColor, font:{size:11} };
+    const grid = { color:gridColor };
+    const dpr = window.devicePixelRatio || 1;
+    chartRealized = new Chart(realizedCanvas.getContext('2d'), {
+      type:'line',
+      data:{ labels: realizedSeries.map(e=>e.date), datasets:[{
+        label:'Cumulative realized P/L', data: realizedSeries.map(e=>e.value),
+        borderColor: lineColor, backgroundColor: lineColor+'26', fill:true, tension:0.2, pointRadius:2, pointHitRadius:10,
+      }]},
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
+    });
+    activeCharts.push(chartRealized);
+  } else {
+    if(chartRealized){ chartRealized.destroy(); chartRealized=null; }
+    realizedCanvas.style.display='none'; realizedEmpty.style.display='block';
   }
 
   // Charts created while web fonts were still swapping in can end up
@@ -2202,9 +2393,11 @@ function calcTickerQuickCalc(ticker){
 }
 
 // Small helper for the modal's grouped info-card layout — one label/value pair.
-function mcard(label, value, cls='', sub='', wide=false, variant=''){
+// `tip`, when given, renders as an info-tip icon next to the label instead of
+// a permanent sub line — same explanation, one hover away, less vertical space.
+function mcard(label, value, cls='', sub='', wide=false, variant='', tip=''){
   return `<div class="mcard${wide?' wide':''}${variant?' mc-'+variant:''}">
-    <div class="mlabel">${label}</div>
+    <div class="mlabel">${label}${tip?infoTip(tip):''}</div>
     <div class="mvalue ${cls}">${value}</div>
     ${sub?`<div class="msub">${sub}</div>`:''}
   </div>`;
@@ -2267,15 +2460,21 @@ function openPositionModal(ticker){
           ${mcard('Break-even price', fmt(be,3), '', '', false, 'gold')}
           ${mcard('Avg. buy price', fmt(avg,3))}
           ${mcard('Market price', mp>0?fmt(mp,3):'—')}
-          ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', 'shares × price − sell commission')}
+          ${mcard('Current worth', mp>0?fmtMoney(netWorth):'—', '', '', false, '', 'Shares × price, minus the estimated sell commission.')}
+        </div>
+      </div>
+      <div class="mgroup">
+        <div class="mgroup-title">Buy vs current vs break-even${infoTip('Three reference prices for this position: what you paid on average, where it trades now, and the price it must clear to be in profit after fees.')}</div>
+        <div class="chart-box" id="posPriceChartBox" style="height:170px;">
+          <canvas id="posPriceChart"></canvas>
         </div>
       </div>
       <div class="mgroup">
         <div class="mgroup-title">Cost &amp; fees</div>
         <div class="mgrid">
           ${mcard('Buy commission', fmtMoney(p.buyFees))}
-          ${mcard('Est. sell commission', mp>0?fmtMoney(sellFeeAtMarket):'—', '', 'at market price')}
-          ${mcard('Total buy price', fmtMoney(p.invested), '', 'buy price × shares + commission', true)}
+          ${mcard('Est. sell commission', mp>0?fmtMoney(sellFeeAtMarket):'—', '', '', false, '', 'Commission you would pay if you sold the position at the current market price.')}
+          ${mcard('Total buy price', fmtMoney(p.invested), '', '', true, '', 'Buy price × shares, plus buy commission.')}
         </div>
       </div>
       <div class="mgroup">
@@ -2344,6 +2543,44 @@ function openPositionModal(ticker){
     </div>
   `;
   openModal(`${p.ticker} position`, body);
+  if(p.shares > 0){
+    const avg = p.invested/p.shares;
+    const be = breakEvenPrice(p.invested, p.shares);
+    renderPositionPriceChart(avg, mp, be);
+  }
+}
+
+// Small horizontal bar chart in the position modal: buy (avg. cost), current
+// (market) and break-even price side by side, so the three reference prices
+// for a position can be read at a glance instead of scanning three separate
+// number cards.
+let modalPriceChart;
+function renderPositionPriceChart(buy, current, breakEven){
+  const canvas = document.getElementById('posPriceChart');
+  if(!canvas || !window.Chart) return;
+  if(modalPriceChart){ modalPriceChart.destroy(); modalPriceChart = null; }
+  const textColor = cssVar('--muted') || '#8a97a3';
+  const gridColor = cssVar('--border') || '#232b33';
+  const infoColor = cssVar('--info') || '#3d8bd6';
+  const goldColor = cssVar('--gold') || '#c9a227';
+  const profitColor = cssVar('--profit') || '#34c77b';
+  const lossColor = cssVar('--loss') || '#e5484d';
+  const currColor = current>0 ? (current>=breakEven ? profitColor : lossColor) : textColor;
+  const ticks = { color:textColor, font:{size:11} };
+  const grid = { color:gridColor };
+  const dpr = window.devicePixelRatio || 1;
+  modalPriceChart = new Chart(canvas.getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:['Buy price', 'Current price', 'Break-even'],
+      datasets:[{ data:[buy, current||0, breakEven], backgroundColor:[infoColor, currColor, goldColor] }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmt(c.parsed.x,3)}} },
+      scales:{ x:{ticks:{...ticks, callback:(v)=>fmt(v,3)}, grid}, y:{ticks, grid} }
+    }
+  });
 }
 
 // Jumps to the Transactions page with the add-transaction form prefilled for
@@ -2831,6 +3068,18 @@ function renderTransfers(){
     </div>
     <div style="margin-top:10px; color:var(--muted); font-size:12.5px;">Total transfer fees paid: <span style="color:var(--loss); font-family:var(--mono); font-weight:700;">${fmtMoney(total)}</span></div>`;
 }
+// Deposits almost always carry the same flat wire fee, so pre-fill it from
+// Settings the moment "Deposit" is selected — one less number to remember or
+// look up each time. Only touches the field when it's empty/zero, so it
+// never clobbers a value you're actively editing or typed by hand.
+function onTrTypeChange(){
+  const typeEl = document.getElementById('trType');
+  const feeEl = document.getElementById('trFee');
+  if(!typeEl || !feeEl) return;
+  if(typeEl.value === 'DEPOSIT'){
+    if(!feeEl.value || parseFloat(feeEl.value) === 0) feeEl.value = DB.settings.depositFee || 0;
+  }
+}
 let editingTransferIndex = null;
 function addTransfer(){
   const date = document.getElementById('trDate').value || new Date().toISOString().slice(0,10);
@@ -2851,6 +3100,7 @@ function addTransfer(){
   }
   saveDB();
   document.getElementById('trGross').value=''; document.getElementById('trFee').value='';
+  onTrTypeChange();
   renderAll();
 }
 function startEditTransfer(i){
@@ -2871,6 +3121,7 @@ function cancelEditTransfer(){
   document.getElementById('trSubmitBtn').textContent = 'Add';
   document.getElementById('trCancelBtn').style.display = 'none';
   document.getElementById('trGross').value=''; document.getElementById('trFee').value='';
+  onTrTypeChange();
 }
 function deleteTransfer(i){
   DB.transfers.splice(i,1);
@@ -3017,6 +3268,7 @@ function renderSettings(){
   document.getElementById('setMinFee').value = DB.settings.minFee;
   document.getElementById('setTick').value = DB.settings.tick;
   document.getElementById('setCurrency').value = DB.settings.currency;
+  document.getElementById('setDepositFee').value = DB.settings.depositFee;
   document.getElementById('setFontFamily').value = DB.appearance.font;
   document.getElementById('setFontSize').value = DB.appearance.fontSize;
   document.getElementById('setColorTheme').value = DB.appearance.colorTheme;
@@ -3027,6 +3279,7 @@ function saveSettings(){
     minFee: parseFloat(document.getElementById('setMinFee').value)||0,
     tick: parseFloat(document.getElementById('setTick').value)||0.001,
     currency: document.getElementById('setCurrency').value || 'QAR',
+    depositFee: parseFloat(document.getElementById('setDepositFee').value)||0,
   };
   saveDB(); renderAll(); toast('Settings saved.');
 }
@@ -3061,6 +3314,7 @@ function clearAll(){
 
 /* ============================= CALCULATORS ============================= */
 function resultLine(k,v,cls=''){ return `<div class="result-line"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`; }
+function infoTip(text){ return `<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="${text.replace(/"/g,'&quot;')}">i</span>`; }
 
 // Lets each calculator tab pull "current shares / average cost" straight from
 // an existing open position instead of typing them in by hand.
@@ -3436,6 +3690,7 @@ populateTickerDatalist();
 document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
 document.getElementById('trDate').value = new Date().toISOString().slice(0,10);
 document.getElementById('adjDate').value = new Date().toISOString().slice(0,10);
+onTrTypeChange(); // pre-fill the deposit fee for the transfer form's default "Deposit" type
 renderAll();
 initCollapsibleSections();
 // Prefill "Available cash" with the real, computed cash balance — one less
