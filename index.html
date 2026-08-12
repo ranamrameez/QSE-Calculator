@@ -849,6 +849,16 @@ html[data-color^="material-"][data-theme="dark"] select{
 /* Authentication UI guard: only one state is visible. */
 html.auth-signed-in #cloudSignedOutBox{display:none !important;}
 html.auth-signed-out #cloudSignedInBox{display:none !important;}
+
+  /* Compact dashboard: keep portfolio positions immediately in view. */
+  #page-dashboard .pagesub{display:none;}
+  #page-dashboard .dash-summary-strip{display:flex;align-items:center;gap:0;width:100%;margin:0 0 10px;padding:0;background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  #page-dashboard .dash-summary-strip .stat-card{flex:1 1 0;min-width:0;padding:6px 10px;border:0;border-right:1px solid var(--border);border-radius:0;box-shadow:none;background:transparent;}
+  #page-dashboard .dash-summary-strip .stat-card:last-child{border-right:0;}
+  #page-dashboard .dash-summary-strip .stat-card .label{font-size:9px;margin-bottom:1px;}
+  #page-dashboard .dash-summary-strip .stat-card .value{font-size:13px;line-height:1.15;}
+  #page-dashboard .dash-summary-strip .stat-card .sub{display:none;}
+  @media(max-width:700px){#page-dashboard .dash-summary-strip{overflow-x:auto;}#page-dashboard .dash-summary-strip .stat-card{flex:0 0 120px;}}
 </style>
 </head>
 <body>
@@ -915,8 +925,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <h1 class="pagetitle">Dashboard</h1>
-      <p class="pagesub">Portfolio overview, computed live from your transaction log.</p>
-
+      
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
