@@ -672,21 +672,20 @@
    .ticker-logo-fallback.lg{font-size:12px;}
    .ticker-logo-fallback.sm{font-size:7px;}
   .hybrid-board{display:grid;gap:10px;}
-  .hybrid-row{display:grid;grid-template-columns:1.1fr repeat(6,minmax(78px,1fr));gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);}
-  .hybrid-head{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
-  .hybrid-main{display:flex;align-items:center;min-width:0;font-weight:700;}
-  .hybrid-cell{font-variant-numeric:tabular-nums;font-size:12px;}
   .hybrid-status{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px;display:inline-block;background:var(--panel);border:1px solid var(--border);}
   .hybrid-status.pos{color:var(--profit);}
   .hybrid-status.neg{color:var(--loss);}
   .hybrid-status.watch{color:var(--accent);}
-  @media(max-width:900px){.hybrid-row{grid-template-columns:1.2fr repeat(3,minmax(78px,1fr));}.hybrid-row .optional{display:none;}}
-  /* Compact density trims padding/gaps on non-holdings-table components too
-     (Exit Board rows, the Trade Calculator's info grids) — same fields,
-     tighter footprint, nothing removed. */
-  html[data-density="compact"] .hybrid-row{padding:6px 10px; gap:6px; border-radius:8px;}
-  html[data-density="compact"] .hybrid-head{font-size:9px;}
-  html[data-density="compact"] .hybrid-cell{font-size:11px;}
+  /* Exit Board's compact/table view: bigger, bolder, more colored than a
+     standard dense table — this is a "should I act on this" scan, not a
+     data dump, so legibility matters more than density here even in
+     compact mode. */
+  .hybrid-table{font-size:14.5px;}
+  .hybrid-table tbody td{padding:11px 12px;}
+  .hybrid-table .num-cell{font-family:var(--mono); font-weight:700;}
+  .hybrid-table .hybrid-status{font-size:12px; padding:5px 10px;}
+  .hybrid-table .price-pos{color:var(--profit);}
+  .hybrid-table .price-neg{color:var(--loss);}
   html[data-density="compact"] .hybrid-status{font-size:9px; padding:3px 6px;}
   html[data-density="compact"] .tc-current-grid{padding:8px 10px; gap:6px; margin:10px 0;}
   html[data-density="compact"] .tc-current-grid .v{font-size:13px;}
@@ -743,9 +742,7 @@
   .mcard.mc-gold .mlabel,.mcard.mc-blue .mlabel{color:var(--muted);}
   .mcard.mc-gold .mvalue{color:var(--gold);text-shadow:0 0 0 transparent;}
   .mcard.mc-blue .mvalue{color:var(--info);}
-  .hybrid-row{border-color:var(--border);background:var(--panel);}
-  .hybrid-row.hybrid-head{color:var(--muted);}
-  .hybrid-cell b{color:var(--text);}
+  .hybrid-table tbody td{color:var(--text);}
   html[data-color^="material-"] .mgroup-title{color:var(--accent);}
   html[data-color^="material-"] .mcard.mc-gold .mvalue{color:var(--accent);}
   html[data-color^="material-"] .mcard.mc-blue .mvalue{color:var(--accent);}
@@ -1597,7 +1594,9 @@ function loadDB(){
     return { settings: {...DEFAULT_SETTINGS}, appearance: {...DEFAULT_APPEARANCE}, transactions: [], transfers: [], adjustments: [], marketPrices: {}, priceHistory: {}, watchlist: [], dividends: [], dividendEstimates: {} };
   }
 }
-function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); queueCloudSync(); }
+// saveDB() is defined once, further down, next to setMarketPrice (kept
+// together since that's the highest-stakes caller — manually-entered price
+// data with no API to re-fetch it from if a write silently failed).
 
 /* ============================= CLOUD SYNC (Realtime Database) ============================= */
 // Whole-workbook JSON at users/{uid}/workbook. Local writes go to
@@ -2095,31 +2094,56 @@ function getMarketPrice(ticker){
   }
   return 0;
 }
+function saveDB(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  }catch(e){
+    // A failed write here means whatever you just entered did NOT persist —
+    // that must never fail silently, especially for manually-fed price data
+    // that can't be re-fetched from anywhere.
+    toast('Save failed — your last change may not have been saved! ('+e.message+')');
+    console.error('saveDB failed', e);
+  }
+  queueCloudSync();
+}
 function setMarketPrice(ticker, val){
   DB.marketPrices[ticker] = val;
-  // Keep a running history of every price ever entered for this ticker, so
-  // there's real data to look back on later — not just whatever the latest
-  // value happens to be. One entry per calendar day (re-editing the same
-  // day updates that day's entry rather than piling up duplicates).
+  // Every price you enter is kept forever, exactly as entered — this is
+  // manually-fed data with no API behind it, so nothing is ever
+  // overwritten or discarded here. Multiple updates on the same day are
+  // ALL kept as separate timestamped records. "One value per day" views
+  // (charts, low/mid/high stats) are derived from this full log at read
+  // time in computePriceStats() — never at write time — so the source of
+  // truth never loses data even as the day-level views stay clean.
   if(val > 0){
     if(!DB.priceHistory) DB.priceHistory = {};
     if(!DB.priceHistory[ticker]) DB.priceHistory[ticker] = [];
-    const today = new Date().toISOString().slice(0,10);
-    const hist = DB.priceHistory[ticker];
-    const last = hist[hist.length-1];
-    if(last && last.date === today) last.price = val;
-    else hist.push({date: today, price: val});
+    DB.priceHistory[ticker].push({ date: new Date().toISOString().slice(0,10), time: new Date().toISOString(), price: val });
   }
   saveDB(); renderAll();
 }
 function getPriceHistory(ticker){ return (DB.priceHistory && DB.priceHistory[ticker]) || []; }
+// Collapses the full (never-deduped) log down to one row per calendar day —
+// the day's LAST recorded price — for day-level charts/stats, without ever
+// touching or discarding the underlying raw log itself.
+function getDailyPriceHistory(ticker){
+  const raw = getPriceHistory(ticker);
+  const byDay = {};
+  const order = [];
+  raw.forEach(h=>{
+    if(!(h.date in byDay)) order.push(h.date);
+    byDay[h.date] = h.price; // later entries in raw (chronological push order) win — the day's last price
+  });
+  return order.map(date=>({date, price:byDay[date]}));
+}
 // Lowest / median / highest across every daily price on record for a
 // ticker — the simplest useful read on "is this cheap or expensive right
 // now relative to its own recent range."
 function computePriceStats(ticker){
-  const hist = getPriceHistory(ticker);
-  if(!hist.length) return null;
-  const sorted = [...hist].sort((a,b)=>a.price-b.price);
+  const raw = getPriceHistory(ticker); // every change ever entered, nothing discarded
+  const daily = getDailyPriceHistory(ticker); // one point per day (that day's last price) for trend/stats
+  if(!daily.length) return null;
+  const sorted = [...daily].sort((a,b)=>a.price-b.price);
   const mid = sorted.length%2===0
     ? (sorted[sorted.length/2-1].price + sorted[sorted.length/2].price)/2
     : sorted[(sorted.length-1)/2].price;
@@ -2127,9 +2151,9 @@ function computePriceStats(ticker){
   return {
     min: minEntry.price, minDate: minEntry.date,
     max: maxEntry.price, maxDate: maxEntry.date,
-    median: mid, count: hist.length,
-    recent: [...hist].slice(-8).reverse(),
-    chronological: [...hist].sort((a,b)=>a.date.localeCompare(b.date)),
+    median: mid, count: daily.length, totalUpdates: raw.length,
+    recent: [...raw].sort((a,b)=>(a.time||a.date).localeCompare(b.time||b.date)).slice(-8).reverse(),
+    chronological: [...daily].sort((a,b)=>a.date.localeCompare(b.date)),
   };
 }
 
@@ -2153,41 +2177,133 @@ document.querySelectorAll('.navbtn[data-page]').forEach(btn=>{
 });
 
 /* ============================= HYBRID TRADING BOARD ============================= */
+let hbSort = {col:'status', dir:'asc'};
+function hbSortValue(row, col){
+  switch(col){
+    case 'market': return row.hasMarket ? row.mp : -Infinity;
+    case 'be': return row.be;
+    case 'net': return Number.isFinite(row.net) ? row.net : -Infinity;
+    case 't1': return row.t1;
+    case 't2': return row.t2;
+    case 't3': return row.t3;
+    case 'status': return row.statusRank;
+    default: return row.ticker;
+  }
+}
+function sortHb(col){
+  if(hbSort.col===col){ hbSort.dir = hbSort.dir==='asc'?'desc':'asc'; }
+  else { hbSort = {col, dir: col==='ticker'?'asc':'desc'}; }
+  renderHybridBoard();
+}
+function hbArrow(col){
+  if(hbSort.col!==col) return '';
+  return `<span class="arrow">${hbSort.dir==='asc'?'▲':'▼'}</span>`;
+}
 function renderHybridBoard(){
   const el=document.getElementById('hybridBoard');
   if(!el) return;
   const positions=computePositions().filter(p=>p.shares>0);
-  if(!positions.length){ el.innerHTML='<div class="empty">No open positions yet.</div>'; return; }
+  if(!positions.length){ el.className=''; el.innerHTML='<div class="empty">No open positions yet.</div>'; return; }
 
+  const isCompact = (DB.appearance.density === 'compact');
   const targetPrice=(p,pct)=>breakEvenPrice(p.invested*(1+pct/100),p.shares);
-  const status=(p,net)=>{
-    if(!Number.isFinite(net)) return '<span class="hybrid-status watch">PRICE NEEDED</span>';
-    if(net>=0) return '<span class="hybrid-status pos">EXIT READY</span>';
-    const lossPct=p.invested?net/p.invested*100:0;
-    if(lossPct>-3) return '<span class="hybrid-status watch">WATCH</span>';
-    return '<span class="hybrid-status neg">HOLD / REVIEW</span>';
-  };
-  const rows=positions.map(p=>{
+
+  // One data pass shared by both layouts — status is ranked (0=best) so the
+  // default sort surfaces the most actionable rows first: ready to exit,
+  // then close to it, then needs a while, then no price set at all.
+  const rows = positions.map(p=>{
     const mp=getMarketPrice(p.ticker);
     const hasMarket=Number(mp)>0;
     const gross=hasMarket?mp*p.shares:0;
     const sellFee=hasMarket?calcFee(gross,false):0;
     const net=hasMarket?(gross-sellFee)-p.invested:NaN;
     const be=breakEvenPrice(p.invested,p.shares);
-    return `<div class="hybrid-row">
-      <div class="hybrid-main">${tickerLogo(p.ticker,'sm')}<span>${p.ticker}</span></div>
-      <div class="hybrid-cell"><div class="hybrid-head">Market</div><b>${hasMarket?fmt(mp,3):'—'}</b></div>
-      <div class="hybrid-cell"><div class="hybrid-head">Break-even</div><b>${fmt(be,3)}</b></div>
-      <div class="hybrid-cell"><div class="hybrid-head">Net P/L</div><b class="${net>=0?'pos':'neg'}">${fmtMoney(net)}</b></div>
-      <div class="hybrid-cell"><div class="hybrid-head">+1% exit</div>${fmt(targetPrice(p,1),3)}</div>
-      <div class="hybrid-cell optional"><div class="hybrid-head">+2% exit</div>${fmt(targetPrice(p,2),3)}</div>
-      <div class="hybrid-cell optional"><div class="hybrid-head">+5% exit</div>${fmt(targetPrice(p,5),3)}</div>
-      <div class="hybrid-cell">${status(p,net)}</div>
-    </div>`;
-  }).join('');
-  el.innerHTML=`<div class="hybrid-row hybrid-head" style="background:transparent;border:0;padding:4px 12px;">
-    <div>Position</div><div>Market</div><div>Break-even</div><div>Net P/L</div><div>+1%</div><div class="optional">+2%</div><div class="optional">+5%</div><div>Status</div>
-  </div>${rows}`;
+    let statusRank=3, statusLabel='PRICE NEEDED', statusCls='watch';
+    if(Number.isFinite(net)){
+      if(net>=0){ statusRank=0; statusLabel='EXIT READY'; statusCls='pos'; }
+      else {
+        const lossPct=p.invested?net/p.invested*100:0;
+        if(lossPct>-3){ statusRank=1; statusLabel='WATCH'; statusCls='watch'; }
+        else { statusRank=2; statusLabel='HOLD / REVIEW'; statusCls='neg'; }
+      }
+    }
+    return {
+      p, ticker:p.ticker, mp, hasMarket, be, net,
+      t1: targetPrice(p,1), t2: targetPrice(p,2), t3: targetPrice(p,5),
+      statusRank, statusLabel, statusCls,
+    };
+  });
+  rows.sort((a,b)=>{
+    const va=hbSortValue(a,hbSort.col), vb=hbSortValue(b,hbSort.col);
+    const cmp = typeof va==='string' ? va.localeCompare(vb) : (va-vb);
+    return hbSort.dir==='asc' ? cmp : -cmp;
+  });
+
+  if(isCompact){
+    // Compact still means a table, but a bigger, bolder, more colored one
+    // than the standard dense holdings table — this board is a "should I
+    // act on this" scan, so legibility wins over squeezing in more rows.
+    el.className='';
+    const rowsHtml = rows.map(r=>{
+      const marketCls = r.hasMarket ? (r.mp>=r.be?'price-pos':'price-neg') : '';
+      return `<tr onclick="openPositionModal('${r.ticker}')">
+        <td><div class="hd-name">${tickerLogo(r.ticker,'sm')}<b>${r.ticker}</b></div></td>
+        <td class="num-cell ${marketCls}">${r.hasMarket?fmt(r.mp,3):'—'}</td>
+        <td class="num-cell">${fmt(r.be,3)}</td>
+        <td class="num-cell">${Number.isFinite(r.net)?`<span class="pl-pill ${r.net>=0?'pos':'neg'}">${fmtMoney(r.net)}</span>`:'—'}</td>
+        <td class="num-cell">${fmt(r.t1,3)}</td>
+        <td class="num-cell">${fmt(r.t2,3)}</td>
+        <td class="num-cell">${fmt(r.t3,3)}</td>
+        <td><span class="hybrid-status ${r.statusCls}">${r.statusLabel}</span></td>
+      </tr>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="card" style="overflow-x:auto; padding:0;">
+        <table class="holdings-table hybrid-table">
+          <thead><tr>
+            <th class="sortable" onclick="sortHb('ticker')">Position${hbArrow('ticker')}</th>
+            <th class="num-cell sortable" onclick="sortHb('market')">Market${hbArrow('market')}</th>
+            <th class="num-cell sortable" onclick="sortHb('be')">Break-even${hbArrow('be')}</th>
+            <th class="num-cell sortable" onclick="sortHb('net')">Net P/L${hbArrow('net')}</th>
+            <th class="num-cell sortable" onclick="sortHb('t1')">+1% exit${hbArrow('t1')}</th>
+            <th class="num-cell sortable" onclick="sortHb('t2')">+2% exit${hbArrow('t2')}</th>
+            <th class="num-cell sortable" onclick="sortHb('t3')">+5% exit${hbArrow('t3')}</th>
+            <th class="sortable" onclick="sortHb('status')">Status${hbArrow('status')}</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>`;
+  } else {
+    // Comfortable mode: one card per position, same visual language as the
+    // Portfolio cards above (ticker-card / tc-row / tc-pair), so the two
+    // sections of the dashboard read as one consistent system instead of
+    // two different UI styles.
+    el.className='portfolio-grid';
+    el.innerHTML = rows.map(r=>{
+      const accent = tickerColor(r.ticker);
+      return `<div class="card ticker-card" style="--card-hue:${accent}; border-top:3px solid ${accent};" onclick="openPositionModal('${r.ticker}')">
+        <div class="ticker-card-head">
+          <div style="display:flex; align-items:center;">
+            ${tickerLogo(r.ticker, 'lg')}
+            <div class="tc-ticker" style="color:${accent};">${r.ticker}</div>
+          </div>
+          <span class="hybrid-status ${r.statusCls}">${r.statusLabel}</span>
+        </div>
+        <div class="tc-info">
+          <div class="tc-row tc-row-pair">
+            <div class="tc-pair"><span class="tc-k">Market</span><span class="tc-v ${r.hasMarket?(r.mp>=r.be?'pos':'neg'):''}">${r.hasMarket?fmt(r.mp,3):'—'}</span></div>
+            <div class="tc-pair gold-bg"><span class="tc-k">Break-even</span><span class="tc-v gold">${fmt(r.be,3)}</span></div>
+          </div>
+          <div class="tc-row"><span class="tc-k">Net P/L</span><span class="tc-v ${Number.isFinite(r.net)?(r.net>=0?'pos':'neg'):''}">${Number.isFinite(r.net)?fmtMoney(r.net):'—'}</span></div>
+          <div class="tc-row tc-row-pair">
+            <div class="tc-pair"><span class="tc-k">+1% exit</span><span class="tc-v">${fmt(r.t1,3)}</span></div>
+            <div class="tc-pair"><span class="tc-k">+2% exit</span><span class="tc-v">${fmt(r.t2,3)}</span></div>
+          </div>
+          <div class="tc-row"><span class="tc-k">+5% exit</span><span class="tc-v">${fmt(r.t3,3)}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 
@@ -3522,21 +3638,23 @@ function openPositionModal(ticker){
   const priceStats = computePriceStats(p.ticker);
   const priceHistoryHtml = `
     <div class="mgroup" style="grid-column:1/-1;">
-      <div class="mgroup-title">Price performance${infoTip('Built from every market price you\'ve entered for this ticker — one saved per calendar day (the day\'s last price), so this reflects real day-on-day movement rather than intraday noise. Lowest and mid are useful reference points for a good entry price; highest shows what you\'d be paying at the top of the recorded range.')}</div>
+      <div class="mgroup-title">Price performance${infoTip('Every single market price you\'ve ever entered for this ticker is kept — nothing is overwritten, even multiple updates on the same day. The chart and low/mid/high stats use each day\'s last price for a clean trend; the log below shows every individual update, timestamped.')}</div>
       ${!priceStats ? `<div class="empty" style="margin:0;">No price history yet — update the market price to start tracking it.</div>` : `
       <div class="mgrid">
         ${mcard('Lowest recorded', fmt(priceStats.min,3), '', priceStats.minDate, false, 'gold', 'The cheapest this ticker has traded at since you started tracking it — a reasonable target for a good entry.')}
-        ${mcard('Mid (median)', fmt(priceStats.median,3), '', priceStats.count+' day(s) tracked', false, '', 'The middle value of all recorded daily prices — half the days were cheaper, half more expensive.')}
+        ${mcard('Mid (median)', fmt(priceStats.median,3), '', priceStats.count+' day(s), '+priceStats.totalUpdates+' update(s) total', false, '', 'The middle value of all recorded daily prices — half the days were cheaper, half more expensive.')}
         ${mcard('Highest recorded', fmt(priceStats.max,3), '', priceStats.maxDate, false, '', 'The most expensive this ticker has traded at since you started tracking it.')}
       </div>
       <div class="chart-box" id="priceHistChartBox" style="height:170px; margin-top:10px;">
         <canvas id="priceHistChart"></canvas>
       </div>
-      <div class="price-history-list" style="margin-top:8px;">${priceStats.recent.map((h,i)=>{
+      <div style="font-size:10.5px; color:var(--muted); margin:8px 2px 4px 2px;">Every update, most recent first — nothing overwritten:</div>
+      <div class="price-history-list">${priceStats.recent.map((h,i)=>{
         const prevPrice = priceStats.recent[i+1] ? priceStats.recent[i+1].price : null;
         const delta = prevPrice!=null ? h.price-prevPrice : null;
+        const timeLabel = h.time ? new Date(h.time).toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : h.date;
         return `<div class="ph-row">
-          <span class="ph-date">${h.date}</span>
+          <span class="ph-date">${timeLabel}</span>
           <span class="ph-price">${fmt(h.price,3)}</span>
           <span class="ph-delta ${delta==null?'':(delta>=0?'pos':'neg')}">${delta==null?'—':(delta>=0?'+':'')+delta.toFixed(3)}</span>
         </div>`;
