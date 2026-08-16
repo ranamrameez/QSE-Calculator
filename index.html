@@ -257,7 +257,7 @@
   html[data-fontsize="large"] body{zoom:1.15;}
   html[data-fontsize="xl"] body{zoom:1.3;}
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;overflow-x:hidden;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;overflow-x:clip;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
   a{color:inherit;}
@@ -455,7 +455,7 @@
   tr.group-row td{background:var(--panel-2); font-size:12px; padding:8px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
   tr.group-row .g-stats{color:var(--muted); font-weight:400; margin-left:8px;}
 
-  .chip-tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .chip-tabs{display:flex; gap:6px; margin-bottom:18px; margin-left:4px; flex-wrap:wrap;}
   .chip{
     background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
     padding:7px 13px; border-radius:20px; font-size:12.5px; cursor:pointer; font-weight:500;
@@ -509,7 +509,7 @@
 
   /* ---------- Back to top ---------- */
   .back-to-top{
-    position:fixed; bottom:20px; left:20px; z-index:45;
+    position:fixed; bottom:76px; right:20px; z-index:45;
     width:38px; height:38px; border-radius:50%;
     background:var(--panel); border:1px solid var(--border); color:var(--text);
     font-size:16px; line-height:1; cursor:pointer;
@@ -519,7 +519,6 @@
   }
   .back-to-top.show{opacity:1; visibility:visible; transform:none;}
   .back-to-top:hover{border-color:var(--accent); color:var(--accent);}
-  @media(max-width:700px){ .back-to-top{left:auto; right:20px; bottom:76px;} }
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -733,6 +732,23 @@
 
   /* ---------- Sub-nav chip row (reuses .chip-tabs / .chip) ---------- */
   .subnav{margin-bottom:20px; margin-top:-6px;}
+  /* Always visible while scrolling a page — sticks to the top of the
+     viewport instead of scrolling away with the content above it, so the
+     jump-to-section chips stay reachable no matter how far down the page
+     you are. Solid page-matching background so content scrolling
+     underneath doesn't show through, plus a hairline + shadow once it's
+     actually pinned so it doesn't blend invisibly into the page. */
+.chip-tabs.subnav {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	background: var(--bg);
+	padding: 14px 0 12px 12px;
+	margin: -14px -5px 20px -5px;
+	margin-top: -14px;
+	border-bottom: 1px solid var(--border);
+	box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
   /* Readability pass: keep semantic colors restrained and text high-contrast. */
   .mgroup-title{color:var(--text);font-weight:800;border-bottom:1px solid var(--border);padding-bottom:7px;}
   .mcard{background:var(--panel-2);border-color:var(--border);}
@@ -1392,6 +1408,17 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 </div>
 <datalist id="tickerList"></datalist>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+  // Force a higher baseline pixel density for every chart, regardless of the
+  // per-instance devicePixelRatio option each chart already sets. This is
+  // what actually fixes blur: a low/inconsistent backing-store resolution at
+  // the moment a chart is created (e.g. its canvas was still display:none,
+  // or the surrounding grid hadn't finished laying out yet) — supersampling
+  // at 2x-3x makes that timing far less visible even when it happens.
+  if(window.Chart){
+    Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+  }
+</script>
 
 <!-- Firebase (compat build — plain globals, no ES module wiring needed to talk to the rest of this file) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -1890,7 +1917,15 @@ function scrollToSection(id){
   if(el.classList.contains('section-title') && el.classList.contains('collapsed')){
     el.click();
   }
-  el.scrollIntoView({behavior:'smooth', block:'start'});
+  // The subnav chip row is sticky now, so a plain scrollIntoView would land
+  // the target right underneath it, hidden. Offset by the subnav's actual
+  // rendered height (whatever it is for the current density/theme/font
+  // size) plus a little breathing room, so the target always lands
+  // visible just below the pinned chips.
+  const subnav = el.closest('.page')?.querySelector('.chip-tabs.subnav');
+  const offset = subnav ? subnav.getBoundingClientRect().height + 12 : 0;
+  const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
+  window.scrollTo({top, behavior:'smooth'});
 }
 
 /* ============================= FEE / MATH CORE ============================= */
@@ -2858,14 +2893,14 @@ function renderDashboard(){
   // still one hover/tap away. Cards whose "sub" carries an actual computed
   // number (not just a description) keep it visible underneath.
   const cards = [
+    {label:'Net P/L', value: fmtMoney(cs.netPL), sub:`incl. ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg', tip:'Total profit or loss since day one, including every fee paid and every reward received.', hue: cs.netPL>=0?'var(--profit)':'var(--loss)'},
+    {label:'Net Worth', value: fmtMoney(cs.netWorth), tip:'Cash balance plus stocks worth, right now. Stocks are counted net of the estimated sell commission you\'d pay to actually cash out — the same commission baked into each position\'s break-even price — so this already reflects what you\'d walk away with, not the raw market value.', hue:'#22C55E'},
+    {label:'Stocks Value', value: fmtMoney(totalValue), tip:'Market value of open positions at the last price you entered, before any sell fee.', hue:'#6366F1'},
+    {label:'Shares Invested', value: fmtMoney(totalInvestment), tip:'Cost basis of all currently open positions — what you paid, not what they\'re worth now.', hue:'#8B5CF6'},
     {label:'Cash Balance', value: fmtMoney(cs.cashBalance), tip:'Cash sitting uninvested — money in your account not tied up in any stock.', hue:'#3D8BD6'},
     {label:'Total Deposited', value: fmtMoney(cs.totalInward), tip:'Total gross amount deposited, before wire transfer fees are deducted.', hue:'#14B8A6'},
     {label:'Total Withdrawn', value: fmtMoney(cs.totalOutward), tip:'Total gross amount withdrawn, before wire transfer fees are deducted.', hue:'#E1A100'},
     {label:'Total Charges', value: fmtMoney(cs.totalCharges), sub:`${fmtMoney(cs.tradingFees)} trading + ${fmtMoney(cs.transferFees)} transfers`, tip:'Every Riyal of cost that isn\'t the stock itself — trading commissions plus wire transfer fees.', hue:'#E5484D'},
-    {label:'Shares Invested', value: fmtMoney(totalInvestment), tip:'Cost basis of all currently open positions — what you paid, not what they\'re worth now.', hue:'#8B5CF6'},
-    {label:'Stocks Value', value: fmtMoney(totalValue), tip:'Market value of open positions at the last price you entered, before any sell fee.', hue:'#6366F1'},
-    {label:'Net Worth', value: fmtMoney(cs.netWorth), tip:'Cash balance plus stocks worth, right now. Stocks are counted net of the estimated sell commission you\'d pay to actually cash out — the same commission baked into each position\'s break-even price — so this already reflects what you\'d walk away with, not the raw market value.', hue:'#22C55E'},
-    {label:'Net P/L', value: fmtMoney(cs.netPL), sub:`incl. ${fmtMoney(cs.totalRewards)} rewards`, cls: cs.netPL>=0?'pos':'neg', tip:'Total profit or loss since day one, including every fee paid and every reward received.', hue: cs.netPL>=0?'var(--profit)':'var(--loss)'},
   ];
   const isCompact = (DB.appearance.density === 'compact');
   const dashCardsEl = document.getElementById('dashCards');
@@ -3340,7 +3375,7 @@ function renderDashboard(){
   // Charts created while web fonts were still swapping in can end up
   // measuring the wrong text width and look soft — one more resize pass
   // once everything's settled fixes that without any visible flash.
-  if(activeCharts.length) requestAnimationFrame(()=> activeCharts.forEach(c=> c.resize()));
+  if(activeCharts.length) requestAnimationFrame(()=> requestAnimationFrame(()=> activeCharts.forEach(c=> c.resize())));
 
   // alerts
   const alerts = [];
@@ -3380,7 +3415,7 @@ function renderDashboard(){
         <td><span class="qty-pill">${fmt(p.shares,0)}</span></td>
         <td>${fmt(avg,3)}</td>
         <td>${fmt(be,3)}</td>
-        <td onclick="event.stopPropagation()"><input type="number" step="0.001" class="price-input-compact ${priceCls}" value="${mp||''}" placeholder="0.000" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)"></td>
+        <td onclick="event.stopPropagation()"><input type="number" step="0.001" class="price-input-compact ${priceCls}" value="${mp||''}" placeholder="0.000" onkeydown="if(event.key==='Enter'){ setMarketPrice('${p.ticker}', parseFloat(this.value)||0); this.blur(); }"></td>
         <td>${fmtMoney(p.invested)}</td>
         <td>${mp>0?fmtMoney(value):'—'}</td>
         <td>${mp>0?`<span class="pl-pill ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${fmtMoney(profit)}<br><span style="font-size:10px; opacity:.9;">${profit>=0?'+':''}${pct.toFixed(2)}%</span></span>`:'—'}</td>
@@ -3425,7 +3460,7 @@ function renderDashboard(){
             <div class="tc-pair gold-bg"><span class="tc-k">Break-even</span><span class="tc-v gold">${fmt(be,3)}</span></div>
             <div class="tc-pair" onclick="event.stopPropagation()">
               <span class="tc-k">Current price</span>
-              <input type="number" step="0.001" class="tc-price-input" value="${mp||''}" placeholder="0.000" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)">
+              <input type="number" step="0.001" class="tc-price-input" value="${mp||''}" placeholder="0.000" onkeydown="if(event.key==='Enter'){ setMarketPrice('${p.ticker}', parseFloat(this.value)||0); this.blur(); }">
             </div>
           </div>
           <div class="tc-row"><span class="tc-k">Avg. buy price</span><span class="tc-v">${fmt(avg,3)}</span></div>
@@ -3901,7 +3936,7 @@ function renderPortfolio(){
       <td><span class="badge-dot" style="background:${statusColor}"></span>${tickerLogo(p.ticker)}<b>${p.ticker}</b>${tickerName(p.ticker)?` <span style="color:var(--muted); font-size:11px;">${tickerName(p.ticker)}</span>`:''}</td>
       <td class="num-cell">${fmt(p.shares,0)}</td>
       <td class="num-cell">${fmt(avg,3)}</td>
-      <td class="num-cell" onclick="event.stopPropagation()"><input type="number" step="0.001" value="${mp||''}" style="width:90px; text-align:right;" onchange="setMarketPrice('${p.ticker}', parseFloat(this.value)||0)"></td>
+      <td class="num-cell" onclick="event.stopPropagation()"><input type="number" step="0.001" value="${mp||''}" style="width:90px; text-align:right;" onkeydown="if(event.key==='Enter'){ setMarketPrice('${p.ticker}', parseFloat(this.value)||0); this.blur(); }"></td>
       <td class="num-cell">${fmtMoney(value)}</td>
       <td class="num-cell ${profit>=0?'pos':'neg'}">${fmtMoney(profit)}</td>
       <td class="num-cell ${pct>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
