@@ -10,7 +10,8 @@
     "theme": "light",
     "font": "rounded",
     "fontSize": "medium",
-    "colorTheme": "material-green"
+    "colorTheme": "material-teal",
+    "density": "comfortable"
   },
   "transactions": [
     {
@@ -320,11 +321,45 @@
     }
   ],
   "marketPrices": {
-    "IQCD": 10.28,
-    "MARK": 1.977,
-    "MPHC": 1.074,
-    "QFLS": 13.55,
-    "TQES": 2.08
+    "IQCD": 9.989,
+    "MARK": 1.973,
+    "MPHC": 1.082,
+    "QFLS": 13.2,
+    "TQES": 2.115
   },
-  "watchlist": []
+  "priceHistory": {
+    "IQCD": [
+      {
+        "date": "2026-08-16",
+        "price": 9.989
+      }
+    ],
+    "MARK": [
+      {
+        "date": "2026-08-16",
+        "price": 1.973
+      }
+    ],
+    "MPHC": [
+      {
+        "date": "2026-08-16",
+        "price": 1.082
+      }
+    ],
+    "QFLS": [
+      {
+        "date": "2026-08-16",
+        "price": 13.2
+      }
+    ],
+    "TQES": [
+      {
+        "date": "2026-08-16",
+        "price": 2.115
+      }
+    ]
+  },
+  "watchlist": [],
+  "dividends": [],
+  "dividendEstimates": {}
 }
