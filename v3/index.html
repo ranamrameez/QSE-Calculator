@@ -398,7 +398,7 @@
   .holdings-table .hd-action-btn{padding:5px 12px; font-size:11.5px;}
 
   .section-title{font-family:var(--disp); font-size:15px; font-weight:600; margin:20px 0 10px 0; display:flex; align-items:center; gap:8px;}
-  .section-title .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:20px; padding:1px 8px; background:color-mix(in srgb, currentColor 14%, transparent);}
+  .section-title .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:20px; padding:1px 8px;}
 
   table{width:100%; border-collapse:collapse; font-size:14px;}
   thead th{
@@ -1041,10 +1041,8 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
-        <button class="chip" onclick="scrollToSection('dash-hybrid')">Exit Board</button>
         <button class="chip" onclick="scrollToSection('dash-tradecalc')">Trade Calculator</button>
-        <button class="chip" onclick="scrollToSection('dash-charts')">Analysis</button>
-        <button class="chip" onclick="scrollToSection('dash-fundamentals')">Fundamentals</button>
+        <button class="chip" onclick="scrollToSection('dash-charts')">Charts</button>
         <button class="chip" onclick="scrollToSection('dash-alerts')">Alerts</button>
       </div>
 
@@ -1052,15 +1050,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for detail</span></div>
       <div class="portfolio-grid" id="dashPortfolioBox"></div>
-
-      <div class="section-title" id="dash-hybrid">Exit Board <span class="tag">existing capital only · fee-aware exits</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="How each row is worked out: Break-even is the price where selling exactly covers your cost plus the estimated sell commission. The +1% / +2% / +5% columns are the price needed to net that much profit after the same commission. Status reads today's set market price — Exit Ready means it would net a profit right now, Watch means it's within 3% of break-even, Hold/Review means it's more than 3% underwater (or no price is set yet).">i</span></div>
-      <div class="card" style="margin-bottom:24px;">
-        <div class="rule-note" style="margin-bottom:12px;">
-          This board is intentionally <b>not a buy-more signal</b>. It shows what your existing positions need to do for a clean short-term exit.
-          Targets include the current QSE fee setting and do not assume any new deposit.
-        </div>
-        <div id="hybridBoard" class="hybrid-board"></div>
-      </div>
 
       <div class="section-title" id="dash-tradecalc">Trade Calculator <span class="tag">buy, sell, or full cycle</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Pick a stock, pick what you're planning, and every number — commission, break-even, required bounce, net P/L — comes from the same fee-aware engine the rest of the workbook uses. Covers plain buys/sells, averaging down to a target cost, budget-limited buys, target-profit sell prices, and live price scenarios — all in one place.">i</span></div>
       <div class="card" style="margin-bottom:24px;">
@@ -1090,6 +1079,15 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="section-title" id="dash-hybrid">Exit Board <span class="tag">existing capital only · fee-aware exits</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="How each row is worked out: Break-even is the price where selling exactly covers your cost plus the estimated sell commission. The +1% / +2% / +5% columns are the price needed to net that much profit after the same commission. Status reads today's set market price — Exit Ready means it would net a profit right now, Watch means it's within 3% of break-even, Hold/Review means it's more than 3% underwater (or no price is set yet).">i</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <div class="rule-note" style="margin-bottom:12px;">
+          This board is intentionally <b>not a buy-more signal</b>. It shows what your existing positions need to do for a clean short-term exit.
+          Targets include the current QSE fee setting and do not assume any new deposit.
+        </div>
+        <div id="hybridBoard" class="hybrid-board"></div>
       </div>
 
       <div class="charts-row section-boundary" id="dash-charts">
@@ -1122,11 +1120,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
           <div class="section-title" data-no-collapse>Fees breakdown<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Every Riyal of cost that isn't the stock itself, split into trading commissions (buy + sell) vs wire fees on deposits/withdrawals. Covers your whole history, not just open positions.">i</span></div>
           <div id="chartFeesEmpty" class="empty" style="display:none; padding:16px 8px;">No fees recorded yet.</div>
           <div class="chart-box"><canvas id="chartFees"></canvas></div>
-        </div>
-        <div class="card chart-card">
-          <div class="section-title" data-no-collapse>Total P/L by symbol <span class="tag">open + closed</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Every ticker you've ever traded, not just what's currently open. Each bar is realized P/L (locked in from any sells) plus unrealized P/L (if shares are still held) — the full lifetime result for that symbol, whether the position is still open, fully closed, or partially both.">i</span></div>
-          <div id="chartLifetimeEmpty" class="empty" style="display:none; padding:16px 8px;">No trades yet.</div>
-          <div class="chart-box"><canvas id="chartLifetime"></canvas></div>
         </div>
       </div>
 
@@ -1199,16 +1192,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
           <div id="chartHoldEmpty" class="empty" style="display:none; padding:16px 8px;">No fully closed positions yet.</div>
           <div class="chart-box"><canvas id="chartHold"></canvas></div>
         </div>
-      </div>
-
-      <div class="section-title" id="dash-fundamentals">Fundamentals <span class="tag">reported H1 2026</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Fundamental figures come only from verified QSE / The Group disclosures. Blank means the figure has not been verified or was not retrieved. H1 EPS is six-month EPS and is never silently treated as annual EPS.">i</span></div>
-      <div class="card" style="margin-bottom:24px;">
-        <div class="row" style="align-items:end;">
-          <div class="field" style="min-width:220px; flex:1;"><label>Stock</label><select id="fundTicker" onchange="renderFundamentalDetail()"></select></div>
-          <div class="field" style="min-width:180px;"><label>View</label><select id="fundView" onchange="renderFundamentals()"><option value="portfolio">My portfolio</option><option value="all">All tracked stocks</option><option value="improving">Improving earnings</option><option value="weakening">Weakening earnings</option></select></div>
-        </div>
-        <div id="fundamentalsTable" style="margin-top:12px;"></div>
-        <div id="fundamentalDetail" style="margin-top:12px;"></div>
       </div>
 
       <div class="section-title" id="dash-alerts">Alerts</div>
@@ -1399,7 +1382,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
           <div class="section-title" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">Data management<span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Everything — transactions, watchlist, amount settings, and appearance (theme, color, font) — is stored as JSON in this browser's localStorage, and in the cloud if you're signed in above. Export a backup any time, or to move the workbook manually.">i</span></div>
           <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
             <button class="btn secondary" onclick="exportJSON()">Export JSON</button>
-            <label class="btn secondary" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">Import JSON<span class="info-tip" tabindex="0" onclick="event.preventDefault(); event.stopPropagation();" data-tip="This REPLACES everything currently stored in this browser — transactions, transfers, adjustments, prices, watchlist, and dividends — with what's in the file. It does not merge with or add to what's already here; anything not in the file is gone. Export a backup first if you want to keep the current data too.">i</span><input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importJSON(event)"></label>
+            <label class="btn secondary" style="cursor:pointer;">Import JSON<input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importJSON(event)"></label>
             <button class="btn danger" onclick="clearAll()">Clear all data</button>
           </div>
         </div>
@@ -1425,17 +1408,6 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 </div>
 <datalist id="tickerList"></datalist>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
-<script>
-  // Registered globally, but OFF by default (Chart.defaults below) — each
-  // chart below opts in explicitly with a formatter matched to what it's
-  // actually plotting (money, %, price, count, days), so numbers only show
-  // where they're genuinely readable at a glance and never as raw floats.
-  if(window.Chart && window.ChartDataLabels){
-    Chart.register(ChartDataLabels);
-    Chart.defaults.set('plugins.datalabels', { display:false });
-  }
-</script>
 <script>
   // Force a higher baseline pixel density for every chart, regardless of the
   // per-instance devicePixelRatio option each chart already sets. This is
@@ -1865,51 +1837,6 @@ function toggleTheme(){
   renderDashboard(); // charts need fresh colors from the new theme
 }
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-// On-chart value labels ("quick gazing") via the chartjs-plugin-datalabels
-// plugin registered above. display:'auto' lets the plugin itself drop
-// labels that would overlap on dense charts (many months/tickers) rather
-// than us guessing a category-count cutoff — sparse charts show every
-// value, crowded ones thin out automatically instead of turning to mush.
-function dlBase(formatter, extra={}){
-  return Object.assign({
-    display:'auto',
-    color: cssVar('--text') || '#ECECEE',
-    font:{size:10, weight:'700'},
-    formatter,
-  }, extra);
-}
-// Vertical bars — sits just past the bar's tip, flipping above/below zero
-// to match the bar's own sign so it never lands inside a negative bar.
-function dlBarV(formatter){
-  return dlBase(formatter, {
-    anchor:'end', offset:4,
-    align: (ctx)=> (Number(ctx.dataset.data[ctx.dataIndex]) || 0) >= 0 ? 'top' : 'bottom',
-  });
-}
-// Horizontal bars (indexAxis:'y') — same idea, left/right instead of top/bottom.
-function dlBarH(formatter){
-  return dlBase(formatter, {
-    anchor:'end', offset:6,
-    align: (ctx)=> (Number(ctx.dataset.data[ctx.dataIndex]) || 0) >= 0 ? 'right' : 'left',
-  });
-}
-// Line points.
-function dlLine(formatter){
-  return dlBase(formatter, { align:'top', offset:6 });
-}
-// Doughnut/pie slices — white text with a dark stroke so it stays legible
-// regardless of the slice's own color underneath it.
-function dlDoughnut(formatter){
-  return dlBase(formatter, { color:'#fff', textStrokeColor:'rgba(0,0,0,.55)', textStrokeWidth:2, font:{size:11, weight:'700'} });
-}
-// Stacked-bar segments — centered inside each colored segment, so it reads
-// like the doughnut labels (white + stroke for contrast) rather than the
-// tip-anchored style used for simple bars. Formatter should return '' for
-// zero/empty values so empty months don't get a floating "0".
-function dlStack(formatter){
-  return dlBase(formatter, { color:'#fff', textStrokeColor:'rgba(0,0,0,.45)', textStrokeWidth:1.5 });
-}
 function applyAppearance(){
   const familyEl = document.getElementById('setFontFamily');
   const sizeEl = document.getElementById('setFontSize');
@@ -2229,7 +2156,6 @@ function setMarketPrice(ticker, val){
     DB.priceHistory[ticker].push({ date: new Date().toISOString().slice(0,10), time: new Date().toISOString(), price: val });
   }
   saveDB(); renderAll();
-  if(val > 0) toast(`${ticker} price saved: ${fmt(val,3)}`);
 }
 function getPriceHistory(ticker){ return (DB.priceHistory && DB.priceHistory[ticker]) || []; }
 // Collapses the full (never-deduped) log down to one row per calendar day —
@@ -2940,67 +2866,8 @@ function calcTradeCycle(){
   if(note) note.textContent=`At Buy price ${fmt(entry,3)}, ${fmt(addedShares,0)} new shares cost ${fmtMoney(totalSpend)} including buy commission. Selling them at ${fmt(target,3)} gives ${Number.isFinite(netCycle)?fmtMoney(netCycle):'—'} net after both commissions. Current break-even is ${fmt(currentBe,3)}; blended break-even becomes ${fmt(blendedBe,3)}.`;
 }
 
-/* ============================= FUNDAMENTALS: VERIFIED DISCLOSURES ============================= */
-// Only figures that were explicitly supplied by the user or verified from QSE/The Group are stored here.
-// Missing values are intentionally null — never inferred. Prices are read live from DB.marketPrices.
-const FUNDAMENTALS = {
-  QFLS:{name:'Qatar Fuel (WOQOD)', period:'H1 2026', profit:397771000, priorProfit:460434000, eps:0.40, priorEps:0.46, dps:0.90, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/b0EARx9'},
-  MARK:{name:'AlRayan Bank', period:'H1 2026', profit:687476000, priorProfit:821383000, eps:0.074, priorEps:0.088, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/dXFccnF'},
-  IQCD:{name:'Industries Qatar', period:'H1 2026', profit:215649000, priorProfit:1955376000, eps:0.04, priorEps:0.32, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/ivf5cPv'},
-  MPHC:{name:'Mesaieed Petrochemical Holding', period:'H1 2026', profit:-183006000, priorProfit:378706000, eps:-0.015, priorEps:0.030, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/6rgKUiv'},
-  QGTS:{name:'Nakilat', period:'H1 2026', profit:856960000, priorProfit:859630000, eps:0.15, priorEps:0.16, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=QGTS&InformationCategory=Company&InformationType=News'},
-  DHBK:{name:'Doha Bank', period:'H1 2026', profit:435971000, priorProfit:null, eps:0.140, priorEps:0.150, dps:null, status:'VERIFIED', source:'QSE / CBFS disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=DHBK&InformationCategory=Company&InformationType=News'},
-  ORDS:{name:'Ooredoo', period:'H1 2026', profit:1848791000, priorProfit:1948062000, eps:0.58, priorEps:0.61, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ORDS&InformationCategory=Company&InformationType=News'},
-  BRES:{name:'Barwa Real Estate', period:'H1 2026', profit:459303000, priorProfit:560166000, eps:0.1180, priorEps:0.1441, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=BRES&InformationCategory=Company&InformationType=News'},
-  VFQS:{name:'Vodafone Qatar', period:'H1 2026', profit:400910000, priorProfit:328628000, eps:0.095, priorEps:0.078, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=VFQS&InformationCategory=Company&InformationType=News'},
-  ERES:{name:'Ezdan Holding Group', period:'H1 2026', profit:441963000, priorProfit:null, eps:0.017, priorEps:0.016, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ERES&InformationCategory=Company&InformationType=News'},
-  GWCS:{name:'Gulf Warehousing', period:'H1 2026', profit:62287000, priorProfit:null, eps:0.106, priorEps:0.100, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=GWCS&InformationCategory=Company&InformationType=News'},
-  ABQK:{name:'Ahli Bank', period:'H1 2026', profit:407427000, priorProfit:null, eps:0.151, priorEps:0.149, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ABQK&InformationCategory=Company&InformationType=News'},
-  TQES:{name:'Qatar Electronic Systems (Techno Q)', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'The Group link supplied by user; figures not verified', url:'https://thegroup.com.qa/news-api/api/v1/news/html/QWf7qU5'},
-  QIBK:{name:'Qatar Islamic Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QIBK&InformationCategory=Company&InformationType=News'},
-  QNBK:{name:'Qatar National Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QNBK&InformationCategory=Company&InformationType=News'},
-  AHCS:{name:'Aamal Company', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=AHCS&InformationCategory=Company&InformationType=News'},
-  CBQK:{name:'The Commercial Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=CBQK&InformationCategory=Company&InformationType=News'},
-  QFBQ:{name:'Lesha Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QFBQ&InformationCategory=Company&InformationType=News'}
-};
-function fundNum(v,d=3){ return v==null?'—':Number(v).toFixed(d); }
-function fundPct(a,b){ return a!=null && b!=null && b!==0 ? ((a/b-1)*100) : null; }
-function fundPrice(t){ const p=getMarketPrice(t); return p>0?p:null; }
-function fundYield(eps,price){ return eps!=null&&price>0 ? eps/price*100 : null; }
-function fundStatus(f){
-  const ch=fundPct(f.eps,f.priorEps);
-  if(ch==null) return f.status==='VERIFIED'?'VERIFIED':'PENDING';
-  if(ch>=2) return 'IMPROVING'; if(ch<=-20) return 'SEVERE'; if(ch<0) return 'WEAKENING'; return 'STABLE';
-}
-function fundBadge(st){ const cls=st==='IMPROVING'||st==='STABLE'?'pos':(st==='SEVERE'?'neg':''); return `<span class="tag ${cls}" style="margin-left:4px;">${st}</span>`; }
-function renderFundamentals(){
-  const box=document.getElementById('fundamentalsTable'); if(!box) return;
-  const view=document.getElementById('fundView')?.value||'portfolio';
-  let syms=Object.keys(FUNDAMENTALS);
-  if(view==='portfolio') syms=computePositions().filter(p=>p.shares>0).map(p=>p.ticker).filter(t=>FUNDAMENTALS[t]);
-  if(view==='improving') syms=syms.filter(t=>{const f=FUNDAMENTALS[t]; const c=fundPct(f.eps,f.priorEps); return c!=null&&c>0;});
-  if(view==='weakening') syms=syms.filter(t=>{const f=FUNDAMENTALS[t]; const c=fundPct(f.eps,f.priorEps); return c!=null&&c<0;});
-  syms.sort((a,b)=>{const ca=fundPct(FUNDAMENTALS[a].eps,FUNDAMENTALS[a].priorEps); const cb=fundPct(FUNDAMENTALS[b].eps,FUNDAMENTALS[b].priorEps); return (cb??-999)-(ca??-999);});
-  if(!syms.length){ box.innerHTML='<div class="empty">No matching stocks in this view.</div>'; return; }
-  box.innerHTML=`<div class="table-wrap" style="overflow-x:auto;"><table class="data-table compact"><thead><tr><th>Stock</th><th>Price</th><th>H1 EPS</th><th>EPS YoY</th><th>H1 earnings yield</th><th>H1 P/E</th><th>Status</th></tr></thead><tbody>${syms.map(t=>{const f=FUNDAMENTALS[t], pr=fundPrice(t), ch=fundPct(f.eps,f.priorEps), ey=fundYield(f.eps,pr), pe=f.eps!=null&&pr>0?pr/f.eps:null, st=fundStatus(f); return `<tr onclick="document.getElementById('fundTicker').value='${t}';renderFundamentalDetail()" style="cursor:pointer"><td><b>${t}</b> <span class="muted">${f.name}</span></td><td>${pr==null?'—':fundNum(pr,3)}</td><td>${fundNum(f.eps,3)}</td><td class="${ch!=null?(ch>=0?'pos':'neg'):''}">${ch==null?'—':(ch>=0?'+':'')+ch.toFixed(1)+'%'}</td><td>${ey==null?'—':ey.toFixed(2)+'%'}</td><td>${pe==null?'—':pe.toFixed(1)+'×'}</td><td>${fundBadge(st)}</td></tr>`;}).join('')}</tbody></table></div>`;
-  renderFundamentalDetail();
-}
-function renderFundamentalDetail(){
-  const sel=document.getElementById('fundTicker'), box=document.getElementById('fundamentalDetail'); if(!sel||!box) return;
-  const t=sel.value, f=FUNDAMENTALS[t]; if(!f){box.innerHTML='';return;}
-  const pr=fundPrice(t), ch=fundPct(f.eps,f.priorEps), ey=fundYield(f.eps,pr), pe=f.eps!=null&&pr>0?pr/f.eps:null, dy=f.dps!=null&&pr>0?f.dps/pr*100:null, payout=f.dps!=null&&f.eps>0?f.dps/f.eps*100:null;
-  const note=f.status==='VERIFIED'?'Reported figure. H1 EPS is six-month EPS, not annual EPS.':'Disclosure exists, but exact financial figures are not verified/retrieved; values are intentionally blank.';
-  box.innerHTML=`<div class="mgrid"><div class="result-line"><span class="k">Price</span><span class="v">${pr==null?'—':fundNum(pr,3)}</span></div><div class="result-line"><span class="k">H1 EPS</span><span class="v">${fundNum(f.eps,3)}</span></div><div class="result-line"><span class="k">EPS YoY</span><span class="v ${ch!=null?(ch>=0?'pos':'neg'):''}">${ch==null?'—':(ch>=0?'+':'')+ch.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 earnings yield</span><span class="v">${ey==null?'—':ey.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 P/E</span><span class="v">${pe==null?'—':pe.toFixed(1)+'×'}</span></div><div class="result-line"><span class="k">Latest DPS stored</span><span class="v">${fundNum(f.dps,3)}</span></div><div class="result-line"><span class="k">Dividend yield</span><span class="v">${dy==null?'—':dy.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">Payout reference</span><span class="v">${payout==null?'—':payout.toFixed(1)+'%'}</span></div></div><div class="trade-calc-note" style="margin-top:10px;">${note} <a href="${f.url}" target="_blank" rel="noopener">Source</a></div>`;
-}
-function initFundamentals(){
-  const sel=document.getElementById('fundTicker'); if(!sel) return;
-  const syms=Object.keys(FUNDAMENTALS); sel.innerHTML=syms.map(t=>`<option value="${t}">${t} — ${FUNDAMENTALS[t].name}</option>`).join('');
-  const pos=computePositions().find(p=>p.shares>0&&FUNDAMENTALS[p.ticker]); if(pos) sel.value=pos.ticker;
-  renderFundamentals();
-}
-
 /* ============================= RENDER: DASHBOARD ============================= */
-let chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees, chartCash, chartRealized, chartTotals, chartSplit, chartRU, chartAlloc, chartActivity, chartDivMonthly, chartDivTicker, chartFeesTime, chartHold, chartLifetime;
+let chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue, chartFees, chartCash, chartRealized, chartTotals, chartSplit, chartRU, chartAlloc, chartActivity, chartDivMonthly, chartDivTicker, chartFeesTime, chartHold;
 function renderDashboard(){
   const positions = computePositions().filter(p=>p.shares>0);
   let totalInvestment=0, totalValue=0, totalFees=0, largestWinner=null, largestLoser=null;
@@ -3094,24 +2961,24 @@ function renderDashboard(){
     chartInvest = new Chart(investCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels, datasets:[{data: rows.map(r=>r.invested), backgroundColor:['#3d4b58','#c9a227','#34c77b','#3b6bd6','#8a97a3','#e5484d','#7b5cd6','#2ea3a3']}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend, datalabels:dlDoughnut(v=>fmt(v,2))} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend} }
     });
     chartProfit = new Chart(profitCanvas.getContext('2d'), {
       type:'bar',
       data:{ labels, datasets:[{ data: rows.map(r=>r.profit), backgroundColor: rows.map(r=> r.profit>=0 ? profitColor : lossColor)}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, datalabels:dlBarV(v=>fmt(v,2))}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
     });
     chartRoi = new Chart(roiCanvas.getContext('2d'), {
       type:'bar',
       data:{ labels, datasets:[{ data: rows.map(r=> r.invested>0 ? (r.profit/r.invested*100) : 0), backgroundColor: rows.map(r=> r.profit>=0 ? profitColor : lossColor)}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, indexAxis:'y', plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> c.parsed.x.toFixed(2)+'%'}}, datalabels:dlBarH(v=>v.toFixed(1)+'%')}, scales:{ x:{ticks:{...ticks, callback:(v)=>v+'%'}, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, indexAxis:'y', plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> c.parsed.x.toFixed(2)+'%'}}}, scales:{ x:{ticks:{...ticks, callback:(v)=>v+'%'}, grid}, y:{ticks, grid} } }
     });
     const winCount = rows.filter(r=>r.profit>=0).length;
     const lossCount = rows.filter(r=>r.profit<0).length;
     chartWinLoss = new Chart(winLossCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels:['Winning','Losing'], datasets:[{data:[winCount,lossCount], backgroundColor:[profitColor,lossColor]}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, datalabels:dlDoughnut(v=>v)} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend} }
     });
     chartValue = new Chart(valueCanvas.getContext('2d'), {
       type:'bar',
@@ -3119,7 +2986,7 @@ function renderDashboard(){
         { label:'Invested', data: rows.map(r=>r.invested), backgroundColor: infoColor },
         { label:'Current value', data: rows.map(r=>r.value), backgroundColor: cssVar('--gold') || '#c9a227' },
       ]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend, datalabels:dlBarV(v=>fmt(v,2))}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
     });
     activeCharts.push(chartInvest, chartProfit, chartRoi, chartWinLoss, chartValue);
   } else {
@@ -3145,60 +3012,12 @@ function renderDashboard(){
     chartFees = new Chart(feesCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels:['Trading fees','Transfer fees'], datasets:[{data:[cs.tradingFees, cs.transferFees], backgroundColor:[cssVar('--loss')||'#e5484d', cssVar('--warn')||'#e5a93f']}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend, datalabels:dlDoughnut(v=>fmt(v,2))} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend} }
     });
     activeCharts.push(chartFees);
   } else {
     if(chartFees){ chartFees.destroy(); chartFees=null; }
     feesCanvas.style.display='none'; feesEmpty.style.display='block';
-  }
-
-  // Total P/L by symbol, open + closed — every ticker ever traded, not just
-  // what's currently open. realized comes straight off computePositions()
-  // (locked in the moment each SELL happened); unrealized only applies to
-  // whatever shares, if any, are still held right now.
-  const lifetimeCanvas = document.getElementById('chartLifetime');
-  const lifetimeEmpty = document.getElementById('chartLifetimeEmpty');
-  const allTickerPositions = computePositions().filter(p=> p.buyCount>0 || p.sellCount>0);
-  if(allTickerPositions.length && window.Chart){
-    lifetimeEmpty.style.display='none'; lifetimeCanvas.style.display='block';
-    if(chartLifetime) chartLifetime.destroy();
-    const textColor = cssVar('--muted') || '#8a97a3';
-    const gridColor = cssVar('--border') || '#232b33';
-    const profitColor = cssVar('--profit') || '#34c77b';
-    const lossColor = cssVar('--loss') || '#e5484d';
-    const ticks = { color:textColor, font:{size:11} };
-    const grid = { color:gridColor };
-    const dpr = window.devicePixelRatio || 1;
-    const lifetimeData = allTickerPositions.map(p=>{
-      let unrealized = 0;
-      if(p.shares>0){
-        const mp2 = getMarketPrice(p.ticker);
-        const grossVal = p.shares*mp2;
-        const sellFee2 = mp2>0 ? calcFee(grossVal, false) : 0;
-        unrealized = (grossVal - sellFee2) - p.invested;
-      }
-      return { ticker:p.ticker, total: p.realized + unrealized, status: p.shares>0 ? (p.sellCount>0?'partial':'open') : 'closed' };
-    }).sort((a,b)=> b.total-a.total);
-    chartLifetime = new Chart(lifetimeCanvas.getContext('2d'), {
-      type:'bar',
-      data:{ labels: lifetimeData.map(d=>d.ticker), datasets:[{
-        data: lifetimeData.map(d=>d.total),
-        backgroundColor: lifetimeData.map(d=> d.total>=0 ? profitColor : lossColor),
-      }]},
-      options:{
-        responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{
-          label:(c)=> fmtMoney(c.parsed.y),
-          afterLabel:(c)=>{ const d=lifetimeData[c.dataIndex]; return d.status==='closed'?'fully closed':d.status==='partial'?'open, partially sold':'open, never sold'; }
-        }}, datalabels:dlBarV(v=>fmt(v,2)) },
-        scales:{ x:{ticks, grid}, y:{ticks, grid} }
-      }
-    });
-    activeCharts.push(chartLifetime);
-  } else {
-    if(chartLifetime){ chartLifetime.destroy(); chartLifetime=null; }
-    lifetimeCanvas.style.display='none'; lifetimeEmpty.style.display='block';
   }
 
   // Cash balance over time — straight off the same ledger that drives the
@@ -3220,7 +3039,7 @@ function renderDashboard(){
         label:'Cash balance', data: cs.ledger.map(e=>e.balance),
         borderColor: infoColor, backgroundColor: infoColor+'26', fill:true, tension:0.2, pointRadius:2, pointHitRadius:10,
       }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}, datalabels:dlLine(v=>fmt(v,2))}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
     });
     activeCharts.push(chartCash);
   } else {
@@ -3252,7 +3071,7 @@ function renderDashboard(){
         label:'Cumulative realized P/L', data: realizedSeries.map(e=>e.value),
         borderColor: lineColor, backgroundColor: lineColor+'26', fill:true, tension:0.2, pointRadius:2, pointHitRadius:10,
       }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}, datalabels:dlLine(v=>fmt(v,2))}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:6}, grid}, y:{ticks, grid} } }
     });
     activeCharts.push(chartRealized);
   } else {
@@ -3335,7 +3154,7 @@ function renderDashboard(){
     chartSplit = new Chart(splitCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels:['Cash','Stocks (at market)'], datasets:[{data:[Math.max(0,cs.cashBalance), stocksNow], backgroundColor:[infoColor, goldColor]}]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> c.label+': '+fmtMoney(c.parsed)}}, datalabels:dlDoughnut(v=>fmt(v,2))} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> c.label+': '+fmtMoney(c.parsed)}}} }
     });
     activeCharts.push(chartSplit);
   } else {
@@ -3365,7 +3184,7 @@ function renderDashboard(){
         data: ruVals,
         backgroundColor: ruVals.map(v=> v>=0 ? profitColor : lossColor),
       }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}, datalabels:dlBarV(v=>fmt(v,2))}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks, grid}, y:{ticks, grid} } }
     });
     activeCharts.push(chartRU);
   } else {
@@ -3391,7 +3210,7 @@ function renderDashboard(){
     chartAlloc = new Chart(allocCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels: allocRows.map(r=>r.ticker), datasets:[{ data: allocRows.map(r=>r.value), backgroundColor: palette }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/allocTotal*100).toFixed(1)}%)`}}, datalabels:dlDoughnut(v=>(v/allocTotal*100).toFixed(1)+'%')} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/allocTotal*100).toFixed(1)}%)`}}} }
     });
     activeCharts.push(chartAlloc);
   } else {
@@ -3426,7 +3245,7 @@ function renderDashboard(){
         {label:'Buys', data: months.map(m=>monthly[m].BUY||0), backgroundColor: profitColor},
         {label:'Sells', data: months.map(m=>monthly[m].SELL||0), backgroundColor: lossColor},
       ]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{labels:{color:textColor, boxWidth:11, font:{size:11}}}, tooltip:{mode:'index', intersect:false}, datalabels:dlStack(v=>v>0?v:'')}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid, stacked:true}, y:{ticks:{...ticks, precision:0}, grid, stacked:true, beginAtZero:true} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{labels:{color:textColor, boxWidth:11, font:{size:11}}}, tooltip:{mode:'index', intersect:false}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid, stacked:true}, y:{ticks:{...ticks, precision:0}, grid, stacked:true, beginAtZero:true} } }
     });
     activeCharts.push(chartActivity);
   } else {
@@ -3453,7 +3272,7 @@ function renderDashboard(){
     chartDivMonthly = new Chart(divMonthlyCanvas.getContext('2d'), {
       type:'bar',
       data:{ labels: divMonths, datasets:[{ label:'Dividends', data: divMonths.map(m=>divByMonth[m]), backgroundColor: profitColor }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}, datalabels:dlBarV(v=>fmt(v,2))}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid}, y:{ticks, grid, beginAtZero:true} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid}, y:{ticks, grid, beginAtZero:true} } }
     });
     activeCharts.push(chartDivMonthly);
   } else {
@@ -3477,7 +3296,7 @@ function renderDashboard(){
     chartDivTicker = new Chart(divTickerCanvas.getContext('2d'), {
       type:'doughnut',
       data:{ labels: divTickers, datasets:[{ data: divTickers.map(t=>divByTicker[t]), backgroundColor: divTickers.map(t=>tickerColor(t)) }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/divTotal*100).toFixed(1)}%)`}}, datalabels:dlDoughnut(v=>(v/divTotal*100).toFixed(1)+'%')} }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, cutout:'55%', plugins:{legend, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/divTotal*100).toFixed(1)}%)`}}} }
     });
     activeCharts.push(chartDivTicker);
   } else {
@@ -3512,7 +3331,7 @@ function renderDashboard(){
     chartFeesTime = new Chart(feesTimeCanvas.getContext('2d'), {
       type:'bar',
       data:{ labels: feesMonths, datasets:[{ label:'Fees', data: feesMonths.map(m=>feesByMonth[m]), backgroundColor: lossColor }]},
-      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}, datalabels:dlBarV(v=>fmt(v,2))}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid}, y:{ticks, grid, beginAtZero:true} } }
+      options:{ responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtMoney(c.parsed.y)}}}, scales:{ x:{ticks:{...ticks, maxTicksLimit:8}, grid}, y:{ticks, grid, beginAtZero:true} } }
     });
     activeCharts.push(chartFeesTime);
   } else {
@@ -3545,7 +3364,7 @@ function renderDashboard(){
     chartHold = new Chart(holdCanvas.getContext('2d'), {
       type:'bar',
       data:{ labels: holdData.map(h=>h.ticker), datasets:[{ label:'Days held', data: holdData.map(h=>h.days), backgroundColor: holdData.map(h=>tickerColor(h.ticker)) }]},
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> c.parsed.x+' days'}}, datalabels:dlBarH(v=>v+'d')}, scales:{ x:{ticks:{...ticks, precision:0}, grid, beginAtZero:true}, y:{ticks, grid} } }
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> c.parsed.x+' days'}}}, scales:{ x:{ticks:{...ticks, precision:0}, grid, beginAtZero:true}, y:{ticks, grid} } }
     });
     activeCharts.push(chartHold);
   } else {
@@ -3583,12 +3402,7 @@ function renderDashboard(){
     psumBox.innerHTML = `<div class="empty" style="grid-column:1/-1;">No open positions. Add a BUY transaction to get started.</div>`;
   } else if(isCompact){
     psumBox.className = '';
-    const sorted = [...positions].sort((a,b)=>{
-      const va=dhSortValue(a), vb=dhSortValue(b);
-      const cmp = typeof va==='string' ? va.localeCompare(vb) : (va-vb);
-      return dhSort.dir==='asc' ? cmp : -cmp;
-    });
-    const rowsHtml = sorted.map(p=>{
+    const rowsHtml = positions.map(p=>{
       const mp = getMarketPrice(p.ticker);
       const avg = p.shares>0 ? p.invested/p.shares : 0;
       const be = breakEvenPrice(p.invested, p.shares);
@@ -3611,17 +3425,7 @@ function renderDashboard(){
     psumBox.innerHTML = `
       <div class="card" style="overflow-x:auto; padding:0;">
         <table class="holdings-table">
-          <thead><tr>
-            <th class="sortable" onclick="sortDh('ticker')">Company${dhArrow('ticker')}</th>
-            <th class="sortable" onclick="sortDh('shares')">Shares${dhArrow('shares')}</th>
-            <th class="sortable" onclick="sortDh('avg')">Avg buy${dhArrow('avg')}</th>
-            <th class="sortable" onclick="sortDh('be')">Break-even${dhArrow('be')}</th>
-            <th class="sortable" onclick="sortDh('market')">Price${dhArrow('market')}</th>
-            <th class="sortable" onclick="sortDh('invested')">Total buy${dhArrow('invested')}</th>
-            <th class="sortable" onclick="sortDh('value')">Worth${dhArrow('value')}</th>
-            <th class="sortable" onclick="sortDh('profit')">P/L${dhArrow('profit')}</th>
-            <th></th>
-          </tr></thead>
+          <thead><tr><th>Company</th><th>Shares</th><th>Avg buy</th><th>Break-even</th><th>Price</th><th>Total buy</th><th>Worth</th><th>P/L</th><th></th></tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       </div>
@@ -3809,17 +3613,8 @@ function latestTickerTransactionsHtml(ticker){
 }
 
 function openPositionModal(ticker){
-  let p = computePositions().find(x=>x.ticker===ticker);
-  if(!p){
-    // No transactions for this ticker at all — still let a watchlist-only
-    // ticker (or anything with saved price history) open, just as an empty
-    // shell, so "what's this been trading at" doesn't require owning it
-    // first. Only truly unknown tickers get turned away.
-    const known = getPriceHistory(ticker).length>0 || DB.watchlist.some(w=>w.ticker===ticker) || TICKER_NAMES[ticker];
-    if(!known){ toast('No transactions or price history found for that symbol.'); return; }
-    p = { ticker, shares:0, invested:0, buyFees:0, sellFees:0, realized:0,
-      totalBoughtShares:0, totalSoldShares:0, buyCount:0, sellCount:0, firstDate:'—', lastDate:'—' };
-  }
+  const p = computePositions().find(x=>x.ticker===ticker);
+  if(!p){ toast('No transactions found for that symbol.'); return; }
   // Resolve the working market price once at the top so it is available to
   // both the position cards and the trade-entry form below. getMarketPrice()
   // already falls back to the latest BUY price when no market price is set.
@@ -3872,9 +3667,7 @@ function openPositionModal(ticker){
         </div>
       </div>`;
   } else {
-    currentHtml = (p.buyCount===0 && p.sellCount===0)
-      ? `<div class="rule-note" style="grid-column:1/-1; margin:0;">You've never bought this ticker — this is just price research. Add a transaction any time to start a position.</div>`
-      : `<div class="rule-note" style="grid-column:1/-1; margin:0;">No open shares right now — this position has been fully closed. Stats below cover its entire history.</div>`;
+    currentHtml = `<div class="rule-note" style="grid-column:1/-1; margin:0;">No open shares right now — this position has been fully closed. Stats below cover its entire history.</div>`;
   }
   const allFees = p.buyFees + p.sellFees;
   const priceStats = computePriceStats(p.ticker);
@@ -3992,7 +3785,7 @@ function renderPositionPriceChart(buy, current, breakEven){
     },
     options:{
       responsive:true, maintainAspectRatio:false, devicePixelRatio:dpr, indexAxis:'y',
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmt(c.parsed.x,3)}}, datalabels:dlBarH(v=>fmt(v,3)) },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmt(c.parsed.x,3)}} },
       scales:{ x:{ticks:{...ticks, callback:(v)=>fmt(v,3)}, grid}, y:{ticks, grid} }
     }
   });
@@ -4021,9 +3814,9 @@ function renderTickerPriceHistoryChart(ticker){
     data:{
       labels,
       datasets:[
-        { label:'Price', data, borderColor:accentColor, backgroundColor:'transparent', tension:.25, pointRadius:2, borderWidth:2, datalabels:dlLine(v=>fmt(v,3)) },
-        { label:'Lowest', data:labels.map(()=>stats.min), borderColor:goldColor, borderDash:[4,4], borderWidth:1, pointRadius:0, datalabels:{display:false} },
-        { label:'Highest', data:labels.map(()=>stats.max), borderColor:lossColor, borderDash:[4,4], borderWidth:1, pointRadius:0, datalabels:{display:false} },
+        { label:'Price', data, borderColor:accentColor, backgroundColor:'transparent', tension:.25, pointRadius:2, borderWidth:2 },
+        { label:'Lowest', data:labels.map(()=>stats.min), borderColor:goldColor, borderDash:[4,4], borderWidth:1, pointRadius:0 },
+        { label:'Highest', data:labels.map(()=>stats.max), borderColor:lossColor, borderDash:[4,4], borderWidth:1, pointRadius:0 },
       ]
     },
     options:{
@@ -4069,34 +3862,6 @@ function addTransactionForTicker(ticker){
 }
 
 /* ============================= RENDER: PORTFOLIO ============================= */
-// Dashboard compact holdings table — its own small sort state, separate
-// from the full Portfolio page's table (different columns are shown here).
-let dhSort = {col:'ticker', dir:'asc'};
-function dhSortValue(p){
-  const mp = getMarketPrice(p.ticker);
-  const avg = p.shares>0 ? p.invested/p.shares : 0;
-  const value = p.shares*mp;
-  const profit = value - p.invested;
-  switch(dhSort.col){
-    case 'shares': return p.shares;
-    case 'avg': return avg;
-    case 'be': return breakEvenPrice(p.invested, p.shares);
-    case 'market': return mp;
-    case 'invested': return p.invested;
-    case 'value': return value;
-    case 'profit': return profit;
-    default: return p.ticker;
-  }
-}
-function sortDh(col){
-  if(dhSort.col===col){ dhSort.dir = dhSort.dir==='asc'?'desc':'asc'; }
-  else { dhSort = {col, dir: col==='ticker'?'asc':'desc'}; }
-  renderDashboard();
-}
-function dhArrow(col){
-  if(dhSort.col!==col) return '';
-  return `<span class="arrow">${dhSort.dir==='asc'?'▲':'▼'}</span>`;
-}
 let pfSort = {col:'ticker', dir:'asc'};
 function pfSortValue(p, col){
   const avg = p.shares>0 ? p.invested/p.shares : 0;
@@ -4840,15 +4605,12 @@ function renderWatchlist(){
     const diff = w.current - w.target;
     const hit = w.current >= w.target;
     return `<tr>
-      <td style="cursor:pointer;" onclick="openPositionModal('${w.ticker}')"><span class="badge-dot" style="background:${hit?'var(--profit)':'var(--loss)'}"></span>${tickerLogo(w.ticker)}${w.ticker}</td>
+      <td style="cursor:pointer;" onclick="addTransactionForTicker('${w.ticker}')"><span class="badge-dot" style="background:${hit?'var(--profit)':'var(--loss)'}"></span>${tickerLogo(w.ticker)}${w.ticker}</td>
       <td class="num-cell">${fmt(w.target,3)}</td>
       <td class="num-cell">${fmt(w.current,3)}</td>
       <td class="num-cell ${diff>=0?'pos':'neg'}">${fmt(diff,3)}</td>
       <td class="num-cell">${hit?'Time to buy':'Wait'}</td>
-      <td class="num-cell" style="white-space:nowrap;">
-        <button class="btn ghost small" onclick="addTransactionForTicker('${w.ticker}')">Buy</button>
-        <button class="btn ghost small" onclick="deleteWatch(${w._i})">Delete</button>
-      </td>
+      <td class="num-cell"><button class="btn ghost small" onclick="deleteWatch(${w._i})">Delete</button></td>
     </tr>`;
   }).join('');
   document.getElementById('watchTableWrap').innerHTML = `
@@ -4932,7 +4694,7 @@ function infoTip(text){ return `<span class="info-tip" tabindex="0" onclick="eve
 
 /* ============================= INIT ============================= */
 function renderAll(){
-  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderDividends, renderWatchlist, renderSettings, refreshTradeCycleTickers, tcaRefreshTickerSelect, initFundamentals];
+  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderDividends, renderWatchlist, renderSettings, refreshTradeCycleTickers, tcaRefreshTickerSelect];
   for(const fn of sections){
     try{ fn(); }catch(e){ console.error(fn.name, e); }
   }
