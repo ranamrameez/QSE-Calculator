@@ -1041,6 +1041,7 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
       <div class="chip-tabs subnav">
         <button class="chip" onclick="scrollToSection('dashCards')">Overview</button>
         <button class="chip" onclick="scrollToSection('dash-portfolio')">Portfolio</button>
+        <button class="chip" onclick="scrollToSection('dash-fundamentals')">Fundamentals</button>
         <button class="chip" onclick="scrollToSection('dash-tradecalc')">Trade Calculator</button>
         <button class="chip" onclick="scrollToSection('dash-charts')">Charts</button>
         <button class="chip" onclick="scrollToSection('dash-alerts')">Alerts</button>
@@ -1050,6 +1051,16 @@ html.auth-signed-out #cloudSignedInBox{display:none !important;}
 
       <div class="section-title" id="dash-portfolio">Portfolio <span class="tag">tap a ticker for detail</span></div>
       <div class="portfolio-grid" id="dashPortfolioBox"></div>
+
+      <div class="section-title" id="dash-fundamentals">Fundamentals <span class="tag">reported H1 2026 · no invented figures</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Fundamental figures come only from verified QSE / The Group disclosures. Blank means the figure has not been verified or was not retrieved. H1 EPS is six-month EPS and is never silently treated as annual EPS.">i</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <div class="row" style="align-items:end;">
+          <div class="field" style="min-width:220px; flex:1;"><label>Stock</label><select id="fundTicker" onchange="renderFundamentalDetail()"></select></div>
+          <div class="field" style="min-width:180px;"><label>View</label><select id="fundView" onchange="renderFundamentals()"><option value="portfolio">My portfolio</option><option value="all">All tracked stocks</option><option value="improving">Improving earnings</option><option value="weakening">Weakening earnings</option></select></div>
+        </div>
+        <div id="fundamentalsTable" style="margin-top:12px;"></div>
+        <div id="fundamentalDetail" style="margin-top:12px;"></div>
+      </div>
 
       <div class="section-title" id="dash-tradecalc">Trade Calculator <span class="tag">buy, sell, or full cycle</span><span class="info-tip" tabindex="0" onclick="event.stopPropagation()" data-tip="Pick a stock, pick what you're planning, and every number — commission, break-even, required bounce, net P/L — comes from the same fee-aware engine the rest of the workbook uses. Covers plain buys/sells, averaging down to a target cost, budget-limited buys, target-profit sell prices, and live price scenarios — all in one place.">i</span></div>
       <div class="card" style="margin-bottom:24px;">
@@ -2864,6 +2875,65 @@ function calcTradeCycle(){
     `<div class="trade-cycle-card"><div class="k">Cash left</div><div class="v">${fmtMoney(Math.max(0,cashLeft))}</div></div>`
   ].join('');
   if(note) note.textContent=`At Buy price ${fmt(entry,3)}, ${fmt(addedShares,0)} new shares cost ${fmtMoney(totalSpend)} including buy commission. Selling them at ${fmt(target,3)} gives ${Number.isFinite(netCycle)?fmtMoney(netCycle):'—'} net after both commissions. Current break-even is ${fmt(currentBe,3)}; blended break-even becomes ${fmt(blendedBe,3)}.`;
+}
+
+/* ============================= FUNDAMENTALS: VERIFIED DISCLOSURES ============================= */
+// Only figures that were explicitly supplied by the user or verified from QSE/The Group are stored here.
+// Missing values are intentionally null — never inferred. Prices are read live from DB.marketPrices.
+const FUNDAMENTALS = {
+  QFLS:{name:'Qatar Fuel (WOQOD)', period:'H1 2026', profit:397771000, priorProfit:460434000, eps:0.40, priorEps:0.46, dps:0.90, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/b0EARx9'},
+  MARK:{name:'AlRayan Bank', period:'H1 2026', profit:687476000, priorProfit:821383000, eps:0.074, priorEps:0.088, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/dXFccnF'},
+  IQCD:{name:'Industries Qatar', period:'H1 2026', profit:215649000, priorProfit:1955376000, eps:0.04, priorEps:0.32, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/ivf5cPv'},
+  MPHC:{name:'Mesaieed Petrochemical Holding', period:'H1 2026', profit:-183006000, priorProfit:378706000, eps:-0.015, priorEps:0.030, dps:null, status:'VERIFIED', source:'The Group / QSE disclosure', url:'https://thegroup.com.qa/news-api/api/v1/news/html/6rgKUiv'},
+  QGTS:{name:'Nakilat', period:'H1 2026', profit:856960000, priorProfit:859630000, eps:0.15, priorEps:0.16, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=QGTS&InformationCategory=Company&InformationType=News'},
+  DHBK:{name:'Doha Bank', period:'H1 2026', profit:435971000, priorProfit:null, eps:0.140, priorEps:0.150, dps:null, status:'VERIFIED', source:'QSE / CBFS disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=DHBK&InformationCategory=Company&InformationType=News'},
+  ORDS:{name:'Ooredoo', period:'H1 2026', profit:1848791000, priorProfit:1948062000, eps:0.58, priorEps:0.61, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ORDS&InformationCategory=Company&InformationType=News'},
+  BRES:{name:'Barwa Real Estate', period:'H1 2026', profit:459303000, priorProfit:560166000, eps:0.1180, priorEps:0.1441, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=BRES&InformationCategory=Company&InformationType=News'},
+  VFQS:{name:'Vodafone Qatar', period:'H1 2026', profit:400910000, priorProfit:328628000, eps:0.095, priorEps:0.078, dps:null, status:'VERIFIED', source:'QSE disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=VFQS&InformationCategory=Company&InformationType=News'},
+  ERES:{name:'Ezdan Holding Group', period:'H1 2026', profit:441963000, priorProfit:null, eps:0.017, priorEps:0.016, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ERES&InformationCategory=Company&InformationType=News'},
+  GWCS:{name:'Gulf Warehousing', period:'H1 2026', profit:62287000, priorProfit:null, eps:0.106, priorEps:0.100, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=GWCS&InformationCategory=Company&InformationType=News'},
+  ABQK:{name:'Ahli Bank', period:'H1 2026', profit:407427000, priorProfit:null, eps:0.151, priorEps:0.149, dps:null, status:'VERIFIED', source:'QSE / company disclosure', url:'https://www.qe.com.qa/company-profile?CompanyCode=ABQK&InformationCategory=Company&InformationType=News'},
+  TQES:{name:'Qatar Electronic Systems (Techno Q)', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'The Group link supplied by user; figures not verified', url:'https://thegroup.com.qa/news-api/api/v1/news/html/QWf7qU5'},
+  QIBK:{name:'Qatar Islamic Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QIBK&InformationCategory=Company&InformationType=News'},
+  QNBK:{name:'Qatar National Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QNBK&InformationCategory=Company&InformationType=News'},
+  AHCS:{name:'Aamal Company', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=AHCS&InformationCategory=Company&InformationType=News'},
+  CBQK:{name:'The Commercial Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=CBQK&InformationCategory=Company&InformationType=News'},
+  QFBQ:{name:'Lesha Bank', period:'H1 2026', profit:null, priorProfit:null, eps:null, priorEps:null, dps:null, status:'DISCLOSED_NOT_RETRIEVED', source:'QSE disclosure exists; exact figures not retrieved', url:'https://www.qe.com.qa/company-profile?CompanyCode=QFBQ&InformationCategory=Company&InformationType=News'}
+};
+function fundNum(v,d=3){ return v==null?'—':Number(v).toFixed(d); }
+function fundPct(a,b){ return a!=null && b!=null && b!==0 ? ((a/b-1)*100) : null; }
+function fundPrice(t){ const p=getMarketPrice(t); return p>0?p:null; }
+function fundYield(eps,price){ return eps!=null&&price>0 ? eps/price*100 : null; }
+function fundStatus(f){
+  const ch=fundPct(f.eps,f.priorEps);
+  if(ch==null) return f.status==='VERIFIED'?'VERIFIED':'PENDING';
+  if(ch>=2) return 'IMPROVING'; if(ch<=-20) return 'SEVERE'; if(ch<0) return 'WEAKENING'; return 'STABLE';
+}
+function fundBadge(st){ const cls=st==='IMPROVING'||st==='STABLE'?'pos':(st==='SEVERE'?'neg':''); return `<span class="tag ${cls}" style="margin-left:4px;">${st}</span>`; }
+function renderFundamentals(){
+  const box=document.getElementById('fundamentalsTable'); if(!box) return;
+  const view=document.getElementById('fundView')?.value||'portfolio';
+  let syms=Object.keys(FUNDAMENTALS);
+  if(view==='portfolio') syms=computePositions().filter(p=>p.shares>0).map(p=>p.ticker).filter(t=>FUNDAMENTALS[t]);
+  if(view==='improving') syms=syms.filter(t=>{const f=FUNDAMENTALS[t]; const c=fundPct(f.eps,f.priorEps); return c!=null&&c>0;});
+  if(view==='weakening') syms=syms.filter(t=>{const f=FUNDAMENTALS[t]; const c=fundPct(f.eps,f.priorEps); return c!=null&&c<0;});
+  syms.sort((a,b)=>{const ca=fundPct(FUNDAMENTALS[a].eps,FUNDAMENTALS[a].priorEps); const cb=fundPct(FUNDAMENTALS[b].eps,FUNDAMENTALS[b].priorEps); return (cb??-999)-(ca??-999);});
+  if(!syms.length){ box.innerHTML='<div class="empty">No matching stocks in this view.</div>'; return; }
+  box.innerHTML=`<div class="table-wrap" style="overflow-x:auto;"><table class="data-table compact"><thead><tr><th>Stock</th><th>Price</th><th>H1 EPS</th><th>EPS YoY</th><th>H1 earnings yield</th><th>H1 P/E</th><th>Status</th></tr></thead><tbody>${syms.map(t=>{const f=FUNDAMENTALS[t], pr=fundPrice(t), ch=fundPct(f.eps,f.priorEps), ey=fundYield(f.eps,pr), pe=f.eps!=null&&pr>0?pr/f.eps:null, st=fundStatus(f); return `<tr onclick="document.getElementById('fundTicker').value='${t}';renderFundamentalDetail()" style="cursor:pointer"><td><b>${t}</b> <span class="muted">${f.name}</span></td><td>${pr==null?'—':fundNum(pr,3)}</td><td>${fundNum(f.eps,3)}</td><td class="${ch!=null?(ch>=0?'pos':'neg'):''}">${ch==null?'—':(ch>=0?'+':'')+ch.toFixed(1)+'%'}</td><td>${ey==null?'—':ey.toFixed(2)+'%'}</td><td>${pe==null?'—':pe.toFixed(1)+'×'}</td><td>${fundBadge(st)}</td></tr>`;}).join('')}</tbody></table></div>`;
+  renderFundamentalDetail();
+}
+function renderFundamentalDetail(){
+  const sel=document.getElementById('fundTicker'), box=document.getElementById('fundamentalDetail'); if(!sel||!box) return;
+  const t=sel.value, f=FUNDAMENTALS[t]; if(!f){box.innerHTML='';return;}
+  const pr=fundPrice(t), ch=fundPct(f.eps,f.priorEps), ey=fundYield(f.eps,pr), pe=f.eps!=null&&pr>0?pr/f.eps:null, dy=f.dps!=null&&pr>0?f.dps/pr*100:null, payout=f.dps!=null&&f.eps>0?f.dps/f.eps*100:null;
+  const note=f.status==='VERIFIED'?'Reported figure. H1 EPS is six-month EPS, not annual EPS.':'Disclosure exists, but exact financial figures are not verified/retrieved; values are intentionally blank.';
+  box.innerHTML=`<div class="mgrid"><div class="result-line"><span class="k">Price</span><span class="v">${pr==null?'—':fundNum(pr,3)}</span></div><div class="result-line"><span class="k">H1 EPS</span><span class="v">${fundNum(f.eps,3)}</span></div><div class="result-line"><span class="k">EPS YoY</span><span class="v ${ch!=null?(ch>=0?'pos':'neg'):''}">${ch==null?'—':(ch>=0?'+':'')+ch.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 earnings yield</span><span class="v">${ey==null?'—':ey.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 P/E</span><span class="v">${pe==null?'—':pe.toFixed(1)+'×'}</span></div><div class="result-line"><span class="k">Latest DPS stored</span><span class="v">${fundNum(f.dps,3)}</span></div><div class="result-line"><span class="k">Dividend yield</span><span class="v">${dy==null?'—':dy.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">Payout reference</span><span class="v">${payout==null?'—':payout.toFixed(1)+'%'}</span></div></div><div class="trade-calc-note" style="margin-top:10px;">${note} <a href="${f.url}" target="_blank" rel="noopener">Source</a></div>`;
+}
+function initFundamentals(){
+  const sel=document.getElementById('fundTicker'); if(!sel) return;
+  const syms=Object.keys(FUNDAMENTALS); sel.innerHTML=syms.map(t=>`<option value="${t}">${t} — ${FUNDAMENTALS[t].name}</option>`).join('');
+  const pos=computePositions().find(p=>p.shares>0&&FUNDAMENTALS[p.ticker]); if(pos) sel.value=pos.ticker;
+  renderFundamentals();
 }
 
 /* ============================= RENDER: DASHBOARD ============================= */
@@ -4694,7 +4764,7 @@ function infoTip(text){ return `<span class="info-tip" tabindex="0" onclick="eve
 
 /* ============================= INIT ============================= */
 function renderAll(){
-  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderDividends, renderWatchlist, renderSettings, refreshTradeCycleTickers, tcaRefreshTickerSelect];
+  const sections = [renderDashboard, renderPortfolio, renderTransactions, renderTransfers, renderAdjustments, renderDividends, renderWatchlist, renderSettings, refreshTradeCycleTickers, tcaRefreshTickerSelect, initFundamentals];
   for(const fn of sections){
     try{ fn(); }catch(e){ console.error(fn.name, e); }
   }
