@@ -1871,10 +1871,22 @@ function cssVar(name){ return getComputedStyle(document.documentElement).getProp
 // labels that would overlap on dense charts (many months/tickers) rather
 // than us guessing a category-count cutoff — sparse charts show every
 // value, crowded ones thin out automatically instead of turning to mush.
+// clamp:true keeps a label that would otherwise land outside the plot area
+// (the tallest bar, the last point on a line hugging the top edge) pinned
+// just inside it instead of overflowing past the canvas edge and getting
+// silently clipped off — that was the main cause of labels going missing.
+// A translucent panel-colored pill sits behind every label too, so it
+// stays readable over grid lines or a busy chart background regardless of
+// which color theme or light/dark mode is active, instead of relying on
+// plain text color alone to stay visible.
 function dlBase(formatter, extra={}){
+  const panel = cssVar('--panel');
   return Object.assign({
-    display:'auto',
+    display:'auto', clamp:true,
     color: cssVar('--text') || '#ECECEE',
+    backgroundColor: panel ? panel+'d9' : 'rgba(20,20,20,.85)',
+    borderRadius:4,
+    padding:{top:2, bottom:2, left:5, right:5},
     font:{size:10, weight:'700'},
     formatter,
   }, extra);
@@ -1899,16 +1911,18 @@ function dlLine(formatter){
   return dlBase(formatter, { align:'top', offset:6 });
 }
 // Doughnut/pie slices — white text with a dark stroke so it stays legible
-// regardless of the slice's own color underneath it.
+// regardless of the slice's own color underneath it. No pill background
+// here (or in dlStack below) — the label already sits on solid color, and
+// a background box would just clutter a small slice.
 function dlDoughnut(formatter){
-  return dlBase(formatter, { color:'#fff', textStrokeColor:'rgba(0,0,0,.55)', textStrokeWidth:2, font:{size:11, weight:'700'} });
+  return dlBase(formatter, { backgroundColor:'transparent', color:'#fff', textStrokeColor:'rgba(0,0,0,.55)', textStrokeWidth:2, font:{size:11, weight:'700'} });
 }
 // Stacked-bar segments — centered inside each colored segment, so it reads
 // like the doughnut labels (white + stroke for contrast) rather than the
 // tip-anchored style used for simple bars. Formatter should return '' for
 // zero/empty values so empty months don't get a floating "0".
 function dlStack(formatter){
-  return dlBase(formatter, { color:'#fff', textStrokeColor:'rgba(0,0,0,.45)', textStrokeWidth:1.5 });
+  return dlBase(formatter, { backgroundColor:'transparent', color:'#fff', textStrokeColor:'rgba(0,0,0,.45)', textStrokeWidth:1.5 });
 }
 function applyAppearance(){
   const familyEl = document.getElementById('setFontFamily');
@@ -2989,7 +3003,7 @@ function renderFundamentalDetail(){
   const sel=document.getElementById('fundTicker'), box=document.getElementById('fundamentalDetail'); if(!sel||!box) return;
   const t=sel.value, f=FUNDAMENTALS[t]; if(!f){box.innerHTML='';return;}
   const pr=fundPrice(t), ch=fundPct(f.eps,f.priorEps), ey=fundYield(f.eps,pr), pe=f.eps!=null&&pr>0?pr/f.eps:null, dy=f.dps!=null&&pr>0?f.dps/pr*100:null, payout=f.dps!=null&&f.eps>0?f.dps/f.eps*100:null;
-  const note=f.status==='VERIFIED'?'Reported figure. H1 EPS is six-month EPS, not annual EPS.':'Disclosure exists, but exact financial figures are not verified/retrieved; values are intentionally blank.';
+  const note=f.status==='VERIFIED'?'Reported figure. H1 2026 EPS is six-month EPS, not annual EPS.':'Disclosure exists, but exact financial figures are not verified/retrieved; values are intentionally blank.';
   box.innerHTML=`<div class="mgrid"><div class="result-line"><span class="k">Price</span><span class="v">${pr==null?'—':fundNum(pr,3)}</span></div><div class="result-line"><span class="k">H1 EPS</span><span class="v">${fundNum(f.eps,3)}</span></div><div class="result-line"><span class="k">EPS YoY</span><span class="v ${ch!=null?(ch>=0?'pos':'neg'):''}">${ch==null?'—':(ch>=0?'+':'')+ch.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 earnings yield</span><span class="v">${ey==null?'—':ey.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">H1 P/E</span><span class="v">${pe==null?'—':pe.toFixed(1)+'×'}</span></div><div class="result-line"><span class="k">Latest DPS stored</span><span class="v">${fundNum(f.dps,3)}</span></div><div class="result-line"><span class="k">Dividend yield</span><span class="v">${dy==null?'—':dy.toFixed(2)+'%'}</span></div><div class="result-line"><span class="k">Payout reference</span><span class="v">${payout==null?'—':payout.toFixed(1)+'%'}</span></div></div><div class="trade-calc-note" style="margin-top:10px;">${note} <a href="${f.url}" target="_blank" rel="noopener">Source</a></div>`;
 }
 function initFundamentals(){
