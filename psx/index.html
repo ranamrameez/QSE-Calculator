@@ -308,7 +308,29 @@ function populateSymbolList(){
  let tickers=(typeof PSX_TICKERS!=="undefined"&&PSX_TICKERS.length)?PSX_TICKERS:[];
  list.innerHTML=tickers.map(s=>`<option value="${s}">`).join("")
 }
-function renderMatrix(){let a=+$("matrixStart").value,b=+$("matrixEnd").value,step=+$("matrixStep").value;if(!(step>0))return;let rows="",count=0;for(let p=a;p<=b+step/1000&&count<1000;p+=step){let r=saleResult(p);rows+=`<tr><td>${p.toFixed(2)}</td><td>${money(r.sf.gross)}</td><td>${money(r.sf.total)}</td><td>${money(r.cgt)}</td><td>${money(r.net)}</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td><td class="${r.roi>=0?"pos":"neg"}">${r.roi.toFixed(2)}%</td></tr>`;count++}$("matrixTable").innerHTML=rows}
+function renderMatrix(){
+ let a=+$("matrixStart").value,
+     b=+$("matrixEnd").value,
+     step=+$("matrixStep").value;
+
+ if(!(step>0)){
+  $("matrixTable").innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted)">Step must be a positive number.</td></tr>`;
+  return;
+ }
+
+ // Normalize reversed ranges so users don't get a silent empty table
+ if(a>b){
+  [a,b]=[b,a];
+ }
+
+ let rows="",count=0;
+ for(let p=a;p<=b+step/1000&&count<1000;p+=step){
+  let r=saleResult(p);
+  rows+=`<tr><td>${p.toFixed(2)}</td><td>${money(r.sf.gross)}</td><td>${money(r.sf.total)}</td><td>${money(r.cgt)}</td><td>${money(r.net)}</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td><td class="${r.roi>=0?"pos":"neg"}">${r.roi.toFixed(2)}%</td></tr>`;
+  count++;
+ }
+ $("matrixTable").innerHTML=rows
+}
 function renderSettings(){$("feePct").value=DB.settings.feePct;$("lowFee").value=DB.settings.lowFee;$("levyPct").value=DB.settings.levyPct;$("pst").value=DB.settings.pst;$("cgt").value=DB.settings.cgt;$("tick").value=DB.settings.tick;$("intradayFeePct").value=DB.settings.intradayFeePct;$("cgtExemptIntraday").checked=DB.settings.cgtExemptIntraday;$("theme").value=DB.appearance.theme;$("color").value=DB.appearance.color}
 function renderAll(){populateSymbolList();renderSettings();renderLots();renderSaved();renderTransactions();calculate();renderMatrix()}
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));$("page-"+b.dataset.page).classList.add("active")}));
